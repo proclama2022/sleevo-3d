@@ -1691,8 +1691,11 @@ export default function App() {
             if (hintSpotlight?.crateId === crate.id) {
               highlightState = 'valid';
             }
-            return (
-                <div key={crate.id} className={`${isMobile ? 'w-full max-w-[280px]' : ''} transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''} ${activeEvent && activeEvent.type === 'magnetic_surge' ? 'magnetic-glow' : ''}`}>
+             return (
+                 <div
+                   key={crate.id}
+                   className={`${isMobile ? 'flex-shrink-0 w-auto max-w-[280px]' : ''} transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''} ${activeEvent && activeEvent.type === 'magnetic_surge' ? 'magnetic-glow' : ''}`}
+                 >
                   <CrateBox
                     crate={crate}
                     highlightState={highlightState}
