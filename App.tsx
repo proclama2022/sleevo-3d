@@ -1334,7 +1334,7 @@ export default function App() {
   // --- RENDER MENU ---
   if (gameState.status === 'menu') {
       return (
-          <div className="relative w-full h-[100dvh] bg-bricks overflow-hidden flex flex-col items-center justify-center p-6 animate-[fade-in_0.3s_ease-out]">
+          <div className="relative w-full h-[100dvh] overflow-hidden flex flex-col items-center justify-center p-6 animate-[fade-in_0.3s_ease-out]" style={{ background: 'linear-gradient(135deg, #2d1b1b 0%, #1a1110 50%, #0f0808 100%)' }}>
               <div className="bg-noise"></div>
               <div className="vignette"></div>
               <div className="relative z-20 flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-500">
@@ -1571,7 +1571,7 @@ export default function App() {
       </header>
 
       {/* MAIN - SCAFFALI AL CENTRO (MOBILE: verticale | DESKTOP: orizzontale) */}
-      <main className={`w-full max-w-3xl flex flex-col items-center relative z-10 ${isMobile ? 'h-[50%] py-2' : 'flex-1 justify-end pb-8'}`}>
+      <main className={`w-full max-w-3xl flex flex-col items-center relative z-10 ${isMobile ? 'h-[58%] py-2' : 'flex-1 justify-end pb-8'}`}>
         {feedback && (
           <div className="absolute top-10 z-50 animate-bounce pointer-events-none">
              <div className={`px-4 py-2 rounded-lg font-display text-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-2 border-white ${feedback.type === 'good' ? 'bg-green-600 rotate-2' : feedback.type === 'bonus' ? 'bg-yellow-500 rotate-0 text-black' : 'bg-red-600 -rotate-2'} text-white`}>
@@ -1617,7 +1617,7 @@ export default function App() {
       </main>
 
       {/* SECTION - CODA VINILI IN BASSO (MOBILE: più compatta | DESKTOP: normale) */}
-      <section className={`w-full bg-wood-dark shadow-[0_-10px_50px_rgba(0,0,0,1)] border-t-[8px] border-[#2d1b15] relative z-20 flex flex-col shrink-0 animate-[shelf-sway_8s_ease-in-out_infinite] ${isMobile ? 'h-[40%] min-h-[200px]' : 'h-[320px]'}`}>
+      <section className={`w-full bg-wood-dark shadow-[0_-10px_50px_rgba(0,0,0,1)] border-t-[8px] border-[#2d1b15] relative z-20 flex flex-col shrink-0 animate-[shelf-sway_8s_ease-in-out_infinite] ${isMobile ? 'h-[32%] min-h-[180px]' : 'h-[320px]'}`}>
          <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/20"></div>
          <style>{`
            @keyframes shelf-sway {
