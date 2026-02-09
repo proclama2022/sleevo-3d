@@ -1678,7 +1678,7 @@ export default function App() {
         <div className={`w-full ${
           isMobile
             ? 'flex flex-col items-center gap-3 overflow-y-auto no-scrollbar py-2 px-4'
-            : 'overflow-x-auto no-scrollbar flex items-end gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
+            : 'overflow-x-auto no-scrollbar flex items-center gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
         }`} style={{ touchAction: isMobile ? 'pan-y' : 'pan-x' }}>
           {crates.map(crate => {
             let highlightState: 'none' | 'neutral' | 'valid' | 'invalid' = 'none';
@@ -1692,7 +1692,7 @@ export default function App() {
               highlightState = 'valid';
             }
             return (
-                <div key={crate.id} className={`${isMobile ? 'w-full max-w-[280px]' : 'snap-center pt-10'} transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''} ${activeEvent && activeEvent.type === 'magnetic_surge' ? 'magnetic-glow' : ''}`}>
+                <div key={crate.id} className={`${isMobile ? 'w-full max-w-[280px]' : ''} transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''} ${activeEvent && activeEvent.type === 'magnetic_surge' ? 'magnetic-glow' : ''}`}>
                   <CrateBox
                     crate={crate}
                     highlightState={highlightState}
