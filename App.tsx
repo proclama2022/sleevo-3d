@@ -19,7 +19,7 @@ import { AchievementToast } from './components/AchievementToast';
 import { StatsScreen } from './components/StatsScreen';
 import { InGameStats } from './components/InGameStats';
 import { SecondaryObjectives } from './components/SecondaryObjectives';
-import { Trophy, Music, Disc3, RefreshCw, Zap, Disc, Trash2, CheckCircle2, Play, Settings, Clock, AlertTriangle, ArrowUp, X, Star, Library, TrendingUp, Eye, ChevronRight, RotateCcw, Palette } from 'lucide-react';
+import { Trophy, Music, Disc3, RefreshCw, Zap, Disc, Trash2, CheckCircle2, Play, Settings, Clock, AlertTriangle, ArrowUp, X, Star, Library, TrendingUp, Eye, ChevronRight, RotateCcw, Palette, Menu, Heart } from 'lucide-react';
 import { checkAchievements, getAchievementProgress } from './constants/achievements';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
@@ -1461,9 +1461,6 @@ export default function App() {
       {/* Theme-specific background */}
       <ThemeBackground theme={gameState.theme} />
 
-      {/* Dark overlay to make gameplay elements stand out */}
-      <div className="fixed inset-0 bg-black/60 pointer-events-none z-[5]"></div>
-
       <div className="bg-noise"></div>
       <div className="vignette"></div>
 
@@ -1488,101 +1485,93 @@ export default function App() {
         />
       )}
 
-      <header className="w-full max-w-lg h-[90px] md:h-[120px] flex flex-col px-4 pt-2 md:pt-3 z-30 relative shrink-0">
-        {/* Top Row: Breadcrumb + Quick Restart */}
-        <div className="flex items-center justify-between mb-1 md:mb-2">
-          <button
-            onClick={confirmBackToMenu}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
-          >
-            <span>Menu</span>
-            <ChevronRight size={12} className="text-gray-600" />
-            <span className="text-white font-medium">
-              Level {levelIndex + 1}
-              {gameState.isEndlessMode && ' (Endless)'}
-            </span>
-          </button>
-          <button
-            onClick={confirmRestart}
-            className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
-            title="Restart Level"
-          >
-            <RotateCcw size={16} className="text-gray-400 hover:text-white" />
-          </button>
-        </div>
+      {/* HUD COMPATTO - SINGOLA RIGA SU MOBILE, DOPPIA SU DESKTOP */}
+      <header className={`w-full max-w-lg z-30 relative shrink-0 ${isMobile ? 'h-[50px]' : 'h-[90px]'} flex items-center px-3 md:px-4`}>
+        <div className={`w-full ${isMobile ? 'flex items-center justify-between gap-2' : 'flex flex-col gap-2'}`}>
 
-        {/* Bottom Row: Game Info */}
-        <div className="flex items-center justify-between">
-        {/* Left: Score + Level + Collection Counter */}
-        <div className="flex flex-col gap-1">
-           <div className="border-3 md:border-4 border-gray-800 bg-black/80 rounded-lg px-2.5 md:px-3 py-1 md:py-1.5 relative shadow-lg">
-             <div className="flex items-baseline gap-1.5">
-               <div className="text-xl md:text-2xl font-display text-neon-blue tracking-wider">{gameState.score.toString().padStart(4, '0')}</div>
-               <div className="bg-yellow-500 text-black text-[8px] md:text-[10px] font-bold px-1.5 py-0.5 rounded-sm">L{gameState.level}</div>
-             </div>
-             <div className="text-[7px] md:text-[9px] text-gray-400 font-mono text-center tracking-widest uppercase">Score</div>
-           </div>
-           <button
-             onClick={() => setShowCollection(true)}
-             className="flex items-center gap-1 bg-purple-900/40 border border-purple-500/30 rounded px-1.5 py-0.5 hover:bg-purple-900/60 transition-colors"
-           >
-             <Library size={10} className="text-purple-400" />
-             <span className="text-[9px] text-purple-300 font-mono">{saveData.collection.length}</span>
-           </button>
-        </div>
+          {/* MOBILE: Singola riga compatta */}
+          {isMobile ? (
+            <>
+              {/* Menu hamburger */}
+              <button onClick={confirmBackToMenu} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <Menu size={20} className="text-gray-400" />
+              </button>
 
-        {/* Center: Combo or Mode indicator */}
-        {gameState.mode === 'Timed' ? (
-             <div className="flex flex-col items-center bg-black/40 px-3 py-1 rounded-full border border-red-500/50">
-                <Clock className="w-3 h-3 md:w-4 md:h-4 text-red-400 mb-0.5" />
-                <span className="font-mono text-xl md:text-2xl text-red-400">{gameState.timeLeft}s</span>
-             </div>
-        ) : gameState.mode === 'SuddenDeath' ? (
-             <div className="flex flex-col items-center animate-pulse">
-                <AlertTriangle className="w-6 h-6 md:w-8 md:h-8 text-red-500" />
-                <span className="text-[8px] md:text-[10px] font-black text-red-500 uppercase">Sudden Death</span>
-             </div>
-        ) : (
-            <div className={`flex flex-col items-center gap-0.5 md:gap-1 transition-all duration-300 ${gameState.combo > 1 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}>
-               <div className="flex items-center gap-1">
-                 <span className="text-2xl md:text-3xl font-marker text-neon-pink rotate-[-10deg] drop-shadow-md">{gameState.combo}x!</span>
-                 {gameState.comboMultiplier > 1 && (
-                   <span className={`${
-                     gameState.combo >= 5 ? 'text-4xl' : gameState.combo >= 3 ? 'text-2xl' : 'text-xl'
-                   } font-black ${
-                     gameState.combo >= 5 ? COMBO_TIER_COLORS.high : gameState.combo >= 3 ? COMBO_TIER_COLORS.mid : COMBO_TIER_COLORS.low
-                   } bg-black/50 px-2 py-1 rounded border-2 transition-all`}>
-                     ×{gameState.comboMultiplier}
-                   </span>
-                 )}
-               </div>
-               {gameState.combo > 1 && (
-                 <div className="w-14 md:w-16 h-1 bg-black/50 rounded-full overflow-hidden border border-neon-pink/30">
-                   <div
-                     className="h-full bg-gradient-to-r from-neon-pink to-purple-500 transition-all duration-100 ease-linear"
-                     style={{ width: `${comboTimerPercent}%` }}
-                   />
-                 </div>
-               )}
-            </div>
-        )}
+              {/* Level badge */}
+              <div className="bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded">L{gameState.level}</div>
 
-        {/* Right: XP + Settings */}
-        <div className="flex flex-col w-16 md:w-20">
-           <div className="flex justify-between items-center mb-0.5 md:mb-1">
-               <span className="text-[7px] md:text-[9px] text-gray-300 font-bold tracking-widest uppercase">XP</span>
-               <button onClick={() => setShowAudioSettings(true)} className="text-gray-400 hover:text-white transition-colors"><Settings size={10} className="md:w-3 md:h-3" /></button>
-           </div>
-           <div className="h-2 md:h-2.5 bg-[#111] rounded-sm border border-gray-600 relative overflow-hidden flex gap-0.5 p-0.5">
-              {Array.from({ length: 10 }).map((_, i) => (
-                 <div key={i} className={`flex-1 rounded-sm transition-colors duration-200 ${(gameState.xp % 100) / 10 > i ? (i > 7 ? 'bg-red-500' : 'bg-green-500') : 'bg-[#222]'}`} />
-              ))}
-           </div>
-        </div>
+              {/* Score */}
+              <div className="text-lg font-display text-white">{gameState.score.toString().padStart(4, '0')}</div>
+
+              {/* Collection */}
+              <button onClick={() => setShowCollection(true)} className="flex items-center gap-1 bg-purple-900/60 rounded px-2 py-1">
+                <Library size={14} className="text-purple-300" />
+                <span className="text-xs text-white font-mono">{saveData.collection.length}</span>
+              </button>
+
+              {/* Moves */}
+              <div ref={movesCounterRef} className={`flex items-center gap-1 px-2 py-1 rounded ${gameState.movesLeft <= 3 ? 'bg-red-500/80 animate-pulse' : 'bg-black/40'}`}>
+                <Heart size={14} className={gameState.movesLeft <= 3 ? 'text-white' : 'text-red-400'} fill={gameState.movesLeft <= 3 ? 'white' : 'none'} />
+                <span className="text-sm font-mono text-white font-bold">{gameState.movesLeft === 999 ? '∞' : gameState.movesLeft}</span>
+              </div>
+
+              {/* Settings */}
+              <button onClick={() => setShowAudioSettings(true)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                <Settings size={18} className="text-gray-400" />
+              </button>
+            </>
+          ) : (
+            // DESKTOP: Layout normale con più spazio
+            <>
+              {/* Top Row: Breadcrumb + Quick Restart */}
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={confirmBackToMenu}
+                  className="flex items-center gap-1 text-xs text-gray-400 hover:text-white transition-colors"
+                >
+                  <span>Menu</span>
+                  <ChevronRight size={12} className="text-gray-600" />
+                  <span className="text-white font-medium">
+                    Level {levelIndex + 1}
+                    {gameState.isEndlessMode && ' (Endless)'}
+                  </span>
+                </button>
+                <button
+                  onClick={confirmRestart}
+                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
+                  title="Restart Level"
+                >
+                  <RotateCcw size={16} className="text-gray-400 hover:text-white" />
+                </button>
+              </div>
+
+              {/* Bottom Row: Game Info */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="border-2 border-gray-700/40 bg-black/30 backdrop-blur-sm rounded-lg px-3 py-1.5 flex items-baseline gap-2">
+                    <div className="text-2xl font-display text-white">{gameState.score.toString().padStart(4, '0')}</div>
+                    <div className="bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded">L{gameState.level}</div>
+                  </div>
+                  <button onClick={() => setShowCollection(true)} className="flex items-center gap-1 bg-purple-900/40 border border-purple-500/30 rounded px-2 py-1 hover:bg-purple-900/60 transition-colors">
+                    <Library size={12} className="text-purple-400" />
+                    <span className="text-xs text-purple-300 font-mono">{saveData.collection.length}</span>
+                  </button>
+                  <div ref={movesCounterRef} className={`px-3 py-1.5 rounded-lg border-2 ${gameState.movesLeft <= 3 ? 'border-red-500 bg-red-500/20 animate-pulse' : 'border-gray-600/40 bg-black/30'} flex items-center gap-2`}>
+                    <Heart size={16} className={gameState.movesLeft <= 3 ? 'text-red-400' : 'text-gray-400'} />
+                    <span className="text-lg font-mono text-white font-bold">{gameState.movesLeft === 999 ? '∞' : gameState.movesLeft}</span>
+                  </div>
+                </div>
+                <button onClick={() => setShowAudioSettings(true)} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
+                  <Settings size={20} className="text-gray-400" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-3xl flex flex-col justify-end items-center relative z-10 pb-4 md:pb-8">
+      {/* MAIN - SCAFFALI AL CENTRO (MOBILE: verticale | DESKTOP: orizzontale) */}
+      <main className={`w-full max-w-3xl flex flex-col items-center relative z-10 ${isMobile ? 'flex-1 justify-center py-4' : 'justify-end pb-8'}`}>
         {feedback && (
           <div className="absolute top-10 z-50 animate-bounce pointer-events-none">
              <div className={`px-4 py-2 rounded-lg font-display text-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-2 border-white ${feedback.type === 'good' ? 'bg-green-600 rotate-2' : feedback.type === 'bonus' ? 'bg-yellow-500 rotate-0 text-black' : 'bg-red-600 -rotate-2'} text-white`}>
@@ -1593,7 +1582,12 @@ export default function App() {
 
         {!prefersReducedMotion && explosions.map(ex => <ParticleExplosion key={ex.id} x={ex.x} y={ex.y} color={ex.color} genre={ex.genre} isMobile={isMobile} />)}
 
-        <div className="w-full overflow-x-auto no-scrollbar flex items-end gap-2 md:gap-4 px-4 md:px-8 py-4 md:py-10 snap-x snap-mandatory h-[260px] md:h-[300px]" style={{ touchAction: 'pan-x' }}>
+        {/* SCAFFALI - LAYOUT VERTICALE SU MOBILE, ORIZZONTALE SU DESKTOP */}
+        <div className={`w-full ${
+          isMobile
+            ? 'flex flex-col items-center gap-3 overflow-y-auto no-scrollbar py-2 px-4'
+            : 'overflow-x-auto no-scrollbar flex items-end gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
+        }`} style={{ touchAction: isMobile ? 'pan-y' : 'pan-x' }}>
           {crates.map(crate => {
             let highlightState: 'none' | 'neutral' | 'valid' | 'invalid' = 'none';
             if (magnetTargetId === crate.id) {
@@ -1602,12 +1596,11 @@ export default function App() {
                 else if (activeVinyl.genre === crate.genre) highlightState = 'valid';
                 else highlightState = 'invalid';
             }
-            // Apply hint spotlight
             if (hintSpotlight?.crateId === crate.id) {
               highlightState = 'valid';
             }
             return (
-                <div key={crate.id} className={`snap-center pt-2 md:pt-10 transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''}`}>
+                <div key={crate.id} className={`${isMobile ? 'w-full max-w-[280px]' : 'snap-center pt-10'} transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''}`}>
                   <CrateBox
                     crate={crate}
                     highlightState={highlightState}
@@ -1619,17 +1612,12 @@ export default function App() {
                 </div>
             );
           })}
-          <div className="w-4 shrink-0"></div>
-        </div>
-        
-        <div ref={trashRef} className={`absolute bottom-4 right-4 w-20 h-24 border-4 border-gray-700 bg-gray-800 rounded-lg flex flex-col items-center justify-end pb-2 transition-transform duration-200 ${magnetTargetId === 'trash' ? 'scale-110 border-green-500 shadow-[0_0_20px_green]' : 'scale-100 opacity-80'}`}>
-             <div className="absolute -top-3 w-22 h-4 bg-gray-700 rounded-t-sm w-[110%]"></div>
-             <Trash2 size={32} className={`${magnetTargetId === 'trash' ? 'text-green-500' : 'text-gray-500'} mb-2`} />
-             <span className="text-[10px] font-mono text-gray-400">TRASH</span>
+          {!isMobile && <div className="w-4 shrink-0"></div>}
         </div>
       </main>
 
-      <section className="w-full h-[240px] md:h-[320px] bg-wood-dark shadow-[0_-10px_50px_rgba(0,0,0,1)] border-t-[8px] border-[#2d1b15] relative z-20 flex flex-col shrink-0 animate-[shelf-sway_8s_ease-in-out_infinite]">
+      {/* SECTION - CODA VINILI IN BASSO (MOBILE: più grande e con cestino | DESKTOP: normale) */}
+      <section className={`w-full bg-wood-dark shadow-[0_-10px_50px_rgba(0,0,0,1)] border-t-[8px] border-[#2d1b15] relative z-20 flex flex-col shrink-0 animate-[shelf-sway_8s_ease-in-out_infinite] ${isMobile ? 'h-[300px]' : 'h-[320px]'}`}>
          <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/20"></div>
          <style>{`
            @keyframes shelf-sway {
@@ -1638,73 +1626,109 @@ export default function App() {
              75% { transform: translateY(1px) rotate(-0.2deg); }
            }
          `}</style>
-         <div className="absolute -top-8 md:-top-10 left-4 md:left-6 transform flex items-start gap-3">
-            {/* Moves Counter */}
-            <div>
-              <div ref={movesCounterRef} className={`bg-black/90 px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg border-2 ${gameState.movesLeft <= 3 ? 'border-red-500 animate-pulse' : 'border-gray-700'} shadow-xl flex flex-col items-center min-w-[60px] md:min-w-[70px] relative`}>
-                 {gameState.movesLeft === 1 && (
-                   <AlertTriangle className="absolute -top-2 -right-2 text-red-500 animate-bounce" size={16} />
-                 )}
-                 <span className="text-[7px] md:text-[8px] text-gray-400 tracking-[0.2em] mb-0.5 md:mb-1 uppercase">Moves</span>
-                 <div className={`text-lg md:text-xl font-mono leading-none ${gameState.movesLeft <= 3 ? 'text-red-500' : 'text-white'}`}>{gameState.movesLeft === 999 ? '∞' : gameState.movesLeft}</div>
-              </div>
-              <div className="absolute top-full left-1/2 w-0.5 h-8 md:h-10 bg-black -z-10"></div>
-            </div>
 
-            {/* Vinyl Progress */}
-            <div className="bg-black/90 px-3 py-1.5 rounded-lg border-2 border-gray-700 shadow-xl">
-              <div className="flex items-center gap-2 mb-1">
-                <Disc size={14} className="text-cyan-400" />
-                <span className="text-white text-xs font-mono">{crates.reduce((sum, c) => sum + c.filled, 0)}/{shelfVinyls.length + crates.reduce((sum, c) => sum + c.filled, 0)}</span>
-              </div>
-              <div className="w-20 h-1 bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-green-500 rounded-full transition-all duration-300"
-                  style={{
-                    width: `${((crates.reduce((sum, c) => sum + c.filled, 0)) / (shelfVinyls.length + crates.reduce((sum, c) => sum + c.filled, 0))) * 100}%`
-                  }}
-                />
-              </div>
-            </div>
-         </div>
-
-         <div className="flex-1 overflow-x-auto overflow-y-hidden no-scrollbar flex items-center px-6 gap-0 pt-4 md:pt-6" style={{ touchAction: 'pan-x' }}>
-            {shelfVinyls.map((vinyl, idx) => {
-              const isActive = activeVinyl?.id === vinyl.id;
-              const overlapClass = idx > 0 ? "-ml-8 md:-ml-10" : ""; // Reduced from -ml-16/-ml-20
-              const tilt = shelfTilts.current[vinyl.id] || 0;
-              return (
-                <div
-                  key={vinyl.id}
-                  ref={idx === 0 ? firstVinylRef : null}
-                  className={`
-                    flex-shrink-0 transition-all duration-300
-                    md:hover:-translate-y-8 md:hover:z-50 md:hover:mr-12 md:hover:ml-6
-                    group z-0
-                    ${isActive ? 'opacity-0' : 'opacity-100'}
-                    ${overlapClass}
-                    ${hintSpotlight?.vinylId === vinyl.id ? 'ring-4 ring-cyan-400 animate-pulse z-50' : ''}
-                  `}
-                  onPointerDown={(e) => handlePointerDown(e, vinyl)}
-                  style={{
-                    transform: `rotate(${tilt}deg)`,
-                    touchAction: 'none',
-                    filter: isActive ? 'none' : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))'
-                  }}
-                >
-                  <VinylCover vinyl={vinyl} size={isMobile ? 120 : 150} className={`${vinyl.dustLevel > 0 ? 'cursor-pointer' : 'cursor-grab'}`} isMobile={isMobile} />
+         {/* Moves Counter e Vinyl Progress - SOLO SU DESKTOP (su mobile sono nell'HUD) */}
+         {!isMobile && (
+           <div className="absolute -top-8 md:-top-10 left-4 md:left-6 transform flex items-start gap-3">
+              {/* Vinyl Progress */}
+              <div className="bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg border-2 border-gray-600/40 shadow-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Disc size={14} className="text-cyan-400" />
+                  <span className="text-white text-xs font-mono">{crates.reduce((sum, c) => sum + c.filled, 0)}/{shelfVinyls.length + crates.reduce((sum, c) => sum + c.filled, 0)}</span>
                 </div>
-              );
-            })}
-            
-            {shelfVinyls.length === 0 && (
-              <div className="w-full flex flex-col items-center justify-center opacity-30 mt-10">
-                <Disc size={48} className="mb-2" />
-                <span className="font-marker text-xl">Sold Out!</span>
+                <div className="w-20 h-1 bg-gray-700 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-green-500 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${((crates.reduce((sum, c) => sum + c.filled, 0)) / (shelfVinyls.length + crates.reduce((sum, c) => sum + c.filled, 0))) * 100}%`
+                    }}
+                  />
+                </div>
+              </div>
+           </div>
+         )}
+
+         {/* CODA VINILI - con cestino su mobile */}
+         <div className={`flex-1 flex items-center ${isMobile ? 'px-4 py-3 justify-between' : 'overflow-x-auto overflow-y-hidden no-scrollbar px-6 pt-6'} gap-0`} style={{ touchAction: 'pan-x' }}>
+            {/* VINILI - più grandi e distanziati su mobile */}
+            {isMobile ? (
+              // MOBILE: vinili più grandi, meno overlap
+              <div className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-2">
+                {shelfVinyls.map((vinyl, idx) => {
+                  const isActive = activeVinyl?.id === vinyl.id;
+                  const tilt = shelfTilts.current[vinyl.id] || 0;
+                  return (
+                    <div
+                      key={vinyl.id}
+                      ref={idx === 0 ? firstVinylRef : null}
+                      className={`flex-shrink-0 transition-all duration-300 ${isActive ? 'opacity-0' : 'opacity-100'} ${hintSpotlight?.vinylId === vinyl.id ? 'ring-4 ring-cyan-400 animate-pulse z-50' : ''}`}
+                      onPointerDown={(e) => handlePointerDown(e, vinyl)}
+                      style={{
+                        transform: `rotate(${tilt}deg)`,
+                        touchAction: 'none',
+                        filter: isActive ? 'none' : 'drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5))'
+                      }}
+                    >
+                      <VinylCover vinyl={vinyl} size={170} className={`${vinyl.dustLevel > 0 ? 'cursor-pointer' : 'cursor-grab'}`} isMobile={isMobile} />
+                    </div>
+                  );
+                })}
+                {shelfVinyls.length === 0 && (
+                  <div className="w-full flex flex-col items-center justify-center opacity-30">
+                    <Disc size={48} className="mb-2" />
+                    <span className="font-marker text-xl">Sold Out!</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              // DESKTOP: layout normale con overlap
+              <>
+                {shelfVinyls.map((vinyl, idx) => {
+                  const isActive = activeVinyl?.id === vinyl.id;
+                  const overlapClass = idx > 0 ? "-ml-10" : "";
+                  const tilt = shelfTilts.current[vinyl.id] || 0;
+                  return (
+                    <div
+                      key={vinyl.id}
+                      ref={idx === 0 ? firstVinylRef : null}
+                      className={`flex-shrink-0 transition-all duration-300 md:hover:-translate-y-8 md:hover:z-50 md:hover:mr-12 md:hover:ml-6 group z-0 ${isActive ? 'opacity-0' : 'opacity-100'} ${overlapClass} ${hintSpotlight?.vinylId === vinyl.id ? 'ring-4 ring-cyan-400 animate-pulse z-50' : ''}`}
+                      onPointerDown={(e) => handlePointerDown(e, vinyl)}
+                      style={{
+                        transform: `rotate(${tilt}deg)`,
+                        touchAction: 'none',
+                        filter: isActive ? 'none' : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))'
+                      }}
+                    >
+                      <VinylCover vinyl={vinyl} size={175} className={`${vinyl.dustLevel > 0 ? 'cursor-pointer' : 'cursor-grab'}`} isMobile={isMobile} />
+                    </div>
+                  );
+                })}
+                {shelfVinyls.length === 0 && (
+                  <div className="w-full flex flex-col items-center justify-center opacity-30 mt-10">
+                    <Disc size={48} className="mb-2" />
+                    <span className="font-marker text-xl">Sold Out!</span>
+                  </div>
+                )}
+                <div className="w-24 flex-shrink-0"></div>
+              </>
+            )}
+
+            {/* CESTINO - dentro la section su mobile, absolute nel main su desktop */}
+            {isMobile && (
+              <div ref={trashRef} className={`flex-shrink-0 w-[80px] h-[120px] border-4 bg-gray-800/90 backdrop-blur rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 shadow-2xl ${magnetTargetId === 'trash' ? 'scale-110 border-green-500 bg-green-900/60 shadow-[0_0_40px_rgba(34,197,94,1)]' : 'scale-100 border-gray-700'}`}>
+                <Trash2 size={36} className={`${magnetTargetId === 'trash' ? 'text-green-400' : 'text-gray-400'} transition-colors`} />
+                <span className="text-xs font-bold font-display text-gray-300 uppercase tracking-wide">TRASH</span>
               </div>
             )}
-            <div className="w-24 flex-shrink-0"></div>
          </div>
+
+         {/* CESTINO DESKTOP - absolute sopra gli scaffali */}
+         {!isMobile && (
+           <div ref={trashRef} className={`absolute bottom-[320px] right-8 w-28 h-32 border-4 bg-gray-800/90 backdrop-blur rounded-lg flex flex-col items-center justify-center gap-2 transition-all duration-200 shadow-2xl ${magnetTargetId === 'trash' ? 'scale-110 border-green-500 bg-green-900/40 shadow-[0_0_30px_rgba(34,197,94,0.8)]' : 'scale-100 border-gray-700'}`}>
+             <Trash2 size={40} className={`${magnetTargetId === 'trash' ? 'text-green-400' : 'text-gray-400'} transition-colors`} />
+             <span className="text-sm font-bold font-display text-gray-300 uppercase tracking-wide">TRASH</span>
+           </div>
+         )}
       </section>
 
       {flyingVinyls.map(item => <FlyingVinylItem key={item.id} item={item} onComplete={handleLanding} isMobile={isMobile} />)}
@@ -1719,7 +1743,7 @@ export default function App() {
                     transition: 'filter 0.15s ease-out'
                 }}
             >
-                <VinylCover vinyl={activeVinyl} size={isMobile ? 130 : 150} className="shadow-[0_40px_80px_rgba(0,0,0,0.8)]" isMobile={isMobile} />
+                <VinylCover vinyl={activeVinyl} size={isMobile ? 180 : 180} className="shadow-[0_40px_80px_rgba(0,0,0,0.8)] scale-110" isMobile={isMobile} />
             </div>
         </div>
       )}

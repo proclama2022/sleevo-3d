@@ -49,35 +49,35 @@ const VINYL_SLEEVE_IMAGES: Record<Genre, string> = {
 
 // --- ART STYLES ---
 const VinylArtLayer = ({ genre, isGold, isMobile = false }: { genre: Genre, isGold: boolean, isMobile?: boolean }) => {
-  // Mobile: use solid colors + patterns instead of dark AI images
+  // Mobile: use solid colors + clean design for instant recognition
   if (isMobile) {
     return (
       <div className="absolute inset-0 overflow-hidden">
-        {/* Bright gradient background */}
+        {/* Strong gradient background - more vibrant */}
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(135deg, ${GENRE_ACCENT_COLORS[genre]}dd 0%, ${GENRE_ACCENT_COLORS[genre]}99 50%, ${GENRE_ACCENT_COLORS[genre]}cc 100%)`
+            background: `linear-gradient(135deg, ${GENRE_ACCENT_COLORS[genre]} 0%, ${GENRE_ACCENT_COLORS[genre]}dd 100%)`
           }}
         />
-        {/* Large centered icon */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+        {/* Large centered icon - more visible */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-15">
           {React.createElement(GENRE_ICONS[genre], {
-            size: 120,
-            strokeWidth: 1.5,
+            size: 140,
+            strokeWidth: 2,
             style: { color: 'white' }
           })}
         </div>
-        {/* Simple pattern overlay */}
+        {/* Subtle radial light effect for depth */}
         <div
-          className="absolute inset-0 opacity-10"
+          className="absolute inset-0"
           style={{
-            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 20px)`
+            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.2) 0%, transparent 50%)'
           }}
         />
         {/* Gold overlay effect */}
         {isGold && (
-          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/40 via-transparent to-yellow-600/40"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-300/50 via-yellow-400/30 to-yellow-600/50"></div>
         )}
       </div>
     );
@@ -307,43 +307,54 @@ export const VinylCover: React.FC<VinylCoverProps> = React.memo(({
             <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/85 to-transparent z-10"></div>
             <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-black/85 to-transparent z-10"></div>
 
-            <div className="absolute inset-0 flex flex-col justify-between p-3 z-20">
-              <div className="flex justify-between items-start">
-                <h3 className="font-display text-white text-xl leading-none font-bold drop-shadow-[0_3px_10px_rgba(0,0,0,1)] truncate flex-1" style={{ textShadow: '0 0 8px rgba(0,0,0,1), 0 3px 10px rgba(0,0,0,1), 0 0 2px rgba(255,255,255,0.3)' }}>{artist}</h3>
-                {/* Special Disc Badge */}
+            <div className="absolute inset-0 flex flex-col justify-center items-center p-2 z-20">
+              {/* TITOLO GRANDE E LEGGIBILE - focus principale */}
+              <div className="text-center flex flex-col items-center gap-1 w-full">
+                {/* Special Disc Badge - più grande e centrato */}
                 {vinyl.specialType && (
-                  <div className="ml-2 flex-shrink-0">
+                  <div className="mb-1">
                     {vinyl.specialType === 'diamond' && (
-                      <div className="bg-cyan-500 rounded-full p-1 shadow-[0_0_10px_rgba(6,182,212,0.8)]">
-                        <Gem size={14} className="text-white" />
+                      <div className="bg-cyan-500 rounded-full p-1.5 shadow-[0_0_15px_rgba(6,182,212,1)]">
+                        <Gem size={20} className="text-white" />
                       </div>
                     )}
                     {vinyl.specialType === 'wildcard' && (
-                      <div className="bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 rounded-full p-1 shadow-[0_0_10px_rgba(255,255,255,0.6)]">
-                        <Zap size={14} className="text-white" />
+                      <div className="bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 rounded-full p-1.5 shadow-[0_0_15px_rgba(255,255,255,0.8)]">
+                        <Zap size={20} className="text-white" />
                       </div>
                     )}
                     {vinyl.specialType === 'bomb' && (
-                      <div className="bg-red-600 rounded-full p-1 shadow-[0_0_10px_rgba(220,38,38,0.8)] animate-pulse">
-                        <Bomb size={14} className="text-white" />
+                      <div className="bg-red-600 rounded-full p-1.5 shadow-[0_0_15px_rgba(220,38,38,1)] animate-pulse">
+                        <Bomb size={20} className="text-white" />
                       </div>
                     )}
                     {vinyl.specialType === 'chain' && (
-                      <div className="bg-purple-500 rounded-full p-1 shadow-[0_0_10px_rgba(168,85,247,0.8)]">
-                        <Link size={14} className="text-white" />
+                      <div className="bg-purple-500 rounded-full p-1.5 shadow-[0_0_15px_rgba(168,85,247,1)]">
+                        <Link size={20} className="text-white" />
                       </div>
                     )}
                     {vinyl.specialType === 'time' && (
-                      <div className="bg-green-500 rounded-full p-1 shadow-[0_0_10px_rgba(34,197,94,0.8)]">
-                        <Clock size={14} className="text-white" />
+                      <div className="bg-green-500 rounded-full p-1.5 shadow-[0_0_15px_rgba(34,197,94,1)]">
+                        <Clock size={20} className="text-white" />
                       </div>
                     )}
                   </div>
                 )}
-              </div>
-              <div className="flex justify-between items-end">
-                <span className="font-marker text-white text-sm leading-tight max-w-[75%] -rotate-2 font-bold" style={{ textShadow: '0 0 8px rgba(0,0,0,1), 0 3px 10px rgba(0,0,0,1), 0 0 2px rgba(255,255,255,0.3)' }}>{title}</span>
-                {isGold && <Star size={16} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" />}
+
+                {/* Titolo - molto grande */}
+                <h3 className="font-display text-white text-2xl md:text-3xl leading-tight font-black text-center max-w-full px-1 line-clamp-2"
+                    style={{ textShadow: '0 0 12px rgba(0,0,0,1), 0 4px 15px rgba(0,0,0,1), 0 0 3px rgba(255,255,255,0.4)' }}>
+                  {title}
+                </h3>
+
+                {/* Artist - piccolo e sottile */}
+                <p className="font-marker text-white/80 text-xs leading-none text-center truncate w-full px-2"
+                   style={{ textShadow: '0 0 6px rgba(0,0,0,1), 0 2px 8px rgba(0,0,0,1)' }}>
+                  {artist}
+                </p>
+
+                {/* Gold star - piccolo sotto */}
+                {isGold && <Star size={18} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,1)] mt-1" />}
               </div>
             </div>
           </>

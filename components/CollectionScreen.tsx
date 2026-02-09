@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { CollectionItem, GENRE_COLORS, Genre } from '../types';
 import { VinylCover } from './VinylCover';
 import { ArrowLeft, Calendar, Disc3, Trophy, Sparkles, Search } from 'lucide-react';
+import { useWindowSize } from '../hooks/useWindowSize';
 
 interface CollectionScreenProps {
   collection: CollectionItem[];
@@ -14,6 +15,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({
   totalRareVinyls,
   onClose,
 }) => {
+  const { isMobile } = useWindowSize();
   const [filterGenre, setFilterGenre] = useState<Genre | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -173,7 +175,7 @@ export const CollectionScreen: React.FC<CollectionScreenProps> = ({
                   >
                     {/* Vinyl Cover */}
                     <div className="flex justify-center mb-3">
-                      <VinylCover vinyl={mockVinyl} size={140} />
+                      <VinylCover vinyl={mockVinyl} size={140} isMobile={isMobile} />
                     </div>
 
                     {/* Info */}

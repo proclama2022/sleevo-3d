@@ -2,6 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { Crate, GENRE_COLORS, Genre, Vinyl } from '../types';
 import { Star, Zap, Music, Heart, Sparkles, Disc, Skull, Activity, Globe, CheckCircle2, X } from 'lucide-react';
 import { VinylCover } from './VinylCover';
+import { useWindowSize } from '../hooks/useWindowSize';
 
 interface CrateBoxProps {
   crate: Crate;
@@ -12,20 +13,20 @@ interface CrateBoxProps {
   onRegisterStackRef?: (id: string, el: HTMLDivElement | null) => void;
 }
 
-// Visual theme configuration for each genre
+// Visual theme configuration for each genre - MOLTO più chiari per visibilità
 const CRATE_THEMES: Record<Genre, {
   woodColor: string;
   accentColor: string;
   textureOpacity: number;
   Icon: React.ElementType;
 }> = {
-  [Genre.Rock]: { woodColor: '#3e2723', accentColor: '#ef4444', textureOpacity: 0.6, Icon: Zap },
-  [Genre.Jazz]: { woodColor: '#4e342e', accentColor: '#3b82f6', textureOpacity: 0.4, Icon: Music },
-  [Genre.Soul]: { woodColor: '#5d4037', accentColor: '#eab308', textureOpacity: 0.5, Icon: Heart },
-  [Genre.Funk]: { woodColor: '#4a332a', accentColor: '#f97316', textureOpacity: 0.5, Icon: Sparkles },
-  [Genre.Disco]: { woodColor: '#262626', accentColor: '#a855f7', textureOpacity: 0.3, Icon: Disc }, // Painted black wood
-  [Genre.Punk]: { woodColor: '#d7ccc8', accentColor: '#db2777', textureOpacity: 0.8, Icon: Skull }, // Bleached wood
-  [Genre.Electronic]: { woodColor: '#212121', accentColor: '#06b6d4', textureOpacity: 0.2, Icon: Activity }, // Matte dark
+  [Genre.Rock]: { woodColor: '#6d4c41', accentColor: '#ef4444', textureOpacity: 0.6, Icon: Zap },
+  [Genre.Jazz]: { woodColor: '#795548', accentColor: '#3b82f6', textureOpacity: 0.4, Icon: Music },
+  [Genre.Soul]: { woodColor: '#8d6e63', accentColor: '#eab308', textureOpacity: 0.5, Icon: Heart },
+  [Genre.Funk]: { woodColor: '#7a5548', accentColor: '#f97316', textureOpacity: 0.5, Icon: Sparkles },
+  [Genre.Disco]: { woodColor: '#4a4a4a', accentColor: '#a855f7', textureOpacity: 0.3, Icon: Disc },
+  [Genre.Punk]: { woodColor: '#e0d4d0', accentColor: '#db2777', textureOpacity: 0.8, Icon: Skull },
+  [Genre.Electronic]: { woodColor: '#455a64', accentColor: '#06b6d4', textureOpacity: 0.2, Icon: Activity },
 };
 
 const CrateDeco = ({ genre }: { genre: Genre }) => {
@@ -93,6 +94,7 @@ const SLEEVE_ACCENTS = [
 ];
 
 export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightState, ghostVinyl, hideLabel, onRegisterRef, onRegisterStackRef }) => {
+  const { isMobile } = useWindowSize();
   const boxRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);
   const theme = CRATE_THEMES[crate.genre];
@@ -119,11 +121,15 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
     <div
       ref={boxRef}
       className={`
-        relative w-[130px] md:w-[160px] h-[170px] md:h-[190px] flex-shrink-0 flex flex-col items-center justify-end pb-0
+        relative flex-shrink-0 flex flex-col items-center justify-end pb-0
         transition-all duration-200 transform
         ${borderClass}
         ${highlightState !== 'none' ? 'z-10' : ''}
+        ${isMobile ? 'w-[240px] h-[280px]' : 'w-[160px] h-[190px]'}
       `}
+      style={{
+        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.7)) drop-shadow(0 0 20px rgba(255,255,255,0.1))',
+      }}
     >
       {/* Enhanced Highlight Effects */}
       {highlightState === 'valid' && (
@@ -153,35 +159,69 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
         </>
       )}
 
-      {/* --- BACK PANEL (Interior) --- */}
-      <div className="absolute inset-x-2 bottom-0 top-6 bg-[#0c0504] rounded-b-sm shadow-2xl overflow-visible -z-10">
+      {/* --- OUTER FRAME (Wood crate walls) - MOLTO PIÙ VISIBILE --- */}
+      <div 
+        className="absolute inset-x-0 bottom-0 top-4 rounded-lg shadow-2xl overflow-visible -z-20 border-4"
+        style={{
+          background: `linear-gradient(135deg, ${theme.woodColor} 0%, ${theme.woodColor}dd 100%)`,
+          borderColor: theme.accentColor,
+          boxShadow: `
+            0 8px 32px rgba(0,0,0,0.8),
+            inset 0 2px 4px rgba(255,255,255,0.1),
+            inset 0 -2px 4px rgba(0,0,0,0.3),
+            0 0 0 2px rgba(0,0,0,0.5)
+          `
+        }}
+      >
+        {/* Wood texture on frame */}
+        <div className="absolute inset-0 bg-wood opacity-40 mix-blend-overlay"></div>
+        {/* Wood grain lines */}
+        <div className="absolute inset-0 opacity-20" style={{ 
+          backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.3) 8px, rgba(0,0,0,0.3) 9px)'
+        }}></div>
+      </div>
 
-        {/* Inner shadow vignette for depth */}
-        <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_30px_rgba(0,0,0,0.9)] z-20"></div>
+      {/* --- INTERIOR SPACE (Dark container inside) - PIÙ PROFONDO --- */}
+      <div 
+        className="absolute inset-x-3 bottom-3 top-8 rounded-sm shadow-2xl overflow-visible -z-10"
+        style={{
+          backgroundColor: '#0a0806',
+          boxShadow: `
+            inset 0 0 50px rgba(0,0,0,1),
+            inset 0 4px 20px rgba(0,0,0,0.9),
+            0 0 0 3px rgba(0,0,0,0.8),
+            0 4px 12px rgba(0,0,0,0.6)
+          `
+        }}
+      >
+        {/* Very deep inner shadows */}
+        <div className="absolute inset-0 pointer-events-none rounded-sm" style={{
+          boxShadow: 'inset 0 0 60px rgba(0,0,0,0.95), inset 0 20px 40px rgba(0,0,0,0.9)'
+        }}></div>
 
-        {/* Side Walls (Thickness) */}
-        <div className="absolute top-0 bottom-0 left-0 w-[4px] md:w-[6px] bg-gradient-to-r from-[#000] via-[#1a0f0d] to-[#2a1d18] z-10 border-r border-white/5"></div>
-        <div className="absolute top-0 bottom-0 right-0 w-[4px] md:w-[6px] bg-gradient-to-l from-[#000] via-[#1a0f0d] to-[#2a1d18] z-10 border-l border-white/5"></div>
+        {/* Side Walls (Thickness) - PIÙ EVIDENTI */}
+        <div className="absolute top-0 bottom-0 left-0 w-[6px] md:w-[8px] bg-gradient-to-r from-[#000] via-[#1a0f0d] to-[#2a1d18] z-10 border-r-2 border-white/10"></div>
+        <div className="absolute top-0 bottom-0 right-0 w-[6px] md:w-[8px] bg-gradient-to-l from-[#000] via-[#1a0f0d] to-[#2a1d18] z-10 border-l-2 border-white/10"></div>
 
-        {/* Back Wall Texture & Lighting */}
-        <div className="absolute inset-x-[6px] inset-y-0 bg-[#140b08] flex">
-            {/* Wood Grain Texture */}
-            <div className="absolute inset-0 bg-wood opacity-10 mix-blend-overlay"></div>
+        {/* Back Wall with visible wood planks */}
+        <div className="absolute inset-x-[8px] inset-y-0 bg-[#140b08] flex">
+            {/* Wood Grain Texture - MORE VISIBLE */}
+            <div className="absolute inset-0 bg-wood opacity-20 mix-blend-overlay"></div>
 
-            {/* Vertical Planks */}
-            <div className="flex-1 border-r border-black/30 bg-gradient-to-b from-black/40 to-transparent"></div>
-            <div className="flex-1 border-r border-black/30 bg-gradient-to-b from-black/20 to-transparent"></div>
-            <div className="flex-1 bg-gradient-to-b from-black/50 to-transparent"></div>
+            {/* Vertical Planks - più definiti */}
+            <div className="flex-1 border-r-2 border-black/50 bg-gradient-to-b from-black/60 to-black/30"></div>
+            <div className="flex-1 border-r-2 border-black/50 bg-gradient-to-b from-black/40 to-black/20"></div>
+            <div className="flex-1 bg-gradient-to-b from-black/70 to-black/40"></div>
 
             {/* Deep shadow at bottom where records sit */}
-            <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/70 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
 
-            {/* Top light leak */}
-            <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-white/5 to-transparent mix-blend-overlay"></div>
+            {/* Top light leak - più luminoso */}
+            <div className="absolute top-0 left-0 right-0 h-1/4 bg-gradient-to-b from-white/10 to-transparent mix-blend-overlay"></div>
         </div>
 
-        {/* Floor strip */}
-        <div className="absolute bottom-0 inset-x-0 h-3 bg-[#050202] z-10 border-t border-white/5 opacity-80"></div>
+        {/* Floor strip - più visibile */}
+        <div className="absolute bottom-0 inset-x-0 h-4 bg-black z-10 border-t-2 border-white/10"></div>
       </div>
 
       {/* --- STACKED SLEEVES (The Records) --- */}
@@ -314,33 +354,60 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
             transform: 'translateX(-50%)'
           }}
         >
-          <VinylCover vinyl={ghostVinyl} size={70} />
+          <VinylCover vinyl={ghostVinyl} size={70} isMobile={isMobile} />
         </div>
       )}
       </div>
 
-      {/* --- FRONT PANEL (The Wood Crate) --- */}
-      <div className="relative z-20 w-full h-[60px] md:h-[70px] flex flex-col items-center translate-y-1">
+      {/* --- FRONT PANEL (The Wood Crate Front) - MOLTO PIÙ TRIDIMENSIONALE --- */}
+      <div className="relative z-20 w-full h-[65px] md:h-[75px] flex flex-col items-center translate-y-1">
 
-         {/* COLORED BORDER (Top accent band) */}
+         {/* COLORED TOP RIM (opening edge) - MOLTO PIÙ SPESSO */}
          <div
-            className="absolute top-0 left-0 right-0 h-2 rounded-t-sm z-40 shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
+            className="absolute top-0 left-0 right-0 h-4 rounded-t-md z-40 border-t-2 border-b-2"
             style={{
-              backgroundColor: theme.accentColor,
-              boxShadow: `0 2px 8px ${theme.accentColor}80, inset 0 1px 0 rgba(255,255,255,0.3)`
+              background: `linear-gradient(180deg, ${theme.accentColor} 0%, ${theme.accentColor}dd 100%)`,
+              borderTopColor: `${theme.accentColor}ff`,
+              borderBottomColor: 'rgba(0,0,0,0.8)',
+              boxShadow: `
+                0 0 30px ${theme.accentColor}dd,
+                0 0 60px ${theme.accentColor}60,
+                inset 0 1px 2px rgba(255,255,255,0.6),
+                inset 0 -2px 4px rgba(0,0,0,0.4),
+                0 6px 16px rgba(0,0,0,0.7)
+              `
             }}
-         ></div>
-
-         {/* The main wood block */}
-         <div
-            className="absolute inset-0 rounded-sm shadow-[0_-5px_20px_rgba(0,0,0,0.7)] overflow-hidden border-t-[4px] border-[#00000030]"
-            style={{ backgroundColor: theme.woodColor }}
          >
-            <div className="absolute inset-0 opacity-30 pointer-events-none" style={{ background: `repeating-linear-gradient(0deg, transparent, transparent 32px, rgba(0,0,0,0.3) 33px, rgba(0,0,0,0.3) 34px)` }}></div>
-            <div className={`absolute inset-0 bg-wood opacity-${theme.textureOpacity * 100} mix-blend-overlay grayscale`}></div>
-            <div className="absolute inset-0 bg-radial-gradient from-transparent to-black/60 opacity-80"></div>
-            <div className="absolute top-0 left-2 w-2 h-full bg-black/20 border-r border-white/5"></div>
-            <div className="absolute top-0 right-2 w-2 h-full bg-black/20 border-l border-white/5"></div>
+           {/* Inner shine */}
+           <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent rounded-t-md"></div>
+         </div>
+
+         {/* The main wood front panel - CON BORDI E TEXTURE MOLTO EVIDENTI */}
+         <div
+            className="absolute inset-0 rounded-md shadow-2xl overflow-hidden border-4"
+            style={{
+              background: `linear-gradient(135deg, ${theme.woodColor} 0%, ${theme.woodColor}dd 50%, ${theme.woodColor}aa 100%)`,
+              borderColor: 'rgba(0,0,0,0.8)',
+              boxShadow: `
+                0 -8px 32px rgba(0,0,0,0.8),
+                0 4px 20px rgba(0,0,0,0.6),
+                inset 0 2px 6px rgba(255,255,255,0.15),
+                inset 0 -2px 6px rgba(0,0,0,0.4),
+                0 0 0 2px ${theme.accentColor}30
+              `
+            }}
+         >
+            {/* Horizontal wood planks */}
+            <div className="absolute inset-0 opacity-40 pointer-events-none" style={{ 
+              backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.4) 20px, rgba(0,0,0,0.4) 22px)'
+            }}></div>
+            {/* Wood grain texture - PIÙ VISIBILE */}
+            <div className="absolute inset-0 bg-wood opacity-60 mix-blend-overlay"></div>
+            {/* Vignette for depth */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40"></div>
+            {/* Side panels (thickness illusion) */}
+            <div className="absolute top-0 bottom-0 left-0 w-3 bg-gradient-to-r from-black/50 to-transparent border-r-2 border-black/30"></div>
+            <div className="absolute top-0 bottom-0 right-0 w-3 bg-gradient-to-l from-black/50 to-transparent border-l-2 border-black/30"></div>
             <CrateDeco genre={crate.genre} />
          </div>
 
@@ -349,18 +416,24 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
              <theme.Icon size={36} strokeWidth={2.5} style={{ color: theme.accentColor }} />
          </div>
 
-         {/* LABEL STICKER */}
+         {/* LABEL STICKER - MOLTO PIÙ GRANDE E CONTRASTATO */}
          {hideLabel ? (
-           /* Memory Challenge Mode: Show only icon (larger and colored) */
-           <div className="absolute top-2 w-12 h-12 bg-black/60 backdrop-blur rounded-full shadow-[0_0_15px_rgba(0,0,0,0.8)] flex items-center justify-center border-2 z-30 animate-pulse" style={{ borderColor: theme.accentColor }}>
-              <theme.Icon size={28} strokeWidth={2.5} style={{ color: theme.accentColor, filter: `drop-shadow(0 0 6px ${theme.accentColor})` }} />
+           // Memory Challenge Mode: Show only icon (larger and colored)
+           <div className="absolute top-2 w-14 h-14 bg-black/70 backdrop-blur rounded-full shadow-[0_0_20px_rgba(0,0,0,0.9)] flex items-center justify-center border-4 z-30 animate-pulse" style={{ borderColor: theme.accentColor }}>
+              <theme.Icon size={32} strokeWidth={2.5} style={{ color: theme.accentColor, filter: `drop-shadow(0 0 8px ${theme.accentColor})` }} />
            </div>
          ) : (
-           /* Normal Mode: Show text label */
-           <div className="absolute top-2 w-[70%] h-[28px] md:h-[32px] bg-[#d7ccc8] shadow-[1px_1px_3px_rgba(0,0,0,0.3)] rotate-[0.5deg] flex flex-col items-center justify-center border border-[#bcaaa4] z-30 rounded-[1px]">
-              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-6 h-3 bg-white/40 shadow-sm backdrop-blur-[1px]"></div>
-              <span className="font-marker text-[10px] md:text-xs text-gray-900 leading-none truncate w-full text-center px-1">
-                    {crate.genre}
+           // Normal Mode: PILL/BADGE GRANDE CON ICONA
+           <div
+             className="absolute top-2 h-[36px] md:h-[42px] px-3 md:px-4 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.4)] flex items-center justify-center gap-2 z-30 rounded-full border-4"
+             style={{
+               borderColor: theme.accentColor,
+               boxShadow: `0 4px 12px rgba(0,0,0,0.4), 0 0 0 3px ${theme.accentColor}, 0 0 20px ${theme.accentColor}60`
+             }}
+           >
+              <theme.Icon size={20} strokeWidth={2.5} style={{ color: theme.accentColor }} />
+              <span className="font-display text-base md:text-lg text-gray-900 font-bold leading-none uppercase tracking-wide">
+                {crate.genre}
               </span>
            </div>
          )}
