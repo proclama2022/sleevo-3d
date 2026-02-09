@@ -1571,7 +1571,7 @@ export default function App() {
       </header>
 
       {/* MAIN - SCAFFALI AL CENTRO (MOBILE: verticale | DESKTOP: orizzontale) */}
-      <main className={`w-full max-w-3xl flex flex-col items-center relative z-10 ${isMobile ? 'flex-1 justify-center py-4' : 'justify-end pb-8'}`}>
+      <main className={`w-full max-w-3xl flex flex-col items-center relative z-10 ${isMobile ? 'h-[40%] py-4' : 'flex-1 justify-end pb-8'}`}>
         {feedback && (
           <div className="absolute top-10 z-50 animate-bounce pointer-events-none">
              <div className={`px-4 py-2 rounded-lg font-display text-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-2 border-white ${feedback.type === 'good' ? 'bg-green-600 rotate-2' : feedback.type === 'bonus' ? 'bg-yellow-500 rotate-0 text-black' : 'bg-red-600 -rotate-2'} text-white`}>
