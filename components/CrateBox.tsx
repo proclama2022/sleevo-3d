@@ -125,7 +125,7 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
         transition-all duration-200 transform
         ${borderClass}
         ${highlightState !== 'none' ? 'z-10' : ''}
-        ${isMobile ? 'w-[150px] h-[190px]' : 'w-[160px] h-[190px]'}
+        ${isMobile ? 'w-[140px] h-[170px]' : 'w-[160px] h-[190px]'}
       `}
       style={{
         filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.7)) drop-shadow(0 0 20px rgba(255,255,255,0.1))',
