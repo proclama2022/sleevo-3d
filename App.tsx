@@ -215,7 +215,7 @@ const FlyingVinylItem: React.FC<{ item: FlyingVinyl; onComplete: (item: FlyingVi
   return (
     <div className="fixed top-0 left-0 pointer-events-none" style={{ ...style, zIndex: FLYING_VINYL_Z_INDEX }}>
        <div className="-translate-x-1/2 -translate-y-1/2">
-          <VinylCover vinyl={item.vinyl} size={vinylSize} className="shadow-2xl" />
+          <VinylCover vinyl={item.vinyl} size={vinylSize} className="shadow-2xl" isMobile={isMobile} />
        </div>
     </div>
   );
@@ -1689,7 +1689,7 @@ export default function App() {
                     filter: isActive ? 'none' : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))'
                   }}
                 >
-                  <VinylCover vinyl={vinyl} size={isMobile ? 120 : 150} className={`${vinyl.dustLevel > 0 ? 'cursor-pointer' : 'cursor-grab'}`} />
+                  <VinylCover vinyl={vinyl} size={isMobile ? 120 : 150} className={`${vinyl.dustLevel > 0 ? 'cursor-pointer' : 'cursor-grab'}`} isMobile={isMobile} />
                 </div>
               );
             })}
@@ -1716,7 +1716,7 @@ export default function App() {
                     transition: 'filter 0.15s ease-out'
                 }}
             >
-                <VinylCover vinyl={activeVinyl} size={isMobile ? 130 : 150} className="shadow-[0_40px_80px_rgba(0,0,0,0.8)]" />
+                <VinylCover vinyl={activeVinyl} size={isMobile ? 130 : 150} className="shadow-[0_40px_80px_rgba(0,0,0,0.8)]" isMobile={isMobile} />
             </div>
         </div>
       )}
@@ -2067,8 +2067,8 @@ export default function App() {
         visible={saveData.level >= 10 && gameState.status === 'playing'}
       />
 
-      {/* Secondary Objectives */}
-      {gameState.status === 'playing' && gameState.secondaryObjectives && gameState.secondaryObjectives.length > 0 && (
+      {/* Secondary Objectives - Hidden on mobile for cleaner UI */}
+      {!isMobile && gameState.status === 'playing' && gameState.secondaryObjectives && gameState.secondaryObjectives.length > 0 && (
         <SecondaryObjectives objectives={gameState.secondaryObjectives} isMobile={isMobile} />
       )}
 

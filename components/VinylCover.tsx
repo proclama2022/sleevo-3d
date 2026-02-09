@@ -7,10 +7,11 @@ import { loadSaveData } from '../services/storage';
 
 interface VinylCoverProps {
   vinyl: Vinyl;
-  size?: number; 
+  size?: number;
   className?: string;
   rotation?: number;
   isGhost?: boolean;
+  isMobile?: boolean;
 }
 
 // Genre icon mapping
@@ -47,7 +48,42 @@ const VINYL_SLEEVE_IMAGES: Record<Genre, string> = {
 };
 
 // --- ART STYLES ---
-const VinylArtLayer = ({ genre, isGold }: { genre: Genre, isGold: boolean }) => {
+const VinylArtLayer = ({ genre, isGold, isMobile = false }: { genre: Genre, isGold: boolean, isMobile?: boolean }) => {
+  // Mobile: use solid colors + patterns instead of dark AI images
+  if (isMobile) {
+    return (
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Bright gradient background */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(135deg, ${GENRE_ACCENT_COLORS[genre]}dd 0%, ${GENRE_ACCENT_COLORS[genre]}99 50%, ${GENRE_ACCENT_COLORS[genre]}cc 100%)`
+          }}
+        />
+        {/* Large centered icon */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-20">
+          {React.createElement(GENRE_ICONS[genre], {
+            size: 120,
+            strokeWidth: 1.5,
+            style: { color: 'white' }
+          })}
+        </div>
+        {/* Simple pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.3) 10px, rgba(255,255,255,0.3) 20px)`
+          }}
+        />
+        {/* Gold overlay effect */}
+        {isGold && (
+          <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/40 via-transparent to-yellow-600/40"></div>
+        )}
+      </div>
+    );
+  }
+
+  // Desktop: keep AI images
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* AI-Generated Album Cover */}
@@ -95,7 +131,8 @@ export const VinylCover: React.FC<VinylCoverProps> = React.memo(({
   size = 140,
   className = '',
   rotation = 0,
-  isGhost = false
+  isGhost = false,
+  isMobile = false
 }) => {
   const { isMystery, isRevealed, isGold, id, genre, artist, title, isTrash, dustLevel } = vinyl;
   const isMysteryState = isMystery && !isRevealed;
@@ -123,8 +160,8 @@ export const VinylCover: React.FC<VinylCoverProps> = React.memo(({
   const ArtLayer = useMemo(() => {
     if (isTrash) return <TrashArt />;
     if (isMysteryState) return null;
-    return <VinylArtLayer genre={genre} isGold={!!isGold} />;
-  }, [genre, isMysteryState, isGold, isTrash]);
+    return <VinylArtLayer genre={genre} isGold={!!isGold} isMobile={isMobile} />;
+  }, [genre, isMysteryState, isGold, isTrash, isMobile]);
 
   const getBgClass = () => {
     if (isTrash) return 'bg-[#2a2a2a]';
