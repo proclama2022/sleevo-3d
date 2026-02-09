@@ -117,8 +117,10 @@ export const GENRE_PATTERNS: Record<string, string> = {
 
 /**
  * Number of particles generated per explosion.
+ * Reduced on mobile for better performance.
  */
 export const PARTICLES_PER_EXPLOSION = 8;
+export const PARTICLES_PER_EXPLOSION_MOBILE = 4;
 
 /**
  * Distance (in pixels) particles travel from explosion center.

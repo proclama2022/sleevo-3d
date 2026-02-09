@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SecondaryObjective } from '../types';
 import { Target, CheckCircle2, ChevronDown, ChevronUp, Clock, Zap } from 'lucide-react';
 
 interface SecondaryObjectivesProps {
   objectives: SecondaryObjective[];
+  isMobile?: boolean;
 }
 
-export const SecondaryObjectives: React.FC<SecondaryObjectivesProps> = ({ objectives }) => {
-  const [isExpanded, setIsExpanded] = useState(true);
+export const SecondaryObjectives: React.FC<SecondaryObjectivesProps> = ({ objectives, isMobile = false }) => {
+  const [isExpanded, setIsExpanded] = useState(!isMobile); // Auto-collapsed on mobile
+
+  // Auto-collapse after 5s on mobile
+  useEffect(() => {
+    if (isMobile && isExpanded) {
+      const timer = setTimeout(() => setIsExpanded(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isMobile, isExpanded]);
 
   if (!objectives || objectives.length === 0) return null;
 

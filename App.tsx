@@ -28,6 +28,7 @@ import {
   MAGNET_RADIUS,
   TRASH_RADIUS,
   PARTICLES_PER_EXPLOSION,
+  PARTICLES_PER_EXPLOSION_MOBILE,
   PARTICLE_SPREAD_RADIUS,
   PARTICLE_ANIMATION_DURATION,
   PARTICLE_CLEANUP_DELAY,
@@ -50,7 +51,7 @@ import {
 } from './constants/gameConfig';
 
 // --- CSS BASED PARTICLE SYSTEM (Enhanced) ---
-const ParticleExplosion: React.FC<{ x: number, y: number, color: string, genre?: Genre }> = ({ x, y, color, genre }) => {
+const ParticleExplosion: React.FC<{ x: number, y: number, color: string, genre?: Genre, isMobile?: boolean }> = ({ x, y, color, genre, isMobile = false }) => {
   const config = genre ? {
     colors: (() => {
       switch(genre) {
@@ -65,12 +66,14 @@ const ParticleExplosion: React.FC<{ x: number, y: number, color: string, genre?:
       }
     })(),
     count: (() => {
+      // Ridotte per mobile
+      const multiplier = isMobile ? 0.5 : 1;
       switch(genre) {
-        case Genre.Rock: return 12;
-        case Genre.Funk: return 12;
-        case Genre.Disco: return 14;
-        case Genre.Punk: return 16;
-        default: return 10;
+        case Genre.Rock: return Math.ceil(12 * multiplier);
+        case Genre.Funk: return Math.ceil(12 * multiplier);
+        case Genre.Disco: return Math.ceil(14 * multiplier);
+        case Genre.Punk: return Math.ceil(16 * multiplier);
+        default: return Math.ceil(10 * multiplier);
       }
     })(),
     shape: (() => {
@@ -82,9 +85,9 @@ const ParticleExplosion: React.FC<{ x: number, y: number, color: string, genre?:
         default: return 'circle';
       }
     })()
-  } : { colors: [color], count: PARTICLES_PER_EXPLOSION, shape: 'circle' };
+  } : { colors: [color], count: isMobile ? PARTICLES_PER_EXPLOSION_MOBILE : PARTICLES_PER_EXPLOSION, shape: 'circle' };
 
-  const particleCount = Math.min(config.count, 16); // Performance limit
+  const particleCount = Math.min(config.count, isMobile ? 8 : 16); // Performance limit (reduced on mobile)
 
   return (
     <div className="fixed pointer-events-none" style={{ left: x, top: y, zIndex: PARTICLE_Z_INDEX }}>
@@ -305,7 +308,7 @@ export default function App() {
   const [showStats, setShowStats] = useState(false);
   const [isNewRecord, setIsNewRecord] = useState(false);
 
-  // In-game stats state
+  // In-game stats state (closed by default on mobile)
   const [showInGameStats, setShowInGameStats] = useState(false);
 
   // Confirm dialog state
@@ -1585,7 +1588,7 @@ export default function App() {
           </div>
         )}
 
-        {!prefersReducedMotion && explosions.map(ex => <ParticleExplosion key={ex.id} x={ex.x} y={ex.y} color={ex.color} genre={ex.genre} />)}
+        {!prefersReducedMotion && explosions.map(ex => <ParticleExplosion key={ex.id} x={ex.x} y={ex.y} color={ex.color} genre={ex.genre} isMobile={isMobile} />)}
 
         <div className="w-full overflow-x-auto no-scrollbar flex items-end gap-2 md:gap-4 px-4 md:px-8 py-4 md:py-10 snap-x snap-mandatory h-[260px] md:h-[300px]" style={{ touchAction: 'pan-x' }}>
           {crates.map(crate => {
@@ -2066,16 +2069,16 @@ export default function App() {
 
       {/* Secondary Objectives */}
       {gameState.status === 'playing' && gameState.secondaryObjectives && gameState.secondaryObjectives.length > 0 && (
-        <SecondaryObjectives objectives={gameState.secondaryObjectives} />
+        <SecondaryObjectives objectives={gameState.secondaryObjectives} isMobile={isMobile} />
       )}
 
       {/* Crate Swap Countdown Warning */}
       {swapCountdown !== null && swapCountdown > 0 && (
-        <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[250] pointer-events-none">
-          <div className="bg-red-900/90 backdrop-blur border-4 border-red-500 rounded-full w-24 h-24 flex items-center justify-center animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.8)]">
+        <div className={`fixed ${isMobile ? 'top-20' : 'top-1/2'} left-1/2 -translate-x-1/2 ${isMobile ? '' : '-translate-y-1/2'} z-[250] pointer-events-none`}>
+          <div className={`bg-red-900/90 backdrop-blur border-4 border-red-500 rounded-full ${isMobile ? 'w-16 h-16' : 'w-24 h-24'} flex items-center justify-center animate-pulse shadow-[0_0_30px_rgba(239,68,68,0.8)]`}>
             <div className="text-center">
-              <div className="text-white text-5xl font-black animate-bounce">{swapCountdown}</div>
-              <div className="text-red-300 text-xs font-marker mt-1">SWAP!</div>
+              <div className={`text-white ${isMobile ? 'text-3xl' : 'text-5xl'} font-black animate-bounce`}>{swapCountdown}</div>
+              {!isMobile && <div className="text-red-300 text-xs font-marker mt-1">SWAP!</div>}
             </div>
           </div>
         </div>
