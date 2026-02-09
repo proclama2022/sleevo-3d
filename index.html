@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- PWA / Mobile Settings -->
+    <meta name="theme-color" content="#1a1110" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Sleevo" />
+    
+    <!-- Links -->
+    <link rel="manifest" href="/manifest.json" />
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/public/icons/icon-180x180.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/public/icons/icon-167x167.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/public/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="120x120" href="/public/icons/icon-120x120.png" />
+    <link rel="apple-touch-icon" sizes="76x76" href="/public/icons/icon-76x76.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/public/icons/icon-192x192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/public/icons/icon-512x512.png" />
+
+    <title>Sleevo - Vinyl Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@400;600;800&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #111;
+        color: #f3f4f6;
+        overflow: hidden;
+        /* Prevent pull-to-refresh and rubber-banding on mobile */
+        overscroll-behavior: none;
+        touch-action: none;
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .font-display {
+        font-family: 'Righteous', cursive;
+      }
+      .font-marker {
+        font-family: 'Permanent Marker', cursive;
+      }
+      
+      /* --- TEXTURES --- */
+      
+      /* Brick Wall Background */
+      .bg-bricks {
+        background-color: #1a1110;
+        background-image: 
+          linear-gradient(335deg, rgba(0,0,0,0.3) 23px, transparent 23px),
+          linear-gradient(155deg, rgba(0,0,0,0.3) 23px, transparent 23px),
+          linear-gradient(335deg, rgba(0,0,0,0.3) 23px, transparent 23px),
+          linear-gradient(155deg, rgba(0,0,0,0.3) 23px, transparent 23px);
+        background-size: 58px 58px;
+        background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px;
+      }
+
+      /* Wood Grain Texture */
+      .bg-wood {
+        background-color: #5c4033;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"),
+        repeating-linear-gradient(90deg, transparent 0, transparent 2px, rgba(0,0,0,0.1) 3px, transparent 6px);
+      }
+      
+      .bg-wood-dark {
+        background-color: #3e2723;
+        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.2'/%3E%3C/svg%3E");
+      }
+
+      .vinyl-grooves {
+        background: repeating-radial-gradient(
+          #111 0, 
+          #111 2px, 
+          #222 3px, 
+          #222 4px
+        );
+      }
+      
+      .vinyl-shine {
+        background: linear-gradient(
+          135deg, 
+          rgba(255,255,255,0) 0%, 
+          rgba(255,255,255,0.05) 30%, 
+          rgba(255,255,255,0.2) 50%, 
+          rgba(255,255,255,0.05) 70%, 
+          rgba(255,255,255,0) 100%
+        );
+      }
+      
+      .bg-noise {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 50;
+        opacity: 0.04;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      }
+
+      .vignette {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        pointer-events: none;
+        z-index: 40;
+        background: radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%);
+      }
+
+      /* Neon Effects */
+      .text-neon-blue {
+        color: #fff;
+        text-shadow: 0 0 5px #00f, 0 0 10px #00f, 0 0 20px #00f, 0 0 40px #0ff;
+      }
+      .text-neon-pink {
+        color: #fff;
+        text-shadow: 0 0 5px #f0f, 0 0 10px #f0f, 0 0 20px #f0f, 0 0 40px #f0f;
+      }
+      
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      
+      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      .animate-spin-slow { animation: spin 4s linear infinite; }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@capacitor/core": "https://esm.sh/@capacitor/core@^8.0.2",
+    "@capacitor/haptics": "https://esm.sh/@capacitor/haptics@^8.0.0",
+    "@capacitor/status-bar": "https://esm.sh/@capacitor/status-bar@^8.0.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
