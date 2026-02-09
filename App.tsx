@@ -1674,12 +1674,12 @@ export default function App() {
 
         {!prefersReducedMotion && explosions.map(ex => <ParticleExplosion key={ex.id} x={ex.x} y={ex.y} color={ex.color} genre={ex.genre} isMobile={isMobile} />)}
 
-        {/* SCAFFALI - LAYOUT VERTICALE SU MOBILE, ORIZZONTALE SU DESKTOP */}
+        {/* SCAFFALI - LAYOUT ORIZZONTALE SU MOBILE E DESKTOP */}
         <div className={`w-full ${
           isMobile
-            ? 'flex flex-col items-center gap-3 overflow-y-auto no-scrollbar py-2 px-4'
+            ? 'flex flex-row items-center gap-2 overflow-x-auto no-scrollbar py-2 px-2 snap-x snap-mandatory'
             : 'overflow-x-auto no-scrollbar flex items-center gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
-        }`} style={{ touchAction: isMobile ? 'pan-y' : 'pan-x' }}>
+        }`} style={{ touchAction: 'pan-x' }}>
           {crates.map(crate => {
             let highlightState: 'none' | 'neutral' | 'valid' | 'invalid' = 'none';
             if (magnetTargetId === crate.id) {
