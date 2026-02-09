@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom utilities */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Background textures */
+.bg-wood {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%238b4513" width="100" height="100"/><path fill="%23654321" d="M0 0h50v100H0z" opacity="0.3"/></svg>');
+}
+
+.bg-wood-dark {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%234a2511" width="100" height="100"/><path fill="%23321809" d="M0 0h50v100H0z" opacity="0.3"/></svg>');
+}
+
+.bg-bricks {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50"><rect fill="%238b4513" width="100" height="50"/><rect fill="%23654321" x="0" y="0" width="50" height="25"/><rect fill="%23654321" x="50" y="25" width="50" height="25"/></svg>');
+}
+
+/* Radial gradient utility */
+.bg-radial-gradient {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
