@@ -1675,11 +1675,19 @@ export default function App() {
         {!prefersReducedMotion && explosions.map(ex => <ParticleExplosion key={ex.id} x={ex.x} y={ex.y} color={ex.color} genre={ex.genre} isMobile={isMobile} />)}
 
         {/* SCAFFALI - LAYOUT ORIZZONTALE SU MOBILE E DESKTOP */}
-        <div className={`w-full ${
-          isMobile
-            ? 'flex flex-row flex-nowrap items-center justify-center gap-2 overflow-x-auto no-scrollbar py-2'
-            : 'overflow-x-auto no-scrollbar flex items-center gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
-        }`} style={{ touchAction: 'pan-x' }}>
+        <div
+          className={`w-full ${
+            isMobile
+              ? 'flex flex-row items-center justify-center gap-2 overflow-x-auto no-scrollbar py-2'
+              : 'overflow-x-auto no-scrollbar flex items-center gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
+          }`}
+          style={{
+            touchAction: 'pan-x',
+            display: isMobile ? 'flex' : undefined,
+            flexDirection: isMobile ? 'row' : undefined,
+            alignItems: isMobile ? 'center' : undefined
+          }}
+        >
           {crates.map(crate => {
             let highlightState: 'none' | 'neutral' | 'valid' | 'invalid' = 'none';
             if (magnetTargetId === crate.id) {
