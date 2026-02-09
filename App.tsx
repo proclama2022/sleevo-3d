@@ -4,6 +4,8 @@ import { generateLevel, calculateScore, getXPToNextLevel } from './services/game
 import { loadSaveData, saveSaveData, updateStats, SaveData, addToCollection, unlockAchievement, updateLevelRecords, checkNewRecords } from './services/storage';
 import { initAudioContext, playThemeMusic, stopMusic, sfx } from './services/audio';
 import { generateSecondaryObjectives, updateObjectiveProgress, calculateObjectiveBonus } from './services/objectives';
+import { shouldTriggerEvent, selectRandomEvent, isEventActive, applyEventEffects, getMagnetRadiusMultiplier, isBlackoutActive, isEarthquakeActive } from './services/randomEvents';
+import { RandomEvent, RandomEventType, RANDOM_EVENT_CONFIG } from './types/events';
 import { useWindowSize } from './hooks/useWindowSize';
 import { VinylCover } from './components/VinylCover';
 import { CrateBox } from './components/CrateBox';
@@ -19,6 +21,7 @@ import { AchievementToast } from './components/AchievementToast';
 import { StatsScreen } from './components/StatsScreen';
 import { InGameStats } from './components/InGameStats';
 import { SecondaryObjectives } from './components/SecondaryObjectives';
+import { RandomEventOverlay } from './components/RandomEventOverlay';
 import { Trophy, Music, Disc3, RefreshCw, Zap, Disc, Trash2, CheckCircle2, Play, Settings, Clock, AlertTriangle, ArrowUp, X, Star, Library, TrendingUp, Eye, ChevronRight, RotateCcw, Palette, Menu, Heart } from 'lucide-react';
 import { checkAchievements, getAchievementProgress } from './constants/achievements';
 import { Capacitor } from '@capacitor/core';
@@ -273,10 +276,15 @@ export default function App() {
   const [feedback, setFeedback] = useState<{ text: string, type: 'good' | 'bad' | 'bonus' } | null>(null);
   const [flyingVinyls, setFlyingVinyls] = useState<FlyingVinyl[]>([]);
   const [explosions, setExplosions] = useState<{id: number, x: number, y: number, color: string, genre?: Genre}[]>([]);
-  
+
   const [landingId, setLandingId] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   const [comboTimerPercent, setComboTimerPercent] = useState(0); // 0-100, countdown
+
+  // Random Events system
+  const [activeEvent, setActiveEvent] = useState<RandomEvent | null>(null);
+  const [eventsTriggeredThisLevel, setEventsTriggeredThisLevel] = useState(0);
+  const randomEventCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Tutorial state
   const [tutorialActive, setTutorialActive] = useState(false);
@@ -399,6 +407,82 @@ export default function App() {
     return () => { if(timerRef.current) clearInterval(timerRef.current); };
   }, [gameState.status, gameState.mode]);
 
+  // Random Events System
+  useEffect(() => {
+    // Clear event timer on level change or game end
+    if (randomEventCheckRef.current) {
+      clearInterval(randomEventCheckRef.current);
+      randomEventCheckRef.current = null;
+    }
+
+    // Don't check events if not playing
+    if (gameState.status !== 'playing') {
+      setActiveEvent(null);
+      setEventsTriggeredThisLevel(0);
+      return;
+    }
+
+    // Check every 15-30 seconds for random events
+    const checkInterval = 15000 + Math.random() * 15000; // 15-30 seconds
+    randomEventCheckRef.current = setInterval(() => {
+      const timeElapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
+
+      // Check if event should trigger
+      if (shouldTriggerEvent(levelIndex, timeElapsed, eventsTriggeredThisLevel)) {
+        const eventType = selectRandomEvent();
+
+        // Apply event effects
+        const effects = applyEventEffects(eventType, gameState, shelfVinyls);
+
+        // Update state based on effects
+        if (effects.modifiedState.timeLeft !== undefined) {
+          setGameState(prev => ({ ...prev, timeLeft: effects.modifiedState.timeLeft }));
+        }
+
+        if (effects.modifiedVinyls.length > 0) {
+          setShelfVinyls(effects.modifiedVinyls);
+        }
+
+        // Set active event
+        const event: RandomEvent = {
+          type: eventType,
+          startTime: Date.now(),
+          endTime: Date.now() + (RANDOM_EVENT_CONFIG[eventType].duration * 1000),
+        };
+
+        setActiveEvent(event);
+        setEventsTriggeredThisLevel(prev => prev + 1);
+
+        // Play sound and show feedback
+        sfx.achievement();
+        showFeedback(effects.message, RANDOM_EVENT_CONFIG[eventType].isBonus ? 'bonus' : 'bad');
+        triggerHaptic(RANDOM_EVENT_CONFIG[eventType].isBonus ? 'success' : 'heavy');
+
+        // Auto-clear event after duration (for instant events)
+        if (RANDOM_EVENT_CONFIG[eventType].duration === 0) {
+          setTimeout(() => setActiveEvent(null), 2000);
+        }
+      }
+    }, checkInterval);
+
+    return () => {
+      if (randomEventCheckRef.current) {
+        clearInterval(randomEventCheckRef.current);
+        randomEventCheckRef.current = null;
+      }
+    };
+  }, [gameState.status, levelIndex, gameState.startTime, eventsTriggeredThisLevel, shelfVinyls, gameState]);
+
+  // Auto-clear random event when it expires
+  useEffect(() => {
+    if (!activeEvent) return;
+
+    const remainingTime = activeEvent.endTime - Date.now();
+    if (remainingTime <= 0) {
+      setActiveEvent(null);
+    }
+  }, [activeEvent]);
+
   // Set initial position of dragged element correctly when activeVinyl changes
   useLayoutEffect(() => {
     if (activeVinyl && dragElRef.current) {
@@ -427,6 +511,10 @@ export default function App() {
   const startLevel = (idx: number, difficulty: Difficulty, endless: boolean = false) => {
     // Clear combo timer when starting new level
     clearComboTimer();
+
+    // Clear random events when starting new level
+    setActiveEvent(null);
+    setEventsTriggeredThisLevel(0);
 
     const data = generateLevel(idx, difficulty, endless);
     setCrates(data.crates);
@@ -615,6 +703,7 @@ export default function App() {
       confirmLabel: "Leave",
       onConfirm: () => {
         clearComboTimer();
+        setActiveEvent(null); // Clear random event when leaving level
         setGameState(prev => ({ ...prev, status: 'menu' }));
       }
     });
@@ -776,7 +865,10 @@ export default function App() {
 
     dragPosRef.current = { x: clientX, y: clientY };
 
-    let bestDist = MAGNET_RADIUS;
+    // Apply magnet radius multiplier if magnetic surge event is active
+    const currentMagnetRadius = MAGNET_RADIUS * getMagnetRadiusMultiplier(activeEvent);
+
+    let bestDist = currentMagnetRadius;
     let targetId: string | null = null;
     let snappedX = clientX;
     let snappedY = clientY;
@@ -1452,7 +1544,7 @@ export default function App() {
 
   return (
     <div
-      className={`relative w-full h-[100dvh] bg-black text-white overflow-hidden flex flex-col items-center animate-[fade-in_0.3s_ease-out] ${shake ? 'translate-x-1' : ''}`}
+      className={`relative w-full h-[100dvh] bg-black text-white overflow-hidden flex flex-col items-center animate-[fade-in_0.3s_ease-out] ${shake ? 'translate-x-1' : ''} ${activeEvent ? (isEarthquakeActive(activeEvent) ? 'earthquake-active' : '') : ''} ${activeEvent ? (activeEvent.type === 'slow_motion' ? 'slow-motion-active' : '') : ''}`}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
@@ -1600,7 +1692,7 @@ export default function App() {
               highlightState = 'valid';
             }
             return (
-                <div key={crate.id} className={`${isMobile ? 'w-full max-w-[280px]' : 'snap-center pt-10'} transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''}`}>
+                <div key={crate.id} className={`${isMobile ? 'w-full max-w-[280px]' : 'snap-center pt-10'} transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''} ${activeEvent && activeEvent.type === 'magnetic_surge' ? 'magnetic-glow' : ''}`}>
                   <CrateBox
                     crate={crate}
                     highlightState={highlightState}
@@ -2109,6 +2201,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* Random Events Overlay */}
+      <RandomEventOverlay activeEvent={activeEvent} />
     </div>
   );
 }
