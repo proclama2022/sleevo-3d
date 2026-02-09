@@ -171,16 +171,20 @@ export const VinylCover: React.FC<VinylCoverProps> = React.memo(({
       {/* 2. The Sleeve / Trash Object */}
       <div
         className={`
-          relative z-10 rounded-sm shadow-[2px_5px_15px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col
+          relative z-10 rounded-sm overflow-hidden flex flex-col
           ${getBgClass()}
-          ${isTrash ? 'border-2 border-dashed border-gray-600 rounded-xl' : 'border-4'}
+          ${isTrash ? 'border-2 border-dashed border-gray-600 rounded-xl' : 'border-8'}
         `}
         style={{
             width: size,
             height: size,
             filter: isMysteryState ? 'grayscale(1)' : 'none',
             borderColor: isTrash ? undefined : GENRE_ACCENT_COLORS[genre],
-            boxShadow: isTrash ? undefined : `2px 5px 15px rgba(0,0,0,0.6), 0 0 15px ${GENRE_ACCENT_COLORS[genre]}80`
+            boxShadow: isTrash ? undefined : `
+              2px 5px 20px rgba(0,0,0,0.8),
+              0 0 25px ${GENRE_ACCENT_COLORS[genre]}cc,
+              inset 0 0 0 2px rgba(255,255,255,0.2)
+            `
         }}
       >
         {ArtLayer}
@@ -201,18 +205,22 @@ export const VinylCover: React.FC<VinylCoverProps> = React.memo(({
         {/* Genre Icon Badge (always visible, except trash) */}
         {!isTrash && !isMysteryState && (
           <div
-            className="absolute top-2 left-2 z-50 rounded-full flex items-center justify-center shadow-lg"
+            className="absolute top-2 left-2 z-50 rounded-full flex items-center justify-center shadow-lg border-4 border-white"
             style={{
-              width: size * 0.25,
-              height: size * 0.25,
-              backgroundColor: `${GENRE_ACCENT_COLORS[genre]}dd`,
-              boxShadow: `0 0 15px ${GENRE_ACCENT_COLORS[genre]}cc, inset 0 2px 4px rgba(255,255,255,0.3)`
+              width: size * 0.35,
+              height: size * 0.35,
+              backgroundColor: `${GENRE_ACCENT_COLORS[genre]}f5`,
+              boxShadow: `
+                0 0 20px ${GENRE_ACCENT_COLORS[genre]}ff,
+                0 4px 12px rgba(0,0,0,0.6),
+                inset 0 2px 4px rgba(255,255,255,0.4)
+              `
             }}
           >
             {React.createElement(GENRE_ICONS[genre], {
-              size: size * 0.15,
-              strokeWidth: 2.5,
-              style: { color: 'white', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }
+              size: size * 0.2,
+              strokeWidth: 3,
+              style: { color: 'white', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))' }
             })}
           </div>
         )}
@@ -258,13 +266,13 @@ export const VinylCover: React.FC<VinylCoverProps> = React.memo(({
         {/* Content Overlay (Hidden if dusty or trash) */}
         {!isMysteryState && !isTrash && !isDusty && (
           <>
-            {/* Gradient overlays for text readability */}
-            <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-b from-black/60 to-transparent z-10"></div>
-            <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+            {/* Gradient overlays for text readability - STRONGER */}
+            <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-b from-black/85 to-transparent z-10"></div>
+            <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-black/85 to-transparent z-10"></div>
 
             <div className="absolute inset-0 flex flex-col justify-between p-3 z-20">
               <div className="flex justify-between items-start">
-                <h3 className="font-display text-white text-xl leading-none drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] truncate flex-1">{artist}</h3>
+                <h3 className="font-display text-white text-xl leading-none font-bold drop-shadow-[0_3px_10px_rgba(0,0,0,1)] truncate flex-1" style={{ textShadow: '0 0 8px rgba(0,0,0,1), 0 3px 10px rgba(0,0,0,1), 0 0 2px rgba(255,255,255,0.3)' }}>{artist}</h3>
                 {/* Special Disc Badge */}
                 {vinyl.specialType && (
                   <div className="ml-2 flex-shrink-0">
@@ -297,7 +305,7 @@ export const VinylCover: React.FC<VinylCoverProps> = React.memo(({
                 )}
               </div>
               <div className="flex justify-between items-end">
-                <span className="font-marker text-white text-sm leading-tight max-w-[75%] -rotate-2 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">{title}</span>
+                <span className="font-marker text-white text-sm leading-tight max-w-[75%] -rotate-2 font-bold" style={{ textShadow: '0 0 8px rgba(0,0,0,1), 0 3px 10px rgba(0,0,0,1), 0 0 2px rgba(255,255,255,0.3)' }}>{title}</span>
                 {isGold && <Star size={16} className="text-yellow-400 fill-yellow-400 drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]" />}
               </div>
             </div>
