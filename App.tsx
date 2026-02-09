@@ -1461,6 +1461,9 @@ export default function App() {
       {/* Theme-specific background */}
       <ThemeBackground theme={gameState.theme} />
 
+      {/* Dark overlay to make gameplay elements stand out */}
+      <div className="fixed inset-0 bg-black/60 pointer-events-none z-[5]"></div>
+
       <div className="bg-noise"></div>
       <div className="vignette"></div>
 
