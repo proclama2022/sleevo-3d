@@ -1584,6 +1584,29 @@ export default function App() {
                       </button>
                   </div>
               </div>
+
+              {/* Star Criteria Modal */}
+              {showStarCriteria && currentStarCriteria && (
+                <StarCriteria
+                  levelNumber={gameState.currentLevel + 1}
+                  levelName={getCampaignLevel(gameState.currentLevel + 1)?.name || `Level ${gameState.currentLevel + 1}`}
+                  mode={gameState.mode}
+                  criteria={currentStarCriteria}
+                  bestStars={saveData.levelStars[gameState.currentLevel] || 0}
+                  onStart={() => {
+                    setShowStarCriteria(false);
+                    // Start the level
+                    setGameState(prev => ({ ...prev, status: 'playing', startTime: Date.now() }));
+                    // Show tutorial for first-time players
+                    if (gameState.currentLevel === 0 && !saveData.tutorialCompleted) {
+                      setTutorialActive(true);
+                      setTutorialStep('drag');
+                    }
+                    // Play theme music
+                    playThemeMusic(gameState.theme);
+                  }}
+                />
+              )}
           </div>
       );
   }
@@ -2063,29 +2086,6 @@ export default function App() {
           saveData={saveData}
           onClose={() => setShowCustomization(false)}
           onUpdate={setSaveData}
-        />
-      )}
-
-      {/* Star Criteria Modal */}
-      {showStarCriteria && currentStarCriteria && (
-        <StarCriteria
-          levelNumber={gameState.currentLevel + 1}
-          levelName={getCampaignLevel(gameState.currentLevel + 1)?.name || `Level ${gameState.currentLevel + 1}`}
-          mode={gameState.mode}
-          criteria={currentStarCriteria}
-          bestStars={saveData.levelStars[gameState.currentLevel] || 0}
-          onStart={() => {
-            setShowStarCriteria(false);
-            // Start the level
-            setGameState(prev => ({ ...prev, status: 'playing', startTime: Date.now() }));
-            // Show tutorial for first-time players
-            if (gameState.currentLevel === 0 && !saveData.tutorialCompleted) {
-              setTutorialActive(true);
-              setTutorialStep('drag');
-            }
-            // Play theme music
-            playThemeMusic(gameState.theme);
-          }}
         />
       )}
 
