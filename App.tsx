@@ -1678,14 +1678,11 @@ export default function App() {
         <div
           className={`w-full ${
             isMobile
-              ? 'flex flex-row items-center justify-center gap-2 overflow-x-auto no-scrollbar py-2'
+              ? 'flex flex-row items-center justify-center gap-2 overflow-x-auto no-scrollbar py-2 px-2'
               : 'overflow-x-auto no-scrollbar flex items-center gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
           }`}
           style={{
-            touchAction: 'pan-x',
-            display: isMobile ? 'flex' : undefined,
-            flexDirection: isMobile ? 'row' : undefined,
-            alignItems: isMobile ? 'center' : undefined
+            touchAction: 'pan-x'
           }}
         >
           {crates.map(crate => {
