@@ -1,256 +1,158 @@
 # Testing Patterns
 
-**Analysis Date:** 2026-02-07
+**Analysis Date:** 2026-02-10
 
 ## Test Framework
 
 **Runner:**
-- No test framework configured or detected
-- No Jest, Vitest, Testing Library, or other testing tools found in dependencies
-- package.json has no test script defined
+- No test framework detected
+- No test configuration files found
+- No test scripts in package.json
 
 **Assertion Library:**
-- Not applicable - no testing setup exists
+- Not implemented
 
 **Run Commands:**
 ```bash
-# No test infrastructure currently in place
-# To run tests when implemented:
-# npm test              # (needs configuration)
-# npm run test:watch   # (needs configuration)
-# npm run test:coverage # (needs configuration)
+# No test commands configured
 ```
 
 ## Test File Organization
 
 **Location:**
-- No test files exist in the codebase
-- No `__tests__` directories found
-- No `.test.tsx`, `.spec.tsx`, `.test.ts`, or `.spec.ts` files detected
+- No dedicated test directories
+- No co-located test files (*.test.*, *.spec.*)
+- All source files lack test coverage
 
 **Naming:**
-- Convention not yet established
-- Recommended pattern: `{ComponentName}.test.tsx` or `{ComponentName}.spec.tsx` for co-located tests
-- Alternative: `__tests__/{ComponentName}.test.tsx` for centralized test directory
+- Not applicable
 
 **Structure:**
-- No examples to reference; would follow industry standard patterns if implemented
+- No test structure detected
 
 ## Test Structure
 
 **Suite Organization:**
-- Not applicable - no tests exist
-- Recommended approach based on component design:
-```typescript
-describe('VinylCover', () => {
-  describe('rendering', () => {
-    it('renders vinyl cover with genre color', () => {
-      // test code
-    });
-  });
-
-  describe('interactions', () => {
-    it('reveals mystery vinyl on click', () => {
-      // test code
-    });
-  });
-});
-```
+- No test suites implemented
 
 **Patterns:**
-- Setup: Would use React Testing Library `render()` for component tests
-- Teardown: Standard cleanup via RTL's cleanup after each test
-- Assertion: Would use @testing-library/jest-dom matchers or similar
+- No testing patterns detected
 
 ## Mocking
 
-**Framework:**
-- Not applicable - no testing setup exists
-- If implemented, Jest's built-in mocking would be used
+**Framework:** Not implemented
 
 **Patterns:**
-- Service mocking needed for:
-  ```typescript
-  // Mock gameLogic.ts functions
-  jest.mock('./services/gameLogic', () => ({
-    generateLevel: jest.fn(),
-    calculateScore: jest.fn(),
-    getXPToNextLevel: jest.fn(),
-  }));
-
-  // Mock Capacitor APIs
-  jest.mock('@capacitor/core', () => ({
-    Capacitor: { isNativePlatform: jest.fn(() => false) }
-  }));
-  ```
+- No mocking patterns
 
 **What to Mock:**
-- External service calls (Capacitor haptics, status bar)
-- Random data generation (via seeded random in VinylCover)
-- Game logic calculations (generateLevel, calculateScore)
+- Not applicable
 
 **What NOT to Mock:**
-- React components being tested
-- Tailwind/CSS styling logic
-- Type definitions
-- Plain data fixtures (GENRE_COLORS, GENRE_LABELS)
+- Not applicable
 
 ## Fixtures and Factories
 
 **Test Data:**
-- No fixtures currently exist
-- Factory pattern needed for creating test game states:
-```typescript
-const createMockVinyl = (overrides?: Partial<Vinyl>): Vinyl => ({
-  id: 'test-vinyl-1',
-  type: 'vinyl',
-  genre: Genre.Rock,
-  title: 'Test Album',
-  artist: 'Test Artist',
-  coverColor: 'bg-red-500',
-  dustLevel: 0,
-  isTrash: false,
-  isMystery: false,
-  isRevealed: true,
-  isGold: false,
-  ...overrides,
-});
-
-const createMockGameState = (overrides?: Partial<GameState>): GameState => ({
-  currentLevel: 1,
-  score: 0,
-  movesLeft: 10,
-  timeLeft: 0,
-  maxTime: 0,
-  combo: 0,
-  xp: 0,
-  level: 1,
-  status: 'playing',
-  difficulty: 'Normal',
-  mode: 'Standard',
-  theme: 'Basement',
-  ...overrides,
-});
-```
-
-**Location:**
-- Recommended: `__tests__/fixtures/` directory
-- Alternative: Co-locate with test files as `ComponentName.fixtures.ts`
+- No test fixtures or factories
+- No test data files
 
 ## Coverage
 
-**Requirements:**
-- No coverage requirements enforced
-- Suggested target: 80% for business logic, 70% overall
-- Components are view-heavy and may not need 100% coverage
+**Requirements:** None enforced
 
 **View Coverage:**
-```bash
-# Once Jest/Vitest configured, run:
-npm test -- --coverage
-# Generates coverage report in coverage/ directory
-```
+- No coverage tool configured
+- No coverage reports generated
 
 ## Test Types
 
 **Unit Tests:**
-- Scope: Individual functions and simple components
-- Approach: Test in isolation with mocked dependencies
-- Examples needed:
-  - `generateLevel()` - validates crate/vinyl generation
-  - `calculateScore()` - tests score calculations
-  - `randomPick()` - tests randomization logic
-  - `seededRandom()` - tests deterministic random generation
+- Not implemented
 
 **Integration Tests:**
-- Scope: Multi-component workflows
-- Approach: Render components together, test user interactions
-- Examples:
-  - Dragging vinyl to crate (VinylCover → CrateBox interaction)
-  - Level completion with score calculation
-  - Haptic feedback triggers on valid placements
+- Not implemented
 
 **E2E Tests:**
-- Framework: Not used currently
-- Suggested: Playwright or Cypress for mobile web testing
-- Would test: Complete game flow from menu to level completion
+- Not implemented
 
-## Async Testing
+## Common Patterns
 
-**Pattern:**
-- Currently no async tests exist
-- When implementing, use async/await with React Testing Library:
+**Async Testing:**
+- Not implemented
+
+**Error Testing:**
+- Not implemented
+
+## Testing Recommendations
+
+Based on codebase analysis, the following testing approach is recommended:
+
+### Priority 1: Core Game Logic
+Test files needed:
+- `services/gameLogic.test.ts` - Test level generation, scoring, difficulty scaling
+- `services/storage.test.ts` - Test save/load functionality, localStorage operations
+- `services/randomEvents.test.ts` - Test event probability and timing
+
+### Priority 2: Component Testing
+Test files needed:
+- `components/VinylDisc.test.tsx` - Test rendering, props, animations
+- `components/ErrorBoundary.test.tsx` - Test error handling and fallback UI
+- `components/CollectionScreen.test.tsx` - Test filtering, search, display
+
+### Priority 3: Integration Testing
+Test files needed:
+- `integration/drag-drop.test.ts` - Test drag and drop mechanics
+- `integration/audio.test.ts` - Test audio context initialization and playback
+
+### Suggested Test Setup
+```json
+// package.json additions
+{
+  "scripts": {
+    "test": "vitest",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest --coverage"
+  },
+  "devDependencies": {
+    "vitest": "^1.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@vitest/coverage-v8": "^1.0.0"
+  }
+}
+```
+
+### Testing Patterns to Implement
 ```typescript
-it('triggers haptic feedback on drop', async () => {
-  const { getByTestId } = render(<App />);
-  const vinyl = getByTestId('vinyl-item');
-  const crate = getByTestId('crate-box');
+// Example unit test structure
+import { describe, it, expect } from 'vitest';
+import { generateLevel, calculateScore } from '../services/gameLogic';
 
-  fireEvent.dragEnd(vinyl);
+describe('Game Logic', () => {
+  describe('generateLevel', () => {
+    it('should generate correct number of crates based on level', () => {
+      const level = generateLevel(1, 'Normal');
+      expect(level.crates.length).toBeGreaterThan(0);
+    });
 
-  await waitFor(() => {
-    expect(Haptics.impact).toHaveBeenCalled();
+    it('should scale difficulty with level progression', () => {
+      const easyLevel = generateLevel(1, 'Easy');
+      const hardLevel = generateLevel(5, 'Hard');
+      expect(hardLevel.moves).toBeLessThanOrEqual(easyLevel.moves);
+    });
+  });
+
+  describe('calculateScore', () => {
+    it('should increase score with combo multiplier', () => {
+      expect(calculateScore(0)).toBe(10);
+      expect(calculateScore(3)).toBeGreaterThan(calculateScore(0));
+    });
   });
 });
 ```
 
-## Error Testing
-
-**Pattern:**
-- Currently no error boundary tests exist
-- Suggested pattern for testing error scenarios:
-```typescript
-it('handles missing root element on init', () => {
-  // Remove root element
-  const root = document.getElementById('root');
-  root?.remove();
-
-  expect(() => {
-    // Simulate import of index.tsx
-  }).toThrow('Could not find root element to mount to');
-});
-
-it('gracefully handles haptic API failure', async () => {
-  Haptics.impact.mockRejectedValueOnce(new Error('API unavailable'));
-
-  expect(async () => {
-    await triggerHaptic('light');
-  }).not.toThrow();
-});
-```
-
-## Testing Gaps
-
-**Critical Areas Without Tests:**
-- Game logic: Level generation, vinyl shuffling, move counting
-- Component interactions: Drag-drop mechanics, vinyl selection, animation completion
-- State management: GameState transitions, score/XP calculations
-- Edge cases: Empty crates, mystery vinyl reveals, dust cleaning mechanics
-
-**Risk Level:** HIGH - No automated testing means regressions go undetected
-
-## Recommended Implementation Priority
-
-1. **Phase 1:** Unit tests for `gameLogic.ts`
-   - generateLevel() - validates game state generation
-   - calculateScore() - tests scoring logic
-   - getXPToNextLevel() - tests progression
-
-2. **Phase 2:** Component unit tests
-   - VinylCover rendering states (mystery, gold, dusty)
-   - CrateBox visual states (valid/invalid drop targets)
-   - VinylDisc rotation and spinning animation
-
-3. **Phase 3:** Integration tests
-   - Drag-drop workflow end-to-end
-   - Level completion flow with scoring
-   - Haptic feedback on interactions
-
-4. **Phase 4:** E2E tests
-   - Full game session from launch to level completion
-   - Mobile touch interactions
-   - Settings/difficulty changes
-
 ---
 
-*Testing analysis: 2026-02-07*
+*Testing analysis: 2026-02-10*
+```

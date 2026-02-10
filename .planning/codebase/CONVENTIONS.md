@@ -1,167 +1,171 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-02-07
+**Analysis Date:** 2026-02-10
 
 ## Naming Patterns
 
 **Files:**
-- PascalCase for React components: `VinylDisc.tsx`, `CrateBox.tsx`, `VinylCover.tsx`
-- camelCase for utilities and services: `gameLogic.ts`
-- lowercase for type definition files: `types.ts`
-- lowercase for entry point: `index.tsx`
+- PascalCase for components: `VinylDisc.tsx`, `CollectionScreen.tsx`, `ErrorBoundary.tsx`
+- camelCase for services and hooks: `gameLogic.ts`, `useWindowSize.ts`
+- kebab-case for assets: `constants/gameConfig.ts`
 
 **Functions:**
-- camelCase for all functions: `generateLevel()`, `calculateScore()`, `randomPick()`
-- camelCase for React component functions, PascalCase for exported component names
-- Helper/internal functions prefixed with descriptive action verbs: `getAvailableGenres()`, `getShopTheme()`, `triggerHaptic()`
+- PascalCase for React components and class constructors
+- camelCase for utility functions and methods: `calculateScore`, `generateLevel`, `saveAudioSettings`
+- Private functions start with underscore: `_handleInternalLogic`
 
 **Variables:**
-- camelCase for all variables: `levelIndex`, `gameState`, `crateRefs`, `dustLevel`
-- const for immutable declarations: `const ARTIST_NAMES = [...]`
-- UPPERCASE_SNAKE_CASE for constants and configuration objects: `DIFFICULTY_SETTINGS`, `GENRE_UNLOCK_ORDER`, `MAGNET_RADIUS`
-- Descriptive names: `magnetTargetId` not `target`, `activeVinyl` not `vinyl`
+- camelCase for all variables: `currentMusicSource`, `windowSize`, `filterGenre`
+- Constants are UPPER_SNAKE_CASE: `MAX_DUST_LEVEL`, `COMBO_TIMEOUT`, `FLYING_VINYL_DURATION`
+- Type parameters use T, U, V: `debounce<T extends (...args: any[]) => void>`
 
 **Types:**
-- PascalCase for interface names: `Vinyl`, `Crate`, `GameState`, `VinylCoverProps`, `DifficultyConfig`
-- camelCase for type properties: `id`, `genre`, `dustLevel`, `isRevealed`
-- Union types use single quotes: `'vinyl' | 'trash'`, `'Easy' | 'Normal' | 'Hard'`
+- PascalCase for interfaces and type aliases: `Vinyl`, `GameState`, `AudioSettings`
+- enum names are PascalCase with members UPPER_SNAKE_CASE: `Genre.ROCK`, `RandomEventType.EARTHQUAKE`
+- Generic types use T, U, V: `<T>`, `<T, U>`
 
 ## Code Style
 
 **Formatting:**
-- No explicit formatter configured (no ESLint, Prettier, or Biome config detected)
-- Spacing: 2-space indentation observed throughout
-- Line length: No hard limit observed, but code tends to stay under 100 chars where practical
-- Semicolons used consistently at end of statements
+- 2 spaces for indentation (consistent with Tailwind)
+- Semicolons at end of statements
+- Single quotes for strings (except JSX attributes)
+- Trailing commas in multiline objects and arrays
+- Line length: 100-120 characters (wrapped where appropriate)
 
 **Linting:**
-- No linting configuration detected (no .eslintrc, eslint.config.js, biome.json)
-- Type safety enforced via TypeScript compiler with `isolatedModules: true`, `noEmit: true`
+- No formal ESLint configuration detected
+- Consistent formatting across files
+- TypeScript compiler strict mode enabled
 
-## Import Organization
+**Import Organization:**
+```typescript
+// 1. React and third-party imports
+import React, { useState, useEffect, useRef } from 'react';
+import { Crate, Vinyl, GameState } from '../types';
+import { generateLevel, calculateScore } from '../services/gameLogic';
 
-**Order:**
-1. React and external libraries: `import React from 'react'`
-2. Type imports and custom types: `import { Genre, Vinyl, Crate } from './types'`
-3. Service/utility imports: `import { generateLevel, calculateScore } from './services/gameLogic'`
-4. Component imports: `import { VinylCover } from './components/VinylCover'`
-5. Icon/UI library imports: `import { Trophy, Music, Disc3 } from 'lucide-react'`
-6. Capacitor/platform imports: `import { Capacitor } from '@capacitor/core'`
-
-**Path Aliases:**
-- `@/*` resolves to project root (configured in tsconfig.json)
-- Example: `import { VinylCover } from '@/components/VinylCover'` would work but codebase uses relative imports (`./components/VinylCover`)
-- Relative imports (../) used consistently instead of aliases
+// 2. Internal module imports
+import { useWindowSize } from '../hooks/useWindowSize';
+import { VinylDisc } from './VinylDisc';
+```
 
 ## Error Handling
 
 **Patterns:**
-- Try-catch with empty catch blocks for non-critical operations (haptic feedback):
-  ```typescript
-  try {
-    await Haptics.impact({ style: ImpactStyle.Light });
-  } catch (e) {}
-  ```
-- Null checks before operations: `if (!rootElement) { throw new Error(...) }`
-- Optional chaining for safe property access
-- Fallback behavior on platform checks: `if (Capacitor.isNativePlatform()) { ... } else if (navigator.vibrate) { ... }`
+```typescript
+// Error boundaries with fallback UI
+class ErrorBoundary extends Component<Props, State> {
+  static getDerivedStateFromError(error: Error): State {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Error caught:', error);
+  }
+}
+
+// Try-catch for async operations
+try {
+  const result = await riskyOperation();
+} catch (error) {
+  console.error('Operation failed:', error);
+  // Fallback or error state
+}
+
+// Null checks with optional chaining
+const user = data?.user?.profile?.name;
+```
 
 ## Logging
 
-**Framework:** Native `console` object
+**Framework:** Console logging for debugging
 
 **Patterns:**
-- No explicit logging calls found in codebase
-- Developers should use `console.log()`, `console.error()`, `console.warn()` where needed
-- Suggested: Use console methods for debug information rather than creating a custom logger
+- Console.error for errors: `console.error('Failed to save audio settings:', error);`
+- Console.warn for warnings: `console.warn('Save data version mismatch, using defaults');`
+- Console.log for development info (limited usage)
+- No production logging service configured
 
 ## Comments
 
 **When to Comment:**
-- Comments used sparingly; code is mostly self-documenting
-- Comments appear mainly for section headers: `// --- CSS BASED PARTICLE SYSTEM (Optimized) ---`
-- Comments explain non-obvious game logic: `// Start with 2 genres, unlock a new one every 2 levels`
-- Comments clarify visual/styling decisions: `// Painted black wood`, `// Bleached wood`
+- Complex algorithms or game mechanics
+- External dependencies and their usage
+- Configuration constants and their purpose
+- TODO items marked with `// TODO: description`
 
 **JSDoc/TSDoc:**
-- No JSDoc comments found in codebase
-- All functions rely on TypeScript parameter and return types for documentation
-- Suggested: Add JSDoc for public exported functions to improve IDE hints
+- Used extensively for functions and components
+- Describes purpose, parameters, and return values
+- Example from gameLogic.ts:
+```typescript
+/**
+ * Generate theme-specific background music using Web Audio API
+ * Each theme has a different tempo, chord progression, and feel
+ */
+const generateThemeMusic = (theme: ShopTheme): AudioBuffer => {
+```
 
 ## Function Design
 
 **Size:**
-- Range from 15 lines (simple utility) to 50+ lines (component render logic)
-- App.tsx main component is 655 lines total (monolithic, could be refactored)
-- Most helper functions kept to 20-35 lines for readability
+- Small, focused functions (10-50 lines)
+- Maximum 1 level of nesting where possible
+- Early returns for error cases
 
 **Parameters:**
-- Props destructured in function signature: `({ crate, highlightState, onRegisterRef })`
-- Type annotations required for all parameters (TypeScript strict mode)
-- Default parameters used when sensible: `size = 140`, `className = ''`
+- 3-5 parameters maximum
+- Use objects for complex parameter sets
+- Optional parameters with default values
 
 **Return Values:**
-- Explicit type annotations on all exported functions: `(): Genre[]`, `(): ShopTheme`, `(): DifficultyConfig`
-- React components always return JSX with proper typing
-- Helper functions return typed values (numbers, objects, React.CSSProperties)
+- Consistent return types
+- Union types for multiple possibilities
+- Void for side-effect-only functions
 
 ## Module Design
 
 **Exports:**
-- Named exports for all components: `export const VinylDisc: React.FC<...>`
-- Named exports for service functions: `export const generateLevel(...)`
-- Constants exported for reuse: `export const GENRE_COLORS`, `export const GENRE_LABELS`
-- All enums exported: `export enum Genre { ... }`
+- Named exports preferred over default
+- Interface exports for types
+- Utility functions exported from service modules
 
-**Barrel Files:**
-- No barrel files (index.ts re-exports) exist
-- Direct imports from specific files used throughout: `from './components/VinylCover'`
-- types.ts acts as central type definition file, imported by all modules
+**Barrel Files:** Not used - direct imports from specific files
 
-## Component Patterns
+## React Patterns
 
-**Functional Components:**
-- All components are functional, not class-based
-- React.FC type annotation used for all component declarations
-- Props interfaces defined immediately before component: `interface VinylCoverProps { ... }`
+**Components:**
+- Functional components with hooks
+- TypeScript interfaces for props
+- Inline styles only for dynamic values
+- Tailwind classes for styling
 
-**Memoization:**
-- React.memo used selectively for expensive components:
-  - `VinylCover` memoized (expensive SVG/canvas rendering)
-  - `CrateBox` memoized (complex 3D CSS rendering)
-  - `VinylDisc` not memoized (lightweight)
-- Improves performance on re-renders without dependency arrays
+**State Management:**
+- useState for local state
+- useRef for DOM references and persistent values
+- useEffect for side effects with proper cleanup
 
-**Inline Components:**
-- Small utility components defined inline: `ParticleExplosion`, `CrateDeco`, `DustOverlay`, `GeometricArt`
-- These functions return JSX elements, not wrapped as React.FC
+**Event Handlers:**
+- Arrow functions for inline handlers
+- useCallback for event handlers passed to child components
+- Proper typing for event parameters
 
-## Styling
+## TypeScript Patterns
 
-**Approach:**
-- Tailwind CSS utility classes for all styling
-- Inline `style` prop for dynamic/computed CSS properties
-- CSS-in-JS for animations (keyframe definitions inside components)
-- No CSS modules, no CSS-in-JS libraries (styled-components, emotion)
+**Types:**
+- Strong typing throughout
+- Interfaces for object shapes
+- Enums for fixed sets of values
+- Generics for reusable components
 
-**Patterns:**
-```typescript
-// Tailwind classes
-className={`relative w-[130px] md:w-[160px] h-[170px] md:h-[190px]`}
-
-// Inline styles for computed values
-style={{ left: x, top: y, backgroundColor: color }}
-
-// Dynamic class selection
-className={getBgClass()}
-
-// Animation definitions
-<style>{`
-  @keyframes particle-burst { ... }
-  .animate-particle-burst { animation: particle-burst 0.6s ease-out forwards; }
-`}</style>
-```
+**Strict Mode:**
+- Enabled in tsconfig.json
+- No implicit any types
+- Strict null checks
+- No unused variables
 
 ---
 
-*Convention analysis: 2026-02-07*
+*Convention analysis: 2026-02-10*
+```
