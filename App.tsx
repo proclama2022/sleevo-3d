@@ -1676,10 +1676,10 @@ export default function App() {
 
         {/* SCAFFALI - LAYOUT ORIZZONTALE SU MOBILE E DESKTOP */}
         <div
-          className={`w-full ${
+          className={`${
             isMobile
-              ? 'flex flex-row items-center justify-center gap-2 overflow-x-auto no-scrollbar py-2 px-2'
-              : 'overflow-x-auto no-scrollbar flex items-center gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
+              ? 'flex flex-row items-center gap-2 overflow-x-auto no-scrollbar py-2 px-2 min-w-max'
+              : 'w-full overflow-x-auto no-scrollbar flex items-center gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
           }`}
           style={{
             touchAction: 'pan-x'
