@@ -10,34 +10,35 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 1 of 6 (Campaign Structure & Star System Foundation)
-Plan: 1 of 4 (completed)
+Plan: 2 of 4 (completed)
 Status: Ready for next plan
-Last activity: 2026-02-10 — Completed plan 01-01: Star calculation & storage foundation
+Last activity: 2026-02-10 — Completed plan 01-02: Hand-crafted campaign levels
 
-Progress: [██░░░░░░░░] 25%
+Progress: [█████░░░░░] 50%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 3.2 min
-- Total execution time: 0.05 hours
+- Total plans completed: 2
+- Average duration: 2.4 min
+- Total execution time: 0.08 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01 | 1 | 193s | 193s |
+| 01 | 2 | 287s | 144s |
 
 **Recent Plans:**
 
 | Plan | Duration | Tasks | Files |
 |------|----------|-------|-------|
 | 01-01 | 193s | 2 | 4 |
+| 01-02 | 94s | 1 | 1 |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (193s)
-- Trend: Baseline
+- Last 5 plans: 01-01 (193s), 01-02 (94s)
+- Trend: Improving (51% faster)
 
 *Updated after each plan completion*
 
@@ -55,6 +56,8 @@ Recent decisions affecting current work:
 - **Denormalized totalStars field** (Plan 01-01): Store computed total for quick access without iterating levelStars dictionary
 - **levelIndex vs levelNumber convention** (Plan 01-01): levelIndex is 0-based (storage), levelNumber is 1-based (UI display)
 - **Separate final vs real-time star calculations** (Plan 01-01): calculateStarsEarned for game-won state, calculateCurrentStars for in-progress projection
+- **Player-facing star criteria** (Plan 01-02): Star criteria descriptions are plain-English (e.g., "Sort with 80% accuracy") instead of technical thresholds for clarity
+- **Boss level timing at 40s** (Plan 01-02): Tighter than intermediate timed levels to create climactic pressure at level 10
 
 ### Pending Todos
 
@@ -74,6 +77,6 @@ None blocking immediate work on Phase 1.
 
 ## Session Continuity
 
-Last session: 2026-02-10 (plan 01-01 execution)
-Stopped at: Completed 01-01-PLAN.md: Star calculation & storage foundation
+Last session: 2026-02-10 (plan 01-02 execution)
+Stopped at: Completed 01-02-PLAN.md: Hand-crafted campaign levels
 Resume file: None
