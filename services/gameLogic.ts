@@ -23,6 +23,7 @@ import {
   COMBO_MULTIPLIER_INCREMENT,
   LEVEL_XP_BASE,
 } from '../constants/gameConfig';
+import { getCampaignLevel, CampaignLevelConfig } from '../constants/levelConfigs';
 
 const ARTIST_NAMES = [
   "The Beagles", "Miles Down", "Aretha F.", "James Braun", "Daft P.", "The Ramones", "Led Zep", "David Bowtie", "Queen B", "Fleetwood Mac"
@@ -61,12 +62,108 @@ const isBossLevel = (level: number): boolean => {
   return level > 0 && level % 10 === 0;
 };
 
+export const generateFromCampaignConfig = (
+  config: CampaignLevelConfig
+): { crates: Crate[], vinyls: Vinyl[], moves: number, mode: LevelMode, time: number, theme: ShopTheme } => {
+  // Build crates from config.genres and config.crateCapacities
+  const crates: Crate[] = config.genres.map((genre, idx) => ({
+    id: `crate-${config.levelNumber}-${idx}`,
+    genre,
+    capacity: config.crateCapacities[idx],
+    filled: 0,
+    label: randomPick(GENRE_LABELS[genre]),
+  }));
+
+  const vinyls: Vinyl[] = [];
+
+  // 1. Generate matching vinyls for each crate
+  crates.forEach(crate => {
+    for (let i = 0; i < crate.capacity; i++) {
+      vinyls.push({
+        id: `vinyl-${crate.id}-${i}`,
+        type: 'vinyl',
+        genre: crate.genre,
+        title: randomPick(ALBUM_TITLES),
+        artist: randomPick(ARTIST_NAMES),
+        coverColor: GENRE_COLORS[crate.genre],
+        isGold: false,
+        isMystery: false,
+        isRevealed: false,
+        dustLevel: 0,
+        isTrash: false,
+      });
+    }
+  });
+
+  // 2. Apply mystery flag to first N vinyls (shuffled later)
+  let mysteryApplied = 0;
+  for (const v of vinyls) {
+    if (mysteryApplied >= config.mysteryCount) break;
+    if (!v.isGold) { v.isMystery = true; mysteryApplied++; }
+  }
+
+  // 3. Apply dusty flag
+  let dustyApplied = 0;
+  for (const v of vinyls) {
+    if (dustyApplied >= config.dustyCount) break;
+    if (!v.isMystery && !v.isGold) { v.dustLevel = 3; dustyApplied++; }
+  }
+
+  // 4. Apply special discs
+  let specialIdx = 0;
+  for (const v of vinyls) {
+    if (specialIdx >= config.specialDiscs.length) break;
+    if (!v.isMystery && !v.isGold && v.dustLevel === 0) {
+      v.specialType = config.specialDiscs[specialIdx];
+      specialIdx++;
+    }
+  }
+
+  // 5. Add trash items
+  for (let i = 0; i < config.trashCount; i++) {
+    vinyls.push({
+      id: `trash-${config.levelNumber}-${i}`,
+      type: 'trash',
+      genre: Genre.Rock,
+      title: randomPick(TRASH_NAMES),
+      artist: "Unknown",
+      coverColor: "bg-gray-500",
+      isTrash: true,
+      dustLevel: 0,
+      isGold: false,
+      isMystery: false,
+    });
+  }
+
+  // 6. Shuffle vinyls
+  for (let i = vinyls.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [vinyls[i], vinyls[j]] = [vinyls[j], vinyls[i]];
+  }
+
+  return {
+    crates,
+    vinyls,
+    moves: config.moves,
+    mode: config.mode,
+    time: config.time,
+    theme: config.theme,
+  };
+};
+
 export const generateLevel = (
   levelIndex: number,
   difficulty: Difficulty,
   isEndlessMode: boolean = false
 ): { crates: Crate[], vinyls: Vinyl[], moves: number, mode: LevelMode, time: number, theme: ShopTheme } => {
 
+  // Check for campaign config first (levels 1-10 in non-endless mode)
+  const campaignConfig = getCampaignLevel(levelIndex + 1);
+  if (campaignConfig && !isEndlessMode) {
+    return generateFromCampaignConfig(campaignConfig);
+  }
+
+  // Fall through to procedural generation for endless mode and levels 11+
   const config = DIFFICULTY_CONFIG[difficulty];
   const theme = getShopTheme(levelIndex + 1);
 
