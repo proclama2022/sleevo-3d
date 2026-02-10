@@ -22,8 +22,14 @@ import { StatsScreen } from './components/StatsScreen';
 import { InGameStats } from './components/InGameStats';
 import { SecondaryObjectives } from './components/SecondaryObjectives';
 import { RandomEventOverlay } from './components/RandomEventOverlay';
+import { StarCriteria } from './components/StarCriteria';
+import { StarProgress } from './components/StarProgress';
+import { StarCelebration } from './components/StarCelebration';
 import { Trophy, Music, Disc3, RefreshCw, Zap, Disc, Trash2, CheckCircle2, Play, Settings, Clock, AlertTriangle, ArrowUp, X, Star, Library, TrendingUp, Eye, ChevronRight, RotateCcw, Palette, Menu, Heart } from 'lucide-react';
 import { checkAchievements, getAchievementProgress } from './constants/achievements';
+import { getStarCriteria, calculateStarsEarned, calculateCurrentStars, StarCriteria as StarCriteriaType } from './services/starCalculation';
+import { updateStarProgress } from './services/storage';
+import { getCampaignLevel } from './constants/levelConfigs';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -345,6 +351,13 @@ export default function App() {
   const [swapCountdown, setSwapCountdown] = useState<number | null>(null);
   const swapTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Star system state
+  const [showStarCriteria, setShowStarCriteria] = useState(false);
+  const [currentStarCriteria, setCurrentStarCriteria] = useState<StarCriteriaType | null>(null);
+  const [showStarCelebration, setShowStarCelebration] = useState(false);
+  const [levelStarsResult, setLevelStarsResult] = useState(0);
+  const [isNewBestStars, setIsNewBestStars] = useState(false);
+
   const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const comboIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const comboStartTimeRef = useRef<number>(0);
@@ -523,8 +536,12 @@ export default function App() {
     // Generate secondary objectives for this level
     const objectives = !endless ? generateSecondaryObjectives(idx, data.mode) : [];
 
+    // Update level index
+    setLevelIndex(idx);
+
     setGameState(prev => ({
         ...prev,
+        currentLevel: idx,
         movesLeft: data.moves,
         status: 'playing',
         combo: 0,
@@ -555,10 +572,23 @@ export default function App() {
     setHintsUsed(0);
     setDustyVinylsCleaned(0);
 
-    // Show tutorial for first-time players
-    if (idx === 0 && !saveData.tutorialCompleted && !endless) {
-      setTutorialActive(true);
-      setTutorialStep('drag');
+    // For campaign levels (not endless), show star criteria before starting
+    if (!endless && idx < 10) {
+      const criteria = getStarCriteria(idx + 1, data.mode);
+      setCurrentStarCriteria(criteria);
+      setShowStarCriteria(true);
+      // Pause game state to show criteria modal
+      setGameState(prev => ({ ...prev, status: 'menu' }));
+    } else {
+      // For endless mode or levels 11+, start immediately
+      // Show tutorial for first-time players
+      if (idx === 0 && !saveData.tutorialCompleted && !endless) {
+        setTutorialActive(true);
+        setTutorialStep('drag');
+      }
+
+      // Play theme music
+      playThemeMusic(data.theme);
     }
 
     const tilts: Record<string, number> = {};
@@ -1396,27 +1426,31 @@ export default function App() {
     const hasVinylsLeft = shelfVinyls.some(v => !v.isTrash);
 
     if (allCratesFull && gameState.status === 'playing') {
-      // Calculate stars earned
-      const isPerfect = gameState.mistakes === 0;
-      const hasGoodCombo = gameState.maxComboThisLevel >= 3;
-      const hasGreatCombo = gameState.maxComboThisLevel >= 5;
+      // Calculate stars earned using star calculation service
+      const stars = currentStarCriteria ? calculateStarsEarned({ ...gameState, status: 'won' }, currentStarCriteria) : 1;
 
-      // Calculate initial moves (data.moves from generateLevel)
-      const totalVinyls = gameState.vinylsSorted;
-      const movesUsed = gameState.totalMoves;
-      const movesRemaining = gameState.movesLeft;
+      // Check if this is a new best
+      const prevBest = saveData.levelStars[gameState.currentLevel] || 0;
+      const isNewBest = stars > prevBest;
 
-      // Estimate initial moves (rough calculation since we don't have it stored)
-      const estimatedInitialMoves = movesUsed + movesRemaining;
-      const movesEfficiency = estimatedInitialMoves > 0 ? (movesRemaining / estimatedInitialMoves) : 0;
-
-      let stars = 1; // Base: Always get 1 star for completing
-      if (isPerfect && hasGoodCombo) stars = 2; // Silver: No mistakes + combo >= 3
-      if (isPerfect && hasGreatCombo && movesEfficiency >= 0.2) stars = 3; // Gold: Perfect + combo >= 5 + 20% moves left
+      // Update save data with star progress
+      if (!gameState.isEndlessMode) {
+        const updatedSaveData = updateStarProgress(saveData, gameState.currentLevel, stars);
+        setSaveData(updatedSaveData);
+        saveSaveData(updatedSaveData);
+      }
 
       // Level won!
       sfx.levelComplete();
       setGameState(prev => ({ ...prev, status: 'won', xp: prev.xp + 100, starsEarned: stars }));
+
+      // Show star celebration for campaign levels
+      if (!gameState.isEndlessMode && gameState.currentLevel < 10) {
+        setLevelStarsResult(stars);
+        setIsNewBestStars(isNewBest);
+        setShowStarCelebration(true);
+      }
+
       saveProgressRef.current(true);
     } else if (
         gameState.status === 'playing' &&
@@ -2028,6 +2062,39 @@ export default function App() {
         />
       )}
 
+      {/* Star Criteria Modal */}
+      {showStarCriteria && currentStarCriteria && (
+        <StarCriteria
+          levelNumber={gameState.currentLevel + 1}
+          levelName={getCampaignLevel(gameState.currentLevel + 1)?.name || `Level ${gameState.currentLevel + 1}`}
+          mode={gameState.mode}
+          criteria={currentStarCriteria}
+          bestStars={saveData.levelStars[gameState.currentLevel] || 0}
+          onStart={() => {
+            setShowStarCriteria(false);
+            // Start the level
+            setGameState(prev => ({ ...prev, status: 'playing', startTime: Date.now() }));
+            // Show tutorial for first-time players
+            if (gameState.currentLevel === 0 && !saveData.tutorialCompleted) {
+              setTutorialActive(true);
+              setTutorialStep('drag');
+            }
+            // Play theme music
+            playThemeMusic(gameState.theme);
+          }}
+        />
+      )}
+
+      {/* Star Celebration */}
+      {showStarCelebration && (
+        <StarCelebration
+          starsEarned={levelStarsResult}
+          isNewBest={isNewBestStars}
+          onComplete={() => setShowStarCelebration(false)}
+          onSkip={() => setShowStarCelebration(false)}
+        />
+      )}
+
       {/* Confirm Dialog */}
       {confirmDialog && (
         <div className="fixed inset-0 z-[400] bg-black/80 flex items-center justify-center p-4">
@@ -2193,6 +2260,16 @@ export default function App() {
           />
         );
       })()}
+
+      {/* Star Progress HUD */}
+      {gameState.status === 'playing' && currentStarCriteria && !gameState.isEndlessMode && (
+        <StarProgress
+          currentStars={calculateCurrentStars(gameState, currentStarCriteria)}
+          criteria={currentStarCriteria}
+          accuracy={gameState.totalMoves > 0 ? (gameState.totalMoves - gameState.mistakes) / gameState.totalMoves : 1}
+          showDetails={!isMobile}
+        />
+      )}
 
       {/* Hint Button */}
       <HintButton
