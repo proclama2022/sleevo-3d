@@ -29,11 +29,13 @@ Transform Sleevo from a proof-of-concept into an addictive hypercasual puzzle ga
   4. User sees star rating celebration animation at victory screen showing stars earned
   5. System persists best star rating for each level across sessions (SaveData tracks all level progress)
 
-**Plans**: TBD
+**Plans:** 4 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md — Star calculation service + SaveData extension
+- [ ] 01-02-PLAN.md — 10 hand-crafted campaign level configs
+- [ ] 01-03-PLAN.md — Star UI components (criteria, progress, celebration)
+- [ ] 01-04-PLAN.md — Full integration into game flow + verification
 
 ### Phase 2: Level Design System & Campaign Expansion
 **Goal**: Players experience 60 hand-crafted campaign levels organized into 6 worlds with progressively introduced mechanics
@@ -138,7 +140,7 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Campaign Structure & Star System Foundation | 0/TBD | Not started | - |
+| 1. Campaign Structure & Star System Foundation | 0/4 | Planned | - |
 | 2. Level Design System & Campaign Expansion | 0/TBD | Not started | - |
 | 3. Enhanced Feedback & Visual Effects | 0/TBD | Not started | - |
 | 4. Level Progression UI | 0/TBD | Not started | - |
