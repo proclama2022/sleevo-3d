@@ -539,11 +539,16 @@ export default function App() {
     // Update level index
     setLevelIndex(idx);
 
+    // Determine initial status: show star criteria for campaign levels, otherwise start playing
+    const shouldShowStarCriteria = !endless && idx < 10;
+    const initialStatus = shouldShowStarCriteria ? 'menu' : 'playing';
+    const initialStartTime = shouldShowStarCriteria ? undefined : Date.now();
+
     setGameState(prev => ({
         ...prev,
         currentLevel: idx,
         movesLeft: data.moves,
-        status: 'playing',
+        status: initialStatus,
         combo: 0,
         comboMultiplier: 1,
         difficulty,
@@ -555,7 +560,7 @@ export default function App() {
         // Reset session stats
         vinylsSorted: 0,
         maxComboThisLevel: 0,
-        startTime: Date.now(),
+        startTime: initialStartTime,
         totalMoves: 0,
         mistakes: 0,
         lastSortedGenre: null,
@@ -573,12 +578,11 @@ export default function App() {
     setDustyVinylsCleaned(0);
 
     // For campaign levels (not endless), show star criteria before starting
-    if (!endless && idx < 10) {
+    if (shouldShowStarCriteria) {
       const criteria = getStarCriteria(idx + 1, data.mode);
       setCurrentStarCriteria(criteria);
       setShowStarCriteria(true);
-      // Pause game state to show criteria modal
-      setGameState(prev => ({ ...prev, status: 'menu' }));
+      // Music will play when user clicks "Start Level" in the modal
     } else {
       // For endless mode or levels 11+, start immediately
       // Show tutorial for first-time players
