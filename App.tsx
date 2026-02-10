@@ -13,6 +13,7 @@ import { ThemeBackground } from './components/ThemeBackground';
 import { Tutorial } from './components/Tutorial';
 import { HintButton } from './components/HintButton';
 import { CollectionScreen } from './components/CollectionScreen';
+import { CompletionView } from './components/CompletionView';
 import { AudioSettings } from './components/AudioSettings';
 import { AccessibilitySettings } from './components/AccessibilitySettings';
 import { CustomizationScreen } from './components/CustomizationScreen';
@@ -48,9 +49,13 @@ import {
   FLYING_VINYL_EASING,
   FLYING_VINYL_SCALE,
   FLYING_VINYL_ROTATION,
+  VINYL_SETTLE_DURATION,
+  VINYL_FADE_DURATION,
   FADE_DURATION,
   HAPTIC_DURATION,
   COMBO_TIMEOUT,
+  COMBO_TIMEOUT_RELAXED,
+  RELAXATION_CONFIG,
   MOBILE_BREAKPOINT,
   VINYL_SIZE_DESKTOP,
   VINYL_SIZE_MOBILE,
@@ -196,31 +201,59 @@ const FlyingVinylItem: React.FC<{ item: FlyingVinyl; onComplete: (item: FlyingVi
   const [style, setStyle] = useState<React.CSSProperties>({
     transform: `translate(${item.startPos.x}px, ${item.startPos.y}px) scale(1) rotate(0deg)`,
     opacity: 1,
-    transition: `transform ${FLYING_VINYL_DURATION}ms ${FLYING_VINYL_EASING}, opacity ${FADE_DURATION}s ease-in`
+    transition: `transform ${FLYING_VINYL_DURATION}ms ${FLYING_VINYL_EASING}, opacity 0ms`
   });
 
   useEffect(() => {
-    // Force a reflow/tick to ensure transition plays
+    const timers: NodeJS.Timeout[] = [];
+
+    // Phase 1: Fly to target (vinyl stays visible)
     const rafId = requestAnimationFrame(() => {
-        // Use the pre-calculated target position that aligns with the vinyl stack area
+        const tx = item.targetPos.x;
+        const ty = item.targetPos.y;
+        setStyle({
+            transform: `translate(${tx}px, ${ty}px) scale(${FLYING_VINYL_SCALE}) rotate(${FLYING_VINYL_ROTATION}deg)`,
+            opacity: 1, // Keep visible during flight
+            transition: `transform ${FLYING_VINYL_DURATION}ms ${FLYING_VINYL_EASING}, opacity 0ms`
+        });
+    });
+
+    // Phase 2: Settle (slight scale adjustment after landing)
+    timers.push(setTimeout(() => {
+        const tx = item.targetPos.x;
+        const ty = item.targetPos.y;
+        setStyle({
+            transform: `translate(${tx}px, ${ty}px) scale(${FLYING_VINYL_SCALE * 1.05}) rotate(${FLYING_VINYL_ROTATION}deg)`,
+            opacity: 1,
+            transition: `transform ${VINYL_SETTLE_DURATION}ms ease-out, opacity 0ms`
+        });
+    }, FLYING_VINYL_DURATION));
+
+    // Phase 3: Fade into stack
+    timers.push(setTimeout(() => {
         const tx = item.targetPos.x;
         const ty = item.targetPos.y;
         setStyle({
             transform: `translate(${tx}px, ${ty}px) scale(${FLYING_VINYL_SCALE}) rotate(${FLYING_VINYL_ROTATION}deg)`,
             opacity: 0,
-            transition: `transform ${FLYING_VINYL_DURATION}ms ${FLYING_VINYL_EASING}, opacity ${FADE_DURATION}s ease-in`
+            transition: `transform ${VINYL_FADE_DURATION}ms ease-out, opacity ${VINYL_FADE_DURATION}ms ease-in`
         });
-    });
+    }, FLYING_VINYL_DURATION + VINYL_SETTLE_DURATION));
 
+    // Complete animation
     const endTimer = setTimeout(() => {
         onComplete(item);
-    }, FLYING_VINYL_DURATION);
+    }, FLYING_VINYL_DURATION + VINYL_SETTLE_DURATION + VINYL_FADE_DURATION);
 
-    return () => { cancelAnimationFrame(rafId); clearTimeout(endTimer); };
+    return () => {
+        cancelAnimationFrame(rafId);
+        timers.forEach(clearTimeout);
+        clearTimeout(endTimer);
+    };
   }, [item, onComplete]);
 
   const vinylSize = isMobile ? VINYL_SIZE_MOBILE : VINYL_SIZE_DESKTOP;
-  
+
   return (
     <div className="fixed top-0 left-0 pointer-events-none" style={{ ...style, zIndex: FLYING_VINYL_Z_INDEX }}>
        <div className="-translate-x-1/2 -translate-y-1/2">
@@ -285,6 +318,7 @@ export default function App() {
 
   const [landingId, setLandingId] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
+  const [bounceBack, setBounceBack] = useState(false); // Gentle feedback for relaxed mode
   const [comboTimerPercent, setComboTimerPercent] = useState(0); // 0-100, countdown
 
   // Random Events system
@@ -313,6 +347,9 @@ export default function App() {
 
   // Customization settings modal state
   const [showCustomization, setShowCustomization] = useState(false);
+
+  // Completion view modal state
+  const [showCompletionView, setShowCompletionView] = useState(false);
 
   // Achievement system state
   const [showAchievements, setShowAchievements] = useState(false);
@@ -856,9 +893,12 @@ export default function App() {
     if (vinyl.dustLevel > 0) {
         triggerHaptic('light');
         sfx.dustClean();
-        const explosionId = Date.now();
-        setExplosions(prev => [...prev, { id: explosionId, x: clientX, y: clientY, color: '#9ca3af' }]);
-        setTimeout(() => setExplosions(prev => prev.filter(e => e.id !== explosionId)), PARTICLE_CLEANUP_DELAY);
+        // Skip particle explosions if reduced motion is enabled
+        if (!prefersReducedMotion) {
+          const explosionId = Date.now();
+          setExplosions(prev => [...prev, { id: explosionId, x: clientX, y: clientY, color: '#9ca3af' }]);
+          setTimeout(() => setExplosions(prev => prev.filter(e => e.id !== explosionId)), PARTICLE_CLEANUP_DELAY);
+        }
 
         // Track if vinyl is fully cleaned (dustLevel going from 1 to 0)
         if (vinyl.dustLevel === 1) {
@@ -1022,7 +1062,7 @@ export default function App() {
           triggerHaptic('success');
           sfx.trash();
           setShelfVinyls(prev => prev.filter(v => v.id !== item.id));
-          if(trashRef.current) {
+          if(trashRef.current && !prefersReducedMotion) {
               const r = trashRef.current.getBoundingClientRect();
               const explosionId = Date.now();
               setExplosions(prev => [...prev, { id: explosionId, x: r.left + r.width/2, y: r.top + r.height/2, color: '#555' }]);
@@ -1037,16 +1077,25 @@ export default function App() {
   };
 
   const handleMistake = (isFull: boolean, msg: string, vinyl?: Vinyl) => {
-    // Granular haptic: double tap for wrong genre, heavy for full
+    const isRelaxedMode = saveData.accessibilitySettings?.relaxedMode || false;
+
+    // Granular haptic: double tap for wrong genre, heavy for full (lighter in relaxed mode)
     if (isFull) {
-      triggerHaptic('heavy');
+      triggerHaptic(isRelaxedMode ? 'light' : 'heavy');
     } else {
-      // Wrong genre - double tap pattern
-      if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
+      // Wrong genre - double tap pattern (gentler in relaxed mode)
+      if (navigator.vibrate) navigator.vibrate(isRelaxedMode ? [10, 5, 10] : [20, 10, 20]);
     }
     sfx.dropError();
-    setShake(true);
-    setTimeout(() => setShake(false), 300);
+
+    // Apply gentle bounce-back in relaxed mode, screen shake otherwise
+    if (isRelaxedMode) {
+      setBounceBack(true);
+      setTimeout(() => setBounceBack(false), 400);
+    } else {
+      setShake(true);
+      setTimeout(() => setShake(false), 300);
+    }
 
     // Bomb disc penalty: -5 moves extra
     const isBomb = vinyl?.specialType === 'bomb';
@@ -1076,16 +1125,19 @@ export default function App() {
 
   const handleSuccess = (crateId: string, vinyl: Vinyl) => {
     triggerHaptic('success');
-    sfx.dropSuccess();
+    sfx.vinylSlide(); // ASMR cardboard slide sound
     const el = crateRefs.current[crateId];
     let rect: DOMRect | undefined;
     
     if (el) {
         rect = el.getBoundingClientRect();
-        const colorMap: any = { Rock: '#ef4444', Jazz: '#3b82f6', Soul: '#eab308', Funk: '#f97316', Disco: '#a855f7', Punk: '#db2777', Electronic: '#06b6d4' };
-        const explosionId = Date.now();
-        setExplosions(prev => [...prev, { id: explosionId, x: rect!.left + rect!.width/2, y: rect!.top + rect!.height/2, color: colorMap[vinyl.genre] || '#fff', genre: vinyl.genre }]);
-        setTimeout(() => setExplosions(prev => prev.filter(e => e.id !== explosionId)), PARTICLE_CLEANUP_DELAY);
+        // Skip particle explosions if reduced motion is enabled
+        if (!prefersReducedMotion) {
+          const colorMap: any = { Rock: '#ef4444', Jazz: '#3b82f6', Soul: '#eab308', Funk: '#f97316', Disco: '#a855f7', Punk: '#db2777', Electronic: '#06b6d4' };
+          const explosionId = Date.now();
+          setExplosions(prev => [...prev, { id: explosionId, x: rect!.left + rect!.width/2, y: rect!.top + rect!.height/2, color: colorMap[vinyl.genre] || '#fff', genre: vinyl.genre }]);
+          setTimeout(() => setExplosions(prev => prev.filter(e => e.id !== explosionId)), PARTICLE_CLEANUP_DELAY);
+        }
     }
 
     setShelfVinyls(prev => prev.filter(v => v.id !== vinyl.id));
@@ -1098,28 +1150,40 @@ export default function App() {
 
     const targetCrate = crates.find(c => c.id === crateId);
     const stackEl = stackRefs.current[crateId];
-    
-    if (rect && stackEl) {
+
+    // Skip flying animation if reduced motion is enabled
+    if (prefersReducedMotion) {
+      // Instant placement
+      handleLanding({
+        id: Math.random().toString(36),
+        vinyl,
+        startPos: { x: 0, y: 0 },
+        targetPos: { x: 0, y: 0 },
+        targetRect: rect!,
+        crateId,
+        crateFilledCount: targetCrate ? targetCrate.filled : 0
+      });
+    } else if (rect && stackEl) {
         // Get the actual stack area position from DOM
         const stackRect = stackEl.getBoundingClientRect();
-        
+
         // The new vinyl will be at the front (visualOffset = 0)
         // So its bottom edge aligns with the bottom of the stack area
         // Vinyl is w-[85%] of stack area and aspect-square
         const vinylSize = stackRect.width * 0.85; // 85% of stack area width
-        
+
         // Target X = center of stack area horizontally
         const targetX = stackRect.left + stackRect.width / 2;
-        
+
         // Target Y = center of the new vinyl
         // Vinyl bottom = stack area bottom (since visualOffset = 0)
         // Vinyl center = vinyl bottom - half height
         const targetY = stackRect.bottom - (vinylSize / 2);
-        
+
         setFlyingVinyls(prev => [...prev, {
             id: Math.random().toString(36),
             vinyl,
-            startPos: { x: dragPosRef.current.x, y: dragPosRef.current.y }, 
+            startPos: { x: dragPosRef.current.x, y: dragPosRef.current.y },
             targetPos: { x: targetX, y: targetY },
             targetRect: rect,
             crateId,
@@ -1133,11 +1197,11 @@ export default function App() {
         const stackAreaBottom = rect.bottom - bottomOffset;
         const targetX = rect.left + rect.width / 2;
         const targetY = stackAreaBottom - (vinylSize / 2);
-        
+
         setFlyingVinyls(prev => [...prev, {
             id: Math.random().toString(36),
             vinyl,
-            startPos: { x: dragPosRef.current.x, y: dragPosRef.current.y }, 
+            startPos: { x: dragPosRef.current.x, y: dragPosRef.current.y },
             targetPos: { x: targetX, y: targetY },
             targetRect: rect,
             crateId,
@@ -1158,13 +1222,13 @@ export default function App() {
     if (item.vinyl.isGold) {
       sfx.goldVinyl();
     } else {
-      sfx.dropSuccess();
+      sfx.vinylThunk(); // ASMR wood impact sound
     }
 
     setLandingId(item.crateId);
     setTimeout(() => setLandingId(null), 150);
     setFlyingVinyls(prev => prev.filter(f => f.id !== item.id));
-    setCrates(prev => prev.map(c => c.id === item.crateId ? { ...c, filled: c.filled + 1 } : c));
+    setCrates(prev => prev.map(c => c.id === item.crateId ? { ...c, filled: c.filled + 1, vinyls: [...c.vinyls, item.vinyl] } : c));
 
     // Add to collection if rare (gold or special type)
     if (item.vinyl.isGold || item.vinyl.specialType) {
@@ -1228,8 +1292,9 @@ export default function App() {
       // Clear existing timers
       clearComboTimer();
 
-      // Start combo countdown timer (4.5s total)
-      const comboTimeout = 4500;
+      // Start combo countdown timer (4.5s default, 6s in relaxed mode)
+      const isRelaxedMode = saveData.accessibilitySettings?.relaxedMode || false;
+      const comboTimeout = isRelaxedMode ? COMBO_TIMEOUT_RELAXED : 4500;
       comboStartTimeRef.current = Date.now();
       setComboTimerPercent(100);
 
@@ -1613,7 +1678,7 @@ export default function App() {
 
   return (
     <div
-      className={`relative w-full h-[100dvh] bg-black text-white overflow-hidden flex flex-col items-center animate-[fade-in_0.3s_ease-out] ${shake ? 'translate-x-1' : ''} ${activeEvent ? (isEarthquakeActive(activeEvent) ? 'earthquake-active' : '') : ''} ${activeEvent ? (activeEvent.type === 'slow_motion' ? 'slow-motion-active' : '') : ''}`}
+      className={`relative w-full h-[100dvh] bg-black text-white overflow-hidden flex flex-col items-center animate-[fade-in_0.3s_ease-out] ${shake ? 'translate-x-1' : ''} ${bounceBack ? 'bounce-back' : ''} ${activeEvent ? (isEarthquakeActive(activeEvent) ? 'earthquake-active' : '') : ''} ${activeEvent ? (activeEvent.type === 'slow_motion' ? 'slow-motion-active' : '') : ''}`}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
@@ -2030,6 +2095,10 @@ export default function App() {
                         })()}
 
                         <button onClick={goToNextLevel} className="w-full py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-black uppercase rounded-lg text-lg flex items-center justify-center gap-3 shadow-[0_5px_0_#b45309] active:shadow-none active:translate-y-[5px]">Next Gig <Zap size={20} fill="black" /></button>
+                        <button onClick={() => setShowCompletionView(true)} className="mt-3 w-full py-2 bg-cyan-600/50 hover:bg-cyan-600/70 text-white font-marker rounded-lg text-base flex items-center justify-center gap-2 border border-cyan-500/30">
+                          <Library size={18} />
+                          View Organized Crates
+                        </button>
                         <button onClick={() => { clearComboTimer(); setGameState(prev => ({...prev, status: 'menu'})); }} className="mt-3 text-gray-400 underline text-sm">Return to Menu</button>
                       </>
                     ) : (
@@ -2086,6 +2155,14 @@ export default function App() {
           saveData={saveData}
           onClose={() => setShowCustomization(false)}
           onUpdate={setSaveData}
+        />
+      )}
+
+      {/* Completion View Overlay */}
+      {showCompletionView && (
+        <CompletionView
+          crates={crates}
+          onClose={() => setShowCompletionView(false)}
         />
       )}
 

@@ -14,7 +14,8 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({ sa
     saveData.accessibilitySettings || {
       reduceMotion: false,
       colorBlindMode: 'none',
-      increasedContrast: false
+      increasedContrast: false,
+      relaxedMode: false
     }
   );
 
@@ -89,6 +90,22 @@ export const AccessibilitySettings: React.FC<AccessibilitySettingsProps> = ({ sa
             <div>
               <span className="text-white font-marker text-lg block">High Contrast</span>
               <span className="text-gray-400 text-sm">Increase contrast for better visibility</span>
+            </div>
+          </label>
+        </div>
+
+        {/* Relaxed Mode */}
+        <div className="mb-6">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={settings.relaxedMode || false}
+              onChange={(e) => setSettings(s => ({ ...s, relaxedMode: e.target.checked }))}
+              className="mt-1 w-5 h-5 rounded border-2 border-gray-600 bg-black/50 checked:bg-cyan-500 checked:border-cyan-500 cursor-pointer"
+            />
+            <div>
+              <span className="text-white font-marker text-lg block">Relaxed Mode</span>
+              <span className="text-gray-400 text-sm">Slower pace, longer combo window, gentler feedback</span>
             </div>
           </label>
         </div>

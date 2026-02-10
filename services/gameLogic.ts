@@ -71,6 +71,7 @@ export const generateFromCampaignConfig = (
     genre,
     capacity: config.crateCapacities[idx],
     filled: 0,
+    vinyls: [],
     label: randomPick(GENRE_LABELS[genre]),
   }));
 
@@ -216,6 +217,7 @@ export const generateLevel = (
     genre,
     capacity: Math.floor(Math.random() * 2) + config.minCrateSize + Math.floor(levelIndex / CAPACITY_INCREASE_INTERVAL),
     filled: 0,
+    vinyls: [],
     label: randomPick(GENRE_LABELS[genre]),
   }));
 

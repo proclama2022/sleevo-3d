@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { Crate, GENRE_COLORS, Genre, Vinyl } from '../types';
-import { Star, Zap, Music, Heart, Sparkles, Disc, Skull, Activity, Globe, CheckCircle2, X } from 'lucide-react';
+import { Star, Zap, Music, Heart, Sparkles, Disc, Skull, Activity, Globe, CheckCircle2, X, Gem, Bomb, Link, Clock } from 'lucide-react';
 import { VinylCover } from './VinylCover';
 import { useWindowSize } from '../hooks/useWindowSize';
 
@@ -13,7 +13,7 @@ interface CrateBoxProps {
   onRegisterStackRef?: (id: string, el: HTMLDivElement | null) => void;
 }
 
-// Visual theme configuration for each genre - MOLTO più chiari per visibilità
+// Visual theme configuration for each genre
 const CRATE_THEMES: Record<Genre, {
   woodColor: string;
   accentColor: string;
@@ -29,8 +29,38 @@ const CRATE_THEMES: Record<Genre, {
   [Genre.Electronic]: { woodColor: '#455a64', accentColor: '#06b6d4', textureOpacity: 0.2, Icon: Activity },
 };
 
+// Genre accent hex colors for sleeve rendering
+const GENRE_HEX: Record<Genre, string> = {
+  [Genre.Rock]: '#ef4444',
+  [Genre.Jazz]: '#3b82f6',
+  [Genre.Soul]: '#eab308',
+  [Genre.Funk]: '#f97316',
+  [Genre.Disco]: '#a855f7',
+  [Genre.Punk]: '#db2777',
+  [Genre.Electronic]: '#06b6d4',
+};
+
+// Genre icon mapping for sleeves
+const GENRE_SLEEVE_ICONS: Record<Genre, React.ElementType> = {
+  [Genre.Rock]: Zap,
+  [Genre.Jazz]: Music,
+  [Genre.Soul]: Heart,
+  [Genre.Funk]: Sparkles,
+  [Genre.Disco]: Disc,
+  [Genre.Punk]: Skull,
+  [Genre.Electronic]: Activity,
+};
+
+// Special disc type icons & colors
+const SPECIAL_BADGE: Record<string, { Icon: React.ElementType; color: string }> = {
+  diamond: { Icon: Gem, color: '#60a5fa' },
+  bomb: { Icon: Bomb, color: '#f87171' },
+  chain: { Icon: Link, color: '#a78bfa' },
+  time: { Icon: Clock, color: '#34d399' },
+  wildcard: { Icon: Star, color: '#fbbf24' },
+};
+
 const CrateDeco = ({ genre }: { genre: Genre }) => {
-  // Uniform style for the etched brand mark (bottom-right corner)
   const brandClass = "absolute bottom-3 right-3 w-6 h-6 text-black/40 drop-shadow-[0_1px_0_rgba(255,255,255,0.15)] mix-blend-overlay pointer-events-none opacity-80";
   const scratchClass = "absolute bg-black/10 mix-blend-overlay pointer-events-none";
 
@@ -81,17 +111,129 @@ const CrateDeco = ({ genre }: { genre: Genre }) => {
   }
 }
 
-// Sleeve accent colors that vary per record for visual variety
-const SLEEVE_ACCENTS = [
-  { bg: '#1a1a2e', stripe: '#e94560' },
-  { bg: '#0f3460', stripe: '#e94560' },
-  { bg: '#2d132c', stripe: '#ee4c7c' },
-  { bg: '#1b1b2f', stripe: '#f0a500' },
-  { bg: '#162447', stripe: '#1f4068' },
-  { bg: '#1a1a1a', stripe: '#e0e0e0' },
-  { bg: '#2c3333', stripe: '#395b64' },
-  { bg: '#3d0000', stripe: '#950101' },
-];
+// Front sleeve: full mini-cover with genre color, icon, title, artist
+const FrontSleeve: React.FC<{ vinyl: Vinyl; sleeveSize: number; crateAccent: string }> = ({ vinyl, sleeveSize, crateAccent }) => {
+  const genreColor = GENRE_HEX[vinyl.genre] || crateAccent;
+  const GenreIcon = GENRE_SLEEVE_ICONS[vinyl.genre] || Music;
+
+  return (
+    <div className="absolute inset-0 overflow-hidden rounded-[3px]" style={{
+      background: `linear-gradient(145deg, ${genreColor}dd 0%, ${genreColor}88 40%, #1a1a2e 100%)`,
+    }}>
+      {/* Watermark genre icon */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.12] pointer-events-none">
+        <GenreIcon size={sleeveSize * 0.6} strokeWidth={1.5} style={{ color: '#fff' }} />
+      </div>
+
+      {/* Genre badge (top-left) */}
+      <div className="absolute top-[4px] left-[4px] w-[18px] h-[18px] rounded-full flex items-center justify-center z-20"
+        style={{ backgroundColor: genreColor, boxShadow: `0 0 6px ${genreColor}80` }}>
+        <GenreIcon size={10} strokeWidth={2.5} style={{ color: '#fff' }} />
+      </div>
+
+      {/* Gold star badge */}
+      {vinyl.isGold && (
+        <div className="absolute top-[3px] right-[20px] z-20">
+          <Star size={14} strokeWidth={2} style={{ color: '#fbbf24', filter: 'drop-shadow(0 0 4px #fbbf2480)' }} fill="#fbbf24" />
+        </div>
+      )}
+
+      {/* Special disc badge */}
+      {vinyl.specialType && SPECIAL_BADGE[vinyl.specialType] && (
+        <div className="absolute top-[4px] right-[4px] w-[16px] h-[16px] rounded-full flex items-center justify-center z-20"
+          style={{ backgroundColor: SPECIAL_BADGE[vinyl.specialType].color + '90', boxShadow: `0 0 4px ${SPECIAL_BADGE[vinyl.specialType].color}60` }}>
+          {React.createElement(SPECIAL_BADGE[vinyl.specialType].Icon, { size: 9, strokeWidth: 2.5, style: { color: '#fff' } })}
+        </div>
+      )}
+
+      {/* Title + Artist at bottom with gradient overlay */}
+      <div className="absolute bottom-0 left-0 right-0 z-10" style={{
+        background: 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)',
+        padding: '14px 5px 4px 5px',
+      }}>
+        <div style={{
+          fontSize: '8px',
+          fontWeight: 800,
+          color: '#fff',
+          lineHeight: 1.1,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+        }}>
+          {vinyl.title}
+        </div>
+        <div style={{
+          fontSize: '6.5px',
+          fontWeight: 500,
+          color: 'rgba(255,255,255,0.7)',
+          lineHeight: 1.1,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          marginTop: 1,
+        }}>
+          {vinyl.artist}
+        </div>
+      </div>
+
+      {/* Gold overlay */}
+      {vinyl.isGold && (
+        <div className="absolute inset-0 pointer-events-none z-5 rounded-[3px]" style={{
+          background: 'linear-gradient(135deg, rgba(251,191,36,0.15) 0%, transparent 50%, rgba(251,191,36,0.1) 100%)',
+          boxShadow: 'inset 0 0 12px rgba(251,191,36,0.2)',
+        }} />
+      )}
+
+      {/* Gloss */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/15 rounded-[3px] pointer-events-none z-10"></div>
+    </div>
+  );
+};
+
+// Back sleeve: colored spine strip + dark tinted body with genre watermark
+const BackSleeve: React.FC<{ vinyl: Vinyl; crateAccent: string }> = ({ vinyl, crateAccent }) => {
+  const genreColor = GENRE_HEX[vinyl.genre] || crateAccent;
+  const GenreIcon = GENRE_SLEEVE_ICONS[vinyl.genre] || Music;
+
+  return (
+    <>
+      {/* Spine: genre-colored strip */}
+      <div className="absolute top-0 left-0 right-0 h-[8px] z-20" style={{
+        background: `linear-gradient(90deg, ${genreColor}ee, ${genreColor}, ${genreColor}ee)`,
+        boxShadow: `0 0 6px ${genreColor}60, 0 2px 4px rgba(0,0,0,0.3)`,
+      }} />
+
+      {/* Body: dark with genre tint */}
+      <div className="absolute inset-0 overflow-hidden rounded-[2px]" style={{
+        background: `linear-gradient(160deg, ${genreColor}25 0%, #1a1520 40%, #12101a 100%)`,
+      }}>
+        {/* Subtle genre watermark */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.06] pointer-events-none">
+          <GenreIcon size={50} strokeWidth={1.5} style={{ color: '#fff' }} />
+        </div>
+      </div>
+
+      {/* Gold indicator for non-front */}
+      {vinyl.isGold && (
+        <div className="absolute top-[10px] right-[3px] z-20">
+          <Star size={9} strokeWidth={2} style={{ color: '#fbbf24', filter: 'drop-shadow(0 0 3px #fbbf2460)' }} fill="#fbbf24" />
+        </div>
+      )}
+
+      {/* Special disc dot */}
+      {vinyl.specialType && SPECIAL_BADGE[vinyl.specialType] && (
+        <div className="absolute top-[10px] left-[3px] w-[7px] h-[7px] rounded-full z-20"
+          style={{ backgroundColor: SPECIAL_BADGE[vinyl.specialType].color }} />
+      )}
+
+      {/* Edge wear */}
+      <div className="absolute inset-0 rounded-[2px] pointer-events-none z-10" style={{
+        boxShadow: 'inset 0 0 3px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(0,0,0,0.3)',
+      }} />
+    </>
+  );
+};
 
 export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightState, ghostVinyl, hideLabel, onRegisterRef, onRegisterStackRef }) => {
   const { isMobile } = useWindowSize();
@@ -134,11 +276,8 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
       {/* Enhanced Highlight Effects */}
       {highlightState === 'valid' && (
         <>
-          {/* Glow effect */}
           <div className="absolute inset-0 rounded-lg bg-green-400 blur-2xl opacity-50 -z-10 animate-pulse"></div>
-          {/* Background overlay */}
           <div className="absolute inset-0 rounded-lg bg-green-400/20 pointer-events-none"></div>
-          {/* Success icon */}
           <div className="absolute -top-4 -right-4 z-50">
             <CheckCircle2 className="w-10 h-10 text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.8)] animate-bounce" fill="rgba(74,222,128,0.3)" />
           </div>
@@ -146,11 +285,8 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
       )}
       {highlightState === 'invalid' && (
         <>
-          {/* Glow effect */}
           <div className="absolute inset-0 rounded-lg bg-red-500 blur-2xl opacity-50 -z-10 animate-pulse"></div>
-          {/* Background overlay */}
           <div className="absolute inset-0 rounded-lg bg-red-500/20 pointer-events-none"></div>
-          {/* Error icon */}
           <div className="absolute -top-4 -right-4 z-50">
             <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center drop-shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-bounce">
               <X className="w-6 h-6 text-white" strokeWidth={3} />
@@ -159,8 +295,8 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
         </>
       )}
 
-      {/* --- OUTER FRAME (Wood crate walls) - MOLTO PIÙ VISIBILE --- */}
-      <div 
+      {/* --- OUTER FRAME (Wood crate walls) --- */}
+      <div
         className="absolute inset-x-0 bottom-0 top-4 rounded-lg shadow-2xl overflow-visible -z-20 border-4"
         style={{
           background: `linear-gradient(135deg, ${theme.woodColor} 0%, ${theme.woodColor}dd 100%)`,
@@ -173,54 +309,41 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
           `
         }}
       >
-        {/* Wood texture on frame */}
         <div className="absolute inset-0 bg-wood opacity-40 mix-blend-overlay"></div>
-        {/* Wood grain lines */}
-        <div className="absolute inset-0 opacity-20" style={{ 
+        <div className="absolute inset-0 opacity-20" style={{
           backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(0,0,0,0.3) 8px, rgba(0,0,0,0.3) 9px)'
         }}></div>
       </div>
 
-      {/* --- INTERIOR SPACE (Dark container inside) - PIÙ PROFONDO --- */}
-      <div 
+      {/* --- INTERIOR SPACE --- */}
+      <div
         className="absolute inset-x-3 bottom-3 top-8 rounded-sm shadow-2xl overflow-visible -z-10"
         style={{
-          backgroundColor: '#0a0806',
+          backgroundColor: '#1a1510',
           boxShadow: `
-            inset 0 0 50px rgba(0,0,0,1),
-            inset 0 4px 20px rgba(0,0,0,0.9),
+            inset 0 0 30px rgba(0,0,0,0.7),
+            inset 0 4px 12px rgba(0,0,0,0.5),
             0 0 0 3px rgba(0,0,0,0.8),
             0 4px 12px rgba(0,0,0,0.6)
           `
         }}
       >
-        {/* Very deep inner shadows */}
         <div className="absolute inset-0 pointer-events-none rounded-sm" style={{
-          boxShadow: 'inset 0 0 60px rgba(0,0,0,0.95), inset 0 20px 40px rgba(0,0,0,0.9)'
+          boxShadow: 'inset 0 0 30px rgba(0,0,0,0.6), inset 0 15px 25px rgba(0,0,0,0.5)'
         }}></div>
 
-        {/* Side Walls (Thickness) - PIÙ EVIDENTI */}
         <div className="absolute top-0 bottom-0 left-0 w-[6px] md:w-[8px] bg-gradient-to-r from-[#000] via-[#1a0f0d] to-[#2a1d18] z-10 border-r-2 border-white/10"></div>
         <div className="absolute top-0 bottom-0 right-0 w-[6px] md:w-[8px] bg-gradient-to-l from-[#000] via-[#1a0f0d] to-[#2a1d18] z-10 border-l-2 border-white/10"></div>
 
-        {/* Back Wall with visible wood planks */}
         <div className="absolute inset-x-[8px] inset-y-0 bg-[#140b08] flex">
-            {/* Wood Grain Texture - MORE VISIBLE */}
             <div className="absolute inset-0 bg-wood opacity-20 mix-blend-overlay"></div>
-
-            {/* Vertical Planks - più definiti */}
             <div className="flex-1 border-r-2 border-black/50 bg-gradient-to-b from-black/60 to-black/30"></div>
             <div className="flex-1 border-r-2 border-black/50 bg-gradient-to-b from-black/40 to-black/20"></div>
             <div className="flex-1 bg-gradient-to-b from-black/70 to-black/40"></div>
-
-            {/* Deep shadow at bottom where records sit */}
-            <div className="absolute bottom-0 left-0 right-0 h-2/3 bg-gradient-to-t from-black via-black/80 to-transparent"></div>
-
-            {/* Top light leak - più luminoso */}
+            <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-black/60 to-transparent"></div>
             <div className="absolute top-0 left-0 right-0 h-1/4 bg-gradient-to-b from-white/10 to-transparent mix-blend-overlay"></div>
         </div>
 
-        {/* Floor strip - più visibile */}
         <div className="absolute bottom-0 inset-x-0 h-4 bg-black z-10 border-t-2 border-white/10"></div>
       </div>
 
@@ -230,35 +353,39 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
           0%, 100% { transform: scale(1); }
           50% { transform: scale(1.02); }
         }
+        @keyframes goldGlow {
+          0%, 100% { box-shadow: 0 0 6px rgba(251,191,36,0.3), 0 4px 12px rgba(0,0,0,0.6); }
+          50% { box-shadow: 0 0 14px rgba(251,191,36,0.6), 0 0 24px rgba(251,191,36,0.3), 0 4px 12px rgba(0,0,0,0.6); }
+        }
       `}</style>
       <div
         ref={stackRef}
         className="absolute pointer-events-none z-10 overflow-visible"
         style={{
-          /* Position directly using pixel values for reliability */
           bottom: 65,
           left: '50%',
           width: '70%',
-          height: 140,
+          height: 180,
           transform: 'translateX(-50%)',
         }}
       >
       {Array.from({ length: crate.filled }).map((_, i) => {
         const isFront = i === crate.filled - 1;
         const reverseIndex = crate.filled - 1 - i;
+        const vinyl = crate.vinyls[i]; // actual vinyl data
 
         const randomRot = ((i * 1337) % 5) - 2;
-        const verticalStep = 18;
-        const visualOffset = Math.min(reverseIndex * verticalStep, 70);
-        const sleeveSize = 95;
-        const accent = SLEEVE_ACCENTS[i % SLEEVE_ACCENTS.length];
-        const seed = (i * 1337) % 4;
+        const verticalStep = 20;
+        const visualOffset = Math.min(reverseIndex * verticalStep, 80);
+        const sleeveSize = 105;
+        const genreColor = vinyl ? GENRE_HEX[vinyl.genre] : theme.accentColor;
+        const isGold = vinyl?.isGold;
 
         return (
           <div
             key={i}
             className={`
-              absolute rounded-[2px]
+              absolute rounded-[3px]
               transition-all duration-500 cubic-bezier(0.34, 1.56, 0.64, 1)
               ${isFront ? 'animate-[breathe_3s_ease-in-out_infinite]' : ''}
             `}
@@ -270,58 +397,37 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
               marginLeft: -(sleeveSize * 0.5),
               transformOrigin: 'bottom center',
               transform: `scale(${0.92 + (i * 0.005)}) rotate(${randomRot}deg)`,
-              filter: isFront ? 'none' : `brightness(${0.4 + (i / Math.max(crate.capacity, 1)) * 0.6}) saturate(0.8)`,
-              boxShadow: isFront
-                ? '0 4px 12px rgba(0,0,0,0.6), -2px 0 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'
-                : '-3px 4px 15px rgba(0,0,0,0.8)',
+              filter: isFront ? 'none' : `brightness(${0.55 + (i / Math.max(crate.capacity, 1)) * 0.35}) saturate(0.9)`,
+              boxShadow: isGold && isFront
+                ? undefined // handled by animation
+                : isFront
+                  ? '0 4px 12px rgba(0,0,0,0.6), -2px 0 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)'
+                  : isGold
+                    ? `0 0 8px rgba(251,191,36,0.3), -3px 4px 15px rgba(0,0,0,0.8)`
+                    : '-3px 4px 15px rgba(0,0,0,0.8)',
+              animation: isGold && isFront
+                ? 'breathe 3s ease-in-out infinite, goldGlow 2s ease-in-out infinite'
+                : undefined,
               animationDelay: `${i * 0.2}s`,
               zIndex: i,
-              backgroundColor: accent.bg,
+              backgroundColor: vinyl ? `${genreColor}20` : '#2a2040',
             }}
           >
-            {/* Spine edge (top of sleeve visible in crate) */}
-            <div className="absolute top-0 left-0 right-0 h-[3px] z-20" style={{ background: `linear-gradient(90deg, ${accent.stripe}, ${accent.bg}, ${accent.stripe})` }}></div>
-
-            {/* Album art area - different patterns per seed */}
-            {seed === 0 && (
+            {/* Render based on vinyl data availability */}
+            {vinyl && isFront ? (
+              <FrontSleeve vinyl={vinyl} sleeveSize={sleeveSize} crateAccent={theme.accentColor} />
+            ) : vinyl ? (
+              <BackSleeve vinyl={vinyl} crateAccent={theme.accentColor} />
+            ) : (
+              /* Fallback for missing vinyl data (shouldn't happen) */
               <>
-                {/* Bold diagonal stripe design */}
-                <div className="absolute inset-0 overflow-hidden rounded-[2px]">
-                  <div className="absolute inset-0 opacity-60" style={{ background: `repeating-linear-gradient(135deg, transparent, transparent 8px, ${accent.stripe}33 8px, ${accent.stripe}33 10px)` }}></div>
-                  <div className="absolute bottom-2 left-2 right-2 h-[30%] bg-black/30 rounded-sm flex items-center justify-center">
-                    <div className="w-[60%] h-[2px] bg-white/30 rounded"></div>
-                  </div>
-                </div>
-              </>
-            )}
-            {seed === 1 && (
-              <>
-                {/* Central circle / vinyl peeking design */}
-                <div className="absolute inset-0 overflow-hidden rounded-[2px]">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[65%] h-[65%] rounded-full border-[3px] opacity-40" style={{ borderColor: accent.stripe }}></div>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[25%] h-[25%] rounded-full bg-black/40"></div>
-                  <div className="absolute top-2 left-2 w-[40%] h-[2px] bg-white/20 rounded"></div>
-                </div>
-              </>
-            )}
-            {seed === 2 && (
-              <>
-                {/* Split design - half color block */}
-                <div className="absolute inset-0 overflow-hidden rounded-[2px]">
-                  <div className="absolute top-0 left-0 w-[40%] h-full opacity-40" style={{ backgroundColor: accent.stripe }}></div>
-                  <div className="absolute bottom-3 right-3 w-[50%] h-[3px] bg-white/20 rounded"></div>
-                  <div className="absolute bottom-5 right-3 w-[35%] h-[2px] bg-white/10 rounded"></div>
-                </div>
-              </>
-            )}
-            {seed === 3 && (
-              <>
-                {/* Minimal typography style */}
-                <div className="absolute inset-0 overflow-hidden rounded-[2px]">
-                  <div className="absolute top-3 left-3 right-3 h-[2px] bg-white/15 rounded"></div>
-                  <div className="absolute top-5 left-3 w-[50%] h-[2px] bg-white/10 rounded"></div>
-                  <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(ellipse at 70% 60%, ${accent.stripe}, transparent 70%)` }}></div>
-                </div>
+                <div className="absolute top-0 left-0 right-0 h-[8px] z-20" style={{
+                  background: `linear-gradient(90deg, ${theme.accentColor}ee, ${theme.accentColor}, ${theme.accentColor}ee)`,
+                  boxShadow: `0 0 4px ${theme.accentColor}60`,
+                }} />
+                <div className="absolute inset-0 overflow-hidden rounded-[2px]" style={{
+                  background: `linear-gradient(160deg, ${theme.accentColor}25 0%, #1a1520 40%, #12101a 100%)`,
+                }} />
               </>
             )}
 
@@ -330,16 +436,16 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
               <div className="absolute -top-[6px] -right-[6px] w-[40%] h-[40%] rounded-full bg-[#111] z-30 overflow-hidden"
                 style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.5)' }}>
                 <div className="absolute inset-0 opacity-40" style={{ background: 'repeating-radial-gradient(#333 0, #111 1px, #111 2px)' }}></div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[35%] h-[35%] rounded-full" style={{ backgroundColor: theme.accentColor + '60' }}></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[35%] h-[35%] rounded-full" style={{ backgroundColor: genreColor + '60' }}></div>
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[8%] h-[8%] rounded-full bg-black"></div>
               </div>
             )}
 
             {/* Light reflection / gloss */}
-            <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-transparent to-black/20 rounded-[2px] pointer-events-none z-10"></div>
+            <div className="absolute inset-0 bg-gradient-to-br from-white/8 via-transparent to-black/20 rounded-[3px] pointer-events-none z-10"></div>
 
             {/* Worn edge effect */}
-            <div className="absolute inset-0 rounded-[2px] pointer-events-none z-10" style={{ boxShadow: 'inset 0 0 3px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(0,0,0,0.3)' }}></div>
+            <div className="absolute inset-0 rounded-[3px] pointer-events-none z-10" style={{ boxShadow: 'inset 0 0 3px rgba(0,0,0,0.4), inset 0 -1px 2px rgba(0,0,0,0.3)' }}></div>
           </div>
         );
       })}
@@ -349,7 +455,7 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
         <div
           className="absolute opacity-40 pointer-events-none z-50"
           style={{
-            bottom: `${(crate.filled * 18) + 65}px`,
+            bottom: `${(crate.filled * 20) + 65}px`,
             left: '50%',
             transform: 'translateX(-50%)'
           }}
@@ -359,10 +465,24 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
       )}
       </div>
 
-      {/* --- FRONT PANEL (The Wood Crate Front) - MOLTO PIÙ TRIDIMENSIONALE --- */}
+      {/* --- VINYL COUNT BADGE --- */}
+      {crate.filled > 0 && (
+        <div
+          className="absolute top-0 left-1/2 -translate-x-1/2 z-40 px-2 py-0.5 rounded-full text-xs font-bold shadow-lg"
+          style={{
+            backgroundColor: theme.accentColor,
+            color: '#000',
+            boxShadow: `0 2px 8px ${theme.accentColor}80, 0 0 12px ${theme.accentColor}40`,
+          }}
+        >
+          {crate.filled}/{crate.capacity}
+        </div>
+      )}
+
+      {/* --- FRONT PANEL (The Wood Crate Front) --- */}
       <div className="relative z-20 w-full h-[65px] md:h-[75px] flex flex-col items-center translate-y-1">
 
-         {/* COLORED TOP RIM (opening edge) - MOLTO PIÙ SPESSO */}
+         {/* COLORED TOP RIM */}
          <div
             className="absolute top-0 left-0 right-0 h-4 rounded-t-md z-40 border-t-2 border-b-2"
             style={{
@@ -378,11 +498,10 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
               `
             }}
          >
-           {/* Inner shine */}
            <div className="absolute inset-0 bg-gradient-to-b from-white/30 to-transparent rounded-t-md"></div>
          </div>
 
-         {/* The main wood front panel - CON BORDI E TEXTURE MOLTO EVIDENTI */}
+         {/* The main wood front panel */}
          <div
             className="absolute inset-0 rounded-md shadow-2xl overflow-hidden border-4"
             style={{
@@ -397,33 +516,27 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
               `
             }}
          >
-            {/* Horizontal wood planks */}
-            <div className="absolute inset-0 opacity-40 pointer-events-none" style={{ 
+            <div className="absolute inset-0 opacity-40 pointer-events-none" style={{
               backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(0,0,0,0.4) 20px, rgba(0,0,0,0.4) 22px)'
             }}></div>
-            {/* Wood grain texture - PIÙ VISIBILE */}
             <div className="absolute inset-0 bg-wood opacity-60 mix-blend-overlay"></div>
-            {/* Vignette for depth */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/40"></div>
-            {/* Side panels (thickness illusion) */}
             <div className="absolute top-0 bottom-0 left-0 w-3 bg-gradient-to-r from-black/50 to-transparent border-r-2 border-black/30"></div>
             <div className="absolute top-0 bottom-0 right-0 w-3 bg-gradient-to-l from-black/50 to-transparent border-l-2 border-black/30"></div>
             <CrateDeco genre={crate.genre} />
          </div>
 
-         {/* MAIN BRAND ICON - Much more visible */}
+         {/* MAIN BRAND ICON */}
          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-70 pointer-events-none scale-110 md:scale-150 z-10" style={{ filter: `drop-shadow(0 2px 4px ${theme.accentColor}60)` }}>
              <theme.Icon size={36} strokeWidth={2.5} style={{ color: theme.accentColor }} />
          </div>
 
-         {/* LABEL STICKER - MOLTO PIÙ GRANDE E CONTRASTATO */}
+         {/* LABEL STICKER */}
          {hideLabel ? (
-           // Memory Challenge Mode: Show only icon (larger and colored)
            <div className="absolute top-2 w-14 h-14 bg-black/70 backdrop-blur rounded-full shadow-[0_0_20px_rgba(0,0,0,0.9)] flex items-center justify-center border-4 z-30 animate-pulse" style={{ borderColor: theme.accentColor }}>
               <theme.Icon size={32} strokeWidth={2.5} style={{ color: theme.accentColor, filter: `drop-shadow(0 0 8px ${theme.accentColor})` }} />
            </div>
          ) : (
-           // Normal Mode: PILL/BADGE GRANDE CON ICONA
            <div
              className="absolute top-2 h-[36px] md:h-[42px] px-3 md:px-4 bg-white shadow-[0_4px_12px_rgba(0,0,0,0.4)] flex items-center justify-center gap-2 z-30 rounded-full border-4"
              style={{
@@ -441,12 +554,12 @@ export const CrateBox: React.FC<CrateBoxProps> = React.memo(({ crate, highlightS
          {/* CAPACITY INDICATOR */}
          <div className="absolute bottom-1 w-full flex justify-center gap-0.5 opacity-90 z-30">
               {Array.from({ length: crate.capacity }).map((_, i) => (
-                   <div 
-                    key={i} 
+                   <div
+                    key={i}
                     className={`
                       w-1.5 h-1.5 rounded-full border border-black/20
-                      ${i < crate.filled 
-                        ? `bg-[${theme.accentColor}] shadow-[0_0_4px_${theme.accentColor}]` 
+                      ${i < crate.filled
+                        ? `bg-[${theme.accentColor}] shadow-[0_0_4px_${theme.accentColor}]`
                         : "bg-[#00000060] box-inner-shadow"}
                     `}
                     style={{ backgroundColor: i < crate.filled ? theme.accentColor : undefined }}

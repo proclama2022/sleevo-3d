@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Hand, Target, HelpCircle, Zap, Trash2, Star, Flame, Package } from 'lucide-react';
 import { TutorialStep } from '../types';
+import { playTutorialNarration, stopNarration } from '../services/voiceNarration';
 
 interface TutorialProps {
   step: TutorialStep;
@@ -77,6 +78,14 @@ export const Tutorial: React.FC<TutorialProps> = ({ step, onNext, onSkip, onSkip
 
   useEffect(() => {
     setVisible(true);
+
+    // Play voice narration for this tutorial step
+    playTutorialNarration(step);
+
+    // Cleanup: stop narration when step changes or component unmounts
+    return () => {
+      stopNarration();
+    };
   }, [step]);
 
   if (step === 'complete') {

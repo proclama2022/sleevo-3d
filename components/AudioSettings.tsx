@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Music as MusicIcon, Zap } from 'lucide-react';
+import { Volume2, VolumeX, Music as MusicIcon, Zap, MessageSquare } from 'lucide-react';
 import {
   getAudioSettings,
   setMusicVolume,
@@ -9,6 +9,12 @@ import {
   AudioSettings as AudioSettingsType,
   sfx,
 } from '../services/audio';
+import {
+  getVoiceSettings,
+  toggleVoiceNarration,
+  testNarration,
+  isVoiceNarrationSupported,
+} from '../services/voiceNarration';
 
 interface AudioSettingsProps {
   onClose: () => void;
@@ -16,10 +22,13 @@ interface AudioSettingsProps {
 
 export const AudioSettings: React.FC<AudioSettingsProps> = ({ onClose }) => {
   const [settings, setSettings] = useState<AudioSettingsType>(getAudioSettings());
+  const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const voiceSupported = isVoiceNarrationSupported();
 
   // Sync settings state when component mounts
   useEffect(() => {
     setSettings(getAudioSettings());
+    setVoiceEnabled(getVoiceSettings().enabled);
   }, []);
 
   const handleMusicVolumeChange = (value: number) => {
@@ -45,6 +54,15 @@ export const AudioSettings: React.FC<AudioSettingsProps> = ({ onClose }) => {
     setSettings(getAudioSettings());
     if (newEnabled) {
       sfx.dropSuccess();
+    }
+  };
+
+  const handleVoiceToggle = () => {
+    const newEnabled = !voiceEnabled;
+    toggleVoiceNarration(newEnabled);
+    setVoiceEnabled(newEnabled);
+    if (newEnabled) {
+      testNarration();
     }
   };
 
@@ -148,6 +166,82 @@ export const AudioSettings: React.FC<AudioSettingsProps> = ({ onClose }) => {
                 <span className="text-white font-mono text-sm w-10 text-right">
                   {Math.round(settings.sfxVolume * 100)}%
                 </span>
+              </div>
+            </div>
+
+            {/* Voice Narration Section */}
+            {voiceSupported && (
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare size={20} className="text-purple-400" />
+                    <span className="text-white font-display text-lg">Tutorial Voice</span>
+                  </div>
+                  <button
+                    onClick={handleVoiceToggle}
+                    className={`p-2 rounded-lg transition-colors ${
+                      voiceEnabled
+                        ? 'bg-purple-500/20 text-purple-400'
+                        : 'bg-gray-700 text-gray-500'
+                    }`}
+                  >
+                    {voiceEnabled ? (
+                      <Volume2 size={20} />
+                    ) : (
+                      <VolumeX size={20} />
+                    )}
+                  </button>
+                </div>
+
+                <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
+                  <p className="text-purple-200 text-xs mb-2">
+                    {voiceEnabled
+                      ? '✅ La voce guida è attiva durante il tutorial'
+                      : 'Attiva la narrazione vocale per il tutorial'}
+                  </p>
+                  <button
+                    onClick={() => testNarration("Tutorial vocale attivato. Benvenuto su Sleevo!")}
+                    disabled={!voiceEnabled}
+                    className="w-full py-2 px-3 bg-purple-600/30 hover:bg-purple-600/50 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors border border-purple-500/30"
+                  >
+                    🎙️ Testa la Voce
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Sound Previews */}
+            <div className="mb-6">
+              <div className="text-white/60 text-sm mb-2 font-display">Preview Sounds:</div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => sfx.vinylSlide()}
+                  disabled={!settings.sfxEnabled}
+                  className="py-2 px-3 bg-cyan-600/30 hover:bg-cyan-600/50 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors border border-cyan-500/30"
+                >
+                  🎵 Vinyl Slide
+                </button>
+                <button
+                  onClick={() => sfx.vinylThunk()}
+                  disabled={!settings.sfxEnabled}
+                  className="py-2 px-3 bg-green-600/30 hover:bg-green-600/50 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors border border-green-500/30"
+                >
+                  🎯 Vinyl Thunk
+                </button>
+                <button
+                  onClick={() => sfx.comboMilestone()}
+                  disabled={!settings.sfxEnabled}
+                  className="py-2 px-3 bg-purple-600/30 hover:bg-purple-600/50 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors border border-purple-500/30"
+                >
+                  🔥 Combo
+                </button>
+                <button
+                  onClick={() => sfx.levelUp()}
+                  disabled={!settings.sfxEnabled}
+                  className="py-2 px-3 bg-yellow-600/30 hover:bg-yellow-600/50 disabled:bg-gray-700 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors border border-yellow-500/30"
+                >
+                  ⭐ Level Up
+                </button>
               </div>
             </div>
 

@@ -29,6 +29,11 @@ export const TRASH_RADIUS = 100;
 export const COMBO_TIMEOUT = 3000;
 
 /**
+ * Extended combo timeout for relaxed mode (6 seconds instead of 3).
+ */
+export const COMBO_TIMEOUT_RELAXED = 6000;
+
+/**
  * Maximum dust level a vinyl can have (0 = clean, 3 = very dusty).
  */
 export const MAX_DUST_LEVEL = 3;
@@ -54,8 +59,9 @@ export const GOLD_VINYL_BONUS = 200;
 
 /**
  * Duration (in milliseconds) for vinyl flying animation from shelf to crate.
+ * Increased to 1200ms for more satisfying, weighted movement.
  */
-export const FLYING_VINYL_DURATION = 600;
+export const FLYING_VINYL_DURATION = 1200;
 
 /**
  * Duration (in milliseconds) for particle explosion animations.
@@ -70,9 +76,9 @@ export const PARTICLE_CLEANUP_DELAY = 600;
 
 /**
  * CSS cubic-bezier easing for flying vinyl animation.
- * Creates a bouncy, satisfying motion.
+ * Smooth ease-in-out for natural, physics-based movement.
  */
-export const FLYING_VINYL_EASING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+export const FLYING_VINYL_EASING = 'cubic-bezier(0.25, 0.1, 0.25, 1)';
 
 /**
  * Duration (in seconds) for opacity fade transitions.
@@ -156,6 +162,18 @@ export const FLYING_VINYL_SCALE = 0.4;
  * Rotation (in degrees) applied to vinyl during flight animation.
  */
 export const FLYING_VINYL_ROTATION = 360;
+
+/**
+ * Duration (in milliseconds) for vinyl settle animation after flight.
+ * Vinyl slightly scales back up before fading.
+ */
+export const VINYL_SETTLE_DURATION = 200;
+
+/**
+ * Duration (in milliseconds) for vinyl fade animation after settling.
+ * Vinyl fades into the stack.
+ */
+export const VINYL_FADE_DURATION = 300;
 
 // ============================================================================
 // UI & LAYOUT
@@ -324,6 +342,15 @@ export const DIFFICULTY_CONFIG = {
     moveBuffer: 1,
     minCrateSize: 3,
   },
+} as const;
+
+/**
+ * Relaxation mode configuration for gentler gameplay experience.
+ */
+export const RELAXATION_CONFIG = {
+  comboTimeoutMultiplier: 2,        // 2x combo timeout (3s → 6s)
+  disableScreenShake: true,         // No screen shake on errors
+  gentleFeedback: true,             // Use bounce-back instead of shake
 } as const;
 
 // ============================================================================

@@ -39,6 +39,7 @@ export interface Crate {
   genre: Genre;
   capacity: number;
   filled: number;
+  vinyls: Vinyl[];
   label: string;
   position?: { x: number; y: number; width: number; height: number };
 }
@@ -149,6 +150,7 @@ export interface AccessibilitySettings {
   reduceMotion: boolean;  // override system preference
   colorBlindMode: ColorBlindMode;
   increasedContrast: boolean;
+  relaxedMode?: boolean;  // slower pace, longer combo window, gentler feedback
 }
 
 // Customization settings
