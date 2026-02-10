@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
-import { Crate, Vinyl, GameState, Genre, Difficulty, TutorialStep, CollectionItem, SecondaryObjective } from './types';
+import { Crate, Vinyl, GameState, Genre, Difficulty, TutorialStep, CollectionItem, SecondaryObjective, ConveyorVinyl, ShelfSection, ShelfSlot, GENRE_COLORS } from './types';
 import { generateLevel, calculateScore, getXPToNextLevel } from './services/gameLogic';
 import { loadSaveData, saveSaveData, updateStats, SaveData, addToCollection, unlockAchievement, updateLevelRecords, checkNewRecords } from './services/storage';
 import { initAudioContext, playThemeMusic, stopMusic, sfx } from './services/audio';
@@ -8,7 +8,7 @@ import { shouldTriggerEvent, selectRandomEvent, isEventActive, applyEventEffects
 import { RandomEvent, RandomEventType, RANDOM_EVENT_CONFIG } from './types/events';
 import { useWindowSize } from './hooks/useWindowSize';
 import { VinylCover } from './components/VinylCover';
-import { CrateBox } from './components/CrateBox';
+import { spawnConveyorVinyl, updateConveyorPositions, getBeltSpeed, getSpawnInterval, removeVinylFromBelt } from './services/conveyorLogic';
 import { ThemeBackground } from './components/ThemeBackground';
 import { Tutorial } from './components/Tutorial';
 import { HintButton } from './components/HintButton';
@@ -26,11 +26,13 @@ import { RandomEventOverlay } from './components/RandomEventOverlay';
 import { StarCriteria } from './components/StarCriteria';
 import { StarProgress } from './components/StarProgress';
 import { StarCelebration } from './components/StarCelebration';
-import { Trophy, Music, Disc3, RefreshCw, Zap, Disc, Trash2, CheckCircle2, Play, Settings, Clock, AlertTriangle, ArrowUp, X, Star, Library, TrendingUp, Eye, ChevronRight, RotateCcw, Palette, Menu, Heart } from 'lucide-react';
+import { Trophy, Music, Disc3, RefreshCw, Zap, Disc, Trash2, CheckCircle2, Play, Settings, Clock, AlertTriangle, ArrowUp, X, Star, Library, TrendingUp, Eye, ChevronRight, RotateCcw, Palette, Menu, Heart, Sparkles } from 'lucide-react';
 import { checkAchievements, getAchievementProgress } from './constants/achievements';
 import { getStarCriteria, calculateStarsEarned, calculateCurrentStars, StarCriteria as StarCriteriaType } from './services/starCalculation';
 import { updateStarProgress } from './services/storage';
 import { getCampaignLevel } from './constants/levelConfigs';
+import { GenreSection } from './components/GenreSection';
+import { ConveyorBelt } from './components/ConveyorBelt';
 import { Capacitor } from '@capacitor/core';
 import { Haptics, ImpactStyle, NotificationType } from '@capacitor/haptics';
 import { StatusBar, Style } from '@capacitor/status-bar';
@@ -297,11 +299,20 @@ export default function App() {
     starsEarned: 0,
   });
 
-  const [crates, setCrates] = useState<Crate[]>([]);
-  const [shelfVinyls, setShelfVinyls] = useState<Vinyl[]>([]);
-  const crateRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const stackRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // Conveyor Belt System
+  const [shelfSections, setShelfSections] = useState<ShelfSection[]>([]);
+  const [conveyorVinyls, setConveyorVinyls] = useState<ConveyorVinyl[]>([]);
+  const [beltSpeed, setBeltSpeed] = useState<number>(50);
+  const [lastSpawnTime, setLastSpawnTime] = useState<number>(Date.now());
+
+  // Slot refs system (genre -> position -> element)
+  const slotRefs = useRef<Map<string, HTMLDivElement | null>>(new Map());
+  const [slotHighlights, setSlotHighlights] = useState<Map<number, 'none' | 'neutral' | 'valid' | 'invalid'>>(new Map());
   const trashRef = useRef<HTMLDivElement>(null);
+
+  // Animation frame tracking
+  const animationFrameRef = useRef<number | undefined>(undefined);
+  const lastFrameTimeRef = useRef<number>(Date.now());
   
   const [activeVinyl, setActiveVinyl] = useState<Vinyl | null>(null);
   
@@ -315,6 +326,7 @@ export default function App() {
   const [feedback, setFeedback] = useState<{ text: string, type: 'good' | 'bad' | 'bonus' } | null>(null);
   const [flyingVinyls, setFlyingVinyls] = useState<FlyingVinyl[]>([]);
   const [explosions, setExplosions] = useState<{id: number, x: number, y: number, color: string, genre?: Genre}[]>([]);
+  const [dustParticles, setDustParticles] = useState<{id: number, x: number, y: number}[]>([]);
 
   const [landingId, setLandingId] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
@@ -481,8 +493,8 @@ export default function App() {
       if (shouldTriggerEvent(levelIndex, timeElapsed, eventsTriggeredThisLevel)) {
         const eventType = selectRandomEvent();
 
-        // Apply event effects
-        const effects = applyEventEffects(eventType, gameState, shelfVinyls);
+        // Apply event effects (now affects conveyor vinyls instead of shelf vinyls)
+        const effects = applyEventEffects(eventType, gameState, conveyorVinyls);
 
         // Update state based on effects
         if (effects.modifiedState.timeLeft !== undefined) {
@@ -490,7 +502,7 @@ export default function App() {
         }
 
         if (effects.modifiedVinyls.length > 0) {
-          setShelfVinyls(effects.modifiedVinyls);
+          setConveyorVinyls(effects.modifiedVinyls as ConveyorVinyl[]);
         }
 
         // Set active event
@@ -521,7 +533,7 @@ export default function App() {
         randomEventCheckRef.current = null;
       }
     };
-  }, [gameState.status, levelIndex, gameState.startTime, eventsTriggeredThisLevel, shelfVinyls, gameState]);
+  }, [gameState.status, levelIndex, gameState.startTime, eventsTriggeredThisLevel, conveyorVinyls, gameState]);
 
   // Auto-clear random event when it expires
   useEffect(() => {
@@ -533,12 +545,94 @@ export default function App() {
     }
   }, [activeEvent]);
 
+  // Conveyor Belt Animation Loop
+  useEffect(() => {
+    if (gameState.status !== 'playing') {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      return;
+    }
+
+    const animate = (timestamp: number) => {
+      const deltaTime = (timestamp - lastFrameTimeRef.current) / 1000; // Convert to seconds
+      lastFrameTimeRef.current = timestamp;
+
+      // Update conveyor vinyl positions
+      setConveyorVinyls(prevVinyls => {
+        const updated = updateConveyorPositions(prevVinyls, beltSpeed, deltaTime);
+
+        // Detect expired vinyls (fell off left edge)
+        const expiredVinyls = prevVinyls.filter(v => !updated.find(u => u.id === v.id));
+        expiredVinyls.forEach(vinyl => {
+          handleVinylExpired(vinyl);
+        });
+
+        return updated;
+      });
+
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [gameState.status, beltSpeed]);
+
+  // Vinyl Spawn Timer
+  useEffect(() => {
+    if (gameState.status !== 'playing') return;
+
+    const spawnInterval = getSpawnInterval(levelIndex) * 1000; // Convert to milliseconds
+
+    const spawnTimer = setInterval(() => {
+      const currentTime = Date.now();
+      const timeSinceLastSpawn = currentTime - lastSpawnTime;
+
+      if (timeSinceLastSpawn >= spawnInterval) {
+        // Get active genres from shelf sections
+        const activeGenres = shelfSections.map(s => s.genre);
+
+        if (activeGenres.length > 0) {
+          const newVinyl = spawnConveyorVinyl(
+            {
+              genres: activeGenres,
+              difficulty: gameState.difficulty,
+              level: levelIndex,
+              lanes: 3,
+            },
+            currentTime
+          );
+
+          setConveyorVinyls(prev => [...prev, newVinyl]);
+          setLastSpawnTime(currentTime);
+        }
+      }
+    }, 500); // Check every 500ms
+
+    return () => clearInterval(spawnTimer);
+  }, [gameState.status, levelIndex, gameState.difficulty, lastSpawnTime, shelfSections]);
+
+  // Belt Speed Adjuster
+  useEffect(() => {
+    if (gameState.status === 'playing') {
+      const newSpeed = getBeltSpeed(gameState.difficulty, levelIndex);
+      setBeltSpeed(newSpeed);
+    }
+  }, [gameState.difficulty, levelIndex, gameState.status]);
+
   // Set initial position of dragged element correctly when activeVinyl changes
   useLayoutEffect(() => {
     if (activeVinyl && dragElRef.current) {
         const x = initialDragPosRef.current.x;
         const y = initialDragPosRef.current.y;
-        dragElRef.current.style.transform = `translate(${x - 70}px, ${y - 120}px) rotate(0deg) scale(1.1)`;
+        const ox = isMobile ? 50 : 60;
+        const oy = isMobile ? 80 : 100;
+        dragElRef.current.style.transform = `translate(${x - ox}px, ${y - oy}px) rotate(0deg) scale(1.1)`;
         dragElRef.current.style.filter = 'none';
     }
   }, [activeVinyl]);
@@ -567,8 +661,23 @@ export default function App() {
     setEventsTriggeredThisLevel(0);
 
     const data = generateLevel(idx, difficulty, endless);
-    setCrates(data.crates);
-    setShelfVinyls(data.vinyls);
+
+    // Initialize shelf sections based on level configuration
+    const genres = data.crates.map(c => c.genre); // Get genres from generated crates
+    const sections: ShelfSection[] = genres.map((genre, genreIdx) => ({
+      genre,
+      slots: Array.from({ length: 5 }, (_, slotIdx) => ({
+        genre,
+        vinyl: null,
+        position: genreIdx * 5 + slotIdx,
+      })),
+      capacity: 5,
+      filled: 0,
+    }));
+
+    setShelfSections(sections);
+    setConveyorVinyls([]); // Clear belt
+    setLastSpawnTime(Date.now()); // Reset spawn timer
 
     // Generate secondary objectives for this level
     const objectives = !endless ? generateSecondaryObjectives(idx, data.mode) : [];
@@ -632,13 +741,9 @@ export default function App() {
       playThemeMusic(data.theme);
     }
 
-    const tilts: Record<string, number> = {};
-    data.vinyls.forEach(v => { tilts[v.id] = Math.random() * 6 - 3; });
-    shelfTilts.current = tilts;
-
-    // Clear old refs
-    crateRefs.current = {};
-    stackRefs.current = {};
+    // Clear old slot refs
+    slotRefs.current.clear();
+    setSlotHighlights(new Map());
   };
 
   // Tutorial handlers
@@ -715,48 +820,36 @@ export default function App() {
     saveSaveData(updatedSave);
   };
 
-  // Hint system handler
+  // Hint system handler (disabled for conveyor belt system)
   const showHint = () => {
     if (gameState.movesLeft <= 0 || saveData.level < 10) return;
 
-    const firstVinyl = shelfVinyls.find(v => !v.isTrash);
-    if (!firstVinyl) return;
-
-    const targetCrate = crates.find(c => c.genre === firstVinyl.genre && c.filled < c.capacity);
-    if (!targetCrate) {
-      showFeedback("No space available!", 'bad');
-      return;
-    }
-
-    setHintSpotlight({ vinylId: firstVinyl.id, crateId: targetCrate.id });
-    setGameState(prev => ({ ...prev, movesLeft: prev.movesLeft - 1 }));
-    setHintsUsed(prev => prev + 1);
+    // TODO: Implement hint system for conveyor belt
+    showFeedback("Hints coming soon!", 'bonus');
     sfx.click();
-
-    setTimeout(() => setHintSpotlight(null), 3000);
   };
 
-  // Crate Swapping system
-  const swapCrates = useCallback(() => {
-    if (crates.length < 2) return;
+  // Section Swapping system (replaces crate swapping)
+  const swapSections = useCallback(() => {
+    if (shelfSections.length < 2) return;
 
-    // Select 2 random different crates
-    const index1 = Math.floor(Math.random() * crates.length);
-    let index2 = Math.floor(Math.random() * crates.length);
+    // Select 2 random different sections
+    const index1 = Math.floor(Math.random() * shelfSections.length);
+    let index2 = Math.floor(Math.random() * shelfSections.length);
     while (index2 === index1) {
-      index2 = Math.floor(Math.random() * crates.length);
+      index2 = Math.floor(Math.random() * shelfSections.length);
     }
 
     // Play swap sound
-    sfx.achievement(); // Reuse achievement sound for swap
+    sfx.achievement();
 
     // Swap positions
-    setCrates(prev => {
-      const newCrates = [...prev];
-      const temp = newCrates[index1];
-      newCrates[index1] = newCrates[index2];
-      newCrates[index2] = temp;
-      return newCrates;
+    setShelfSections(prev => {
+      const newSections = [...prev];
+      const temp = newSections[index1];
+      newSections[index1] = newSections[index2];
+      newSections[index2] = temp;
+      return newSections;
     });
 
     // Trigger haptic feedback
@@ -764,7 +857,7 @@ export default function App() {
 
     // Reset countdown
     setSwapCountdown(null);
-  }, [crates.length]);
+  }, [shelfSections.length]);
 
   // Navigation confirm handlers
   const confirmBackToMenu = () => {
@@ -806,14 +899,36 @@ export default function App() {
     }, 2500);
   };
 
-  const registerCrateRef = useCallback((id: string, el: HTMLDivElement | null) => {
-    if (el) crateRefs.current[id] = el;
-    else delete crateRefs.current[id];
+  // Register slot references for drag & drop targeting
+  const registerSlotRef = useCallback((genre: Genre, position: number, el: HTMLDivElement | null) => {
+    const key = `${genre}-${position}`;
+    if (el) {
+      slotRefs.current.set(key, el);
+    } else {
+      slotRefs.current.delete(key);
+    }
   }, []);
 
-  const registerStackRef = useCallback((id: string, el: HTMLDivElement | null) => {
-    if (el) stackRefs.current[id] = el;
-    else delete stackRefs.current[id];
+  // Handle vinyl falling off the belt (missed)
+  const handleVinylExpired = useCallback((vinyl: ConveyorVinyl) => {
+    if (!vinyl.isTrash) {
+      // Penalty for missing non-trash vinyl
+      setGameState(prev => ({
+        ...prev,
+        movesLeft: Math.max(0, prev.movesLeft - 1),
+        combo: 0,
+        comboMultiplier: 1,
+        mistakes: prev.mistakes + 1,
+      }));
+
+      // Break combo and show feedback
+      clearComboTimer();
+      showFeedback("Too slow!", 'bad');
+      sfx.dropError();
+      triggerHaptic('heavy');
+      setShake(true);
+      setTimeout(() => setShake(false), 300);
+    }
   }, []);
 
   // Save game progress when level ends - using refs to avoid dependency issues
@@ -882,53 +997,67 @@ export default function App() {
     };
   }, [gameState, saveData, levelIndex]);
 
-  const handlePointerDown = (e: React.PointerEvent, vinyl: Vinyl) => {
+  // Handle grabbing vinyl from conveyor belt
+  const handleBeltVinylGrab = useCallback((vinyl: ConveyorVinyl, clientX: number, clientY: number) => {
     if (gameState.status !== 'playing') return;
 
-    e.preventDefault(); e.stopPropagation();
-
-    const clientX = e.clientX;
-    const clientY = e.clientY;
-
+    // Handle dusty vinyl cleaning
     if (vinyl.dustLevel > 0) {
-        triggerHaptic('light');
-        sfx.dustClean();
-        // Skip particle explosions if reduced motion is enabled
-        if (!prefersReducedMotion) {
-          const explosionId = Date.now();
-          setExplosions(prev => [...prev, { id: explosionId, x: clientX, y: clientY, color: '#9ca3af' }]);
-          setTimeout(() => setExplosions(prev => prev.filter(e => e.id !== explosionId)), PARTICLE_CLEANUP_DELAY);
-        }
+      triggerHaptic('light');
+      sfx.dustClean();
 
-        // Track if vinyl is fully cleaned (dustLevel going from 1 to 0)
-        if (vinyl.dustLevel === 1) {
-          setDustyVinylsCleaned(prev => prev + 1);
-        }
+      if (!prefersReducedMotion) {
+        const explosionId = Date.now();
+        setExplosions(prev => [...prev, { id: explosionId, x: clientX, y: clientY, color: '#9ca3af' }]);
+        setTimeout(() => setExplosions(prev => prev.filter(e => e.id !== explosionId)), PARTICLE_CLEANUP_DELAY);
+      }
 
-        setShelfVinyls(prev => prev.map(v => {
-            if (v.id === vinyl.id) {
-                return { ...v, dustLevel: v.dustLevel - 1 };
-            }
-            return v;
-        }));
-        return;
+      if (vinyl.dustLevel === 1) {
+        setDustyVinylsCleaned(prev => prev + 1);
+      }
+
+      // Clean vinyl on belt
+      setConveyorVinyls(prev => prev.map(v =>
+        v.id === vinyl.id ? { ...v, dustLevel: v.dustLevel - 1 } : v
+      ));
+      return;
     }
 
+    // Start dragging vinyl
     triggerHaptic('light');
     sfx.dragStart();
-    if (vinyl.isMystery && !vinyl.isRevealed && !vinyl.isTrash) {
-        sfx.mysteryReveal();
-        setShelfVinyls(prev => prev.map(v => v.id === vinyl.id ? { ...v, isRevealed: true } : v));
-        setActiveVinyl({ ...vinyl, isRevealed: true });
-    } else {
-        if (vinyl.isGold) sfx.goldVinyl();
-        setActiveVinyl(vinyl);
+
+    // Create dust particles when picking up vinyl
+    if (!prefersReducedMotion) {
+      const particles = Array.from({ length: 8 }, (_, i) => ({
+        id: Date.now() + i,
+        x: clientX,
+        y: clientY
+      }));
+      setDustParticles(prev => [...prev, ...particles]);
+      setTimeout(() => {
+        setDustParticles(prev => prev.filter(p => !particles.some(np => np.id === p.id)));
+      }, 3000);
     }
 
-    // Store initial positions
+    // Handle mystery vinyl reveal
+    if (vinyl.isMystery && !vinyl.isRevealed && !vinyl.isTrash) {
+      sfx.mysteryReveal();
+      const revealedVinyl = { ...vinyl, isRevealed: true };
+      setConveyorVinyls(prev => prev.map(v => v.id === vinyl.id ? revealedVinyl : v));
+      setActiveVinyl(revealedVinyl);
+    } else {
+      if (vinyl.isGold) sfx.goldVinyl();
+      setActiveVinyl(vinyl);
+    }
+
+    // Remove vinyl from belt
+    setConveyorVinyls(prev => removeVinylFromBelt(prev, vinyl.id));
+
+    // Store initial drag position
     dragPosRef.current = { x: clientX, y: clientY };
     initialDragPosRef.current = { x: clientX, y: clientY };
-  };
+  }, [gameState.status, prefersReducedMotion]);
 
   const handlePointerMove = (e: React.PointerEvent) => {
     if (!activeVinyl) return;
@@ -943,79 +1072,104 @@ export default function App() {
     const currentMagnetRadius = MAGNET_RADIUS * getMagnetRadiusMultiplier(activeEvent);
 
     let bestDist = currentMagnetRadius;
-    let targetId: string | null = null;
+    let targetSlotKey: string | null = null;
+    let targetSlot: ShelfSlot | null = null;
     let snappedX = clientX;
     let snappedY = clientY;
     let isValidTarget = false;
 
-    // 1. Check Crate Collision using current DOM Rects (handles scrolling!)
-    Object.entries(crateRefs.current).forEach(([cId, el]) => {
+    // Check all shelf slots using slotRefs
+    slotRefs.current.forEach((el, key) => {
       if (!el) return;
-      const rect = (el as HTMLDivElement).getBoundingClientRect();
+
+      const rect = el.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
       const dist = Math.sqrt(Math.pow(clientX - cx, 2) + Math.pow(clientY - cy, 2));
 
       if (dist < bestDist) {
-        const targetCrate = crates.find(c => c.id === cId);
         bestDist = dist;
-        targetId = cId;
-        // Check if it's a valid target
-        isValidTarget = targetCrate ?
-          !activeVinyl.isTrash &&
-          targetCrate.genre === activeVinyl.genre &&
-          targetCrate.filled < targetCrate.capacity : false;
+        targetSlotKey = key;
+
+        // Parse slot key to find section and slot
+        const [genreStr, posStr] = key.split('-');
+        const position = parseInt(posStr, 10);
+
+        // Find the section and slot
+        for (const section of shelfSections) {
+          if (section.genre === genreStr) {
+            targetSlot = section.slots.find(s => s.position === position) || null;
+            break;
+          }
+        }
+
+        // Validate: slot must be empty and genre must match
+        isValidTarget = !activeVinyl.isTrash &&
+          targetSlot !== null &&
+          targetSlot.vinyl === null &&
+          targetSlot.genre === activeVinyl.genre;
+
         // Snap calculation
         snappedX = clientX + (cx - clientX) * 0.5;
-        snappedY = clientY + (cy - clientY - 40) * 0.5;
+        snappedY = clientY + (cy - clientY) * 0.5;
       }
     });
 
+    // Check trash bin
     if (trashRef.current) {
-        const rect = trashRef.current.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2;
-        const cy = rect.top + rect.height / 2;
-        const dist = Math.sqrt(Math.pow(clientX - cx, 2) + Math.pow(clientY - cy, 2));
+      const rect = trashRef.current.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dist = Math.sqrt(Math.pow(clientX - cx, 2) + Math.pow(clientY - cy, 2));
 
-        if (dist < TRASH_RADIUS && dist < bestDist) {
-            targetId = 'trash';
-            isValidTarget = activeVinyl.isTrash;
-            snappedX = cx;
-            snappedY = cy;
-        }
+      if (dist < TRASH_RADIUS && dist < bestDist) {
+        targetSlotKey = 'trash';
+        targetSlot = null;
+        isValidTarget = activeVinyl.isTrash;
+        snappedX = cx;
+        snappedY = cy;
+      }
     }
 
     // Direct DOM update for high performance
     if (dragElRef.current) {
-        if (targetId) {
-            // Snapped to target - no rotation, larger scale, with glow
-            const scale = 1.15;
-            dragElRef.current.style.transform = `translate(${snappedX - 70}px, ${snappedY - 120}px) rotate(0deg) scale(${scale})`;
-            dragElRef.current.style.filter = isValidTarget ?
-              'drop-shadow(0 0 20px rgba(34, 197, 94, 0.8))' :
-              'drop-shadow(0 0 20px rgba(239, 68, 68, 0.8))';
-            if (targetId !== magnetTargetId) triggerHaptic('light');
-        } else {
-            // Free dragging - no rotation, normal scale
-            dragElRef.current.style.transform = `translate(${clientX - 70}px, ${clientY - 120}px) rotate(0deg) scale(1.1)`;
-            dragElRef.current.style.filter = 'none';
-        }
-    }
+      // Calculate velocity for subtle tilt effect
+      const dx = clientX - dragPosRef.current.x;
+      const dy = clientY - dragPosRef.current.y;
+      const tiltX = Math.max(-8, Math.min(8, dy * 0.3)); // Tilt based on vertical movement
+      const tiltY = Math.max(-8, Math.min(8, -dx * 0.3)); // Tilt based on horizontal movement
 
-    // Update ghost preview and haptic feedback for magnet zone
-    if (targetId && targetId !== 'trash') {
-      if (!prevMagnetRef.current) {
-        // Just entered magnet zone
-        if (navigator.vibrate) navigator.vibrate([10]);
+      if (targetSlotKey) {
+        // Snapped to target - larger scale with glow, no tilt
+        const scale = 1.15;
+        const ox2 = isMobile ? 50 : 60;
+        const oy2 = isMobile ? 80 : 100;
+        dragElRef.current.style.transform = `translate(${snappedX - ox2}px, ${snappedY - oy2}px) rotateX(0deg) rotateY(0deg) scale(${scale})`;
+        dragElRef.current.style.filter = isValidTarget ?
+          'drop-shadow(0 0 20px rgba(34, 197, 94, 0.8))' :
+          'drop-shadow(0 0 20px rgba(239, 68, 68, 0.8))';
+        if (targetSlotKey !== magnetTargetId) triggerHaptic('light');
+      } else {
+        // Free dragging - subtle physics-based tilt
+        const ox3 = isMobile ? 50 : 60;
+        const oy3 = isMobile ? 80 : 100;
+        dragElRef.current.style.transform = `translate(${clientX - ox3}px, ${clientY - oy3}px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale(1.1)`;
+        dragElRef.current.style.filter = 'none';
       }
-      setGhostPreview({ crateId: targetId, vinyl: activeVinyl });
-    } else {
-      setGhostPreview(null);
     }
-    prevMagnetRef.current = targetId;
 
-    if (targetId !== magnetTargetId) {
-        setMagnetTargetId(targetId);
+    // Update slot highlights
+    const newHighlights = new Map<number, 'none' | 'neutral' | 'valid' | 'invalid'>();
+    if (targetSlot && targetSlotKey !== 'trash') {
+      const highlightState = isValidTarget ? 'valid' : 'invalid';
+      newHighlights.set(targetSlot.position, highlightState);
+    }
+    setSlotHighlights(newHighlights);
+
+    // Update magnet target
+    if (targetSlotKey !== magnetTargetId) {
+      setMagnetTargetId(targetSlotKey);
+      prevMagnetRef.current = targetSlotKey;
     }
   };
 
@@ -1026,21 +1180,53 @@ export default function App() {
     if (magnetTargetId === 'trash') {
         handleTrashDrop(activeVinyl);
     } else if (magnetTargetId) {
-      const targetCrate = crates.find(c => c.id === magnetTargetId);
-      if (targetCrate) {
-        // Wild Card can go anywhere
-        const isWildCard = activeVinyl.specialType === 'wildcard';
-        const isCorrectGenre = targetCrate.genre === activeVinyl.genre || isWildCard;
+      // Parse slot key to find target slot
+      const [genreStr, posStr] = magnetTargetId.split('-');
+      const position = parseInt(posStr, 10);
 
-        if (activeVinyl.isTrash) {
-             handleMistake(false, randomMessage('wrong'), activeVinyl);
-        } else if (isCorrectGenre && targetCrate.filled < targetCrate.capacity) {
-             handleSuccess(magnetTargetId, activeVinyl);
-        } else {
-             const msg = targetCrate.filled >= targetCrate.capacity ? randomMessage('full') : randomMessage('wrong');
-             handleMistake(targetCrate.filled >= targetCrate.capacity, msg, activeVinyl);
+      // Find the target section and slot
+      let targetSection: ShelfSection | null = null;
+      let targetSlot: ShelfSlot | null = null;
+
+      for (const section of shelfSections) {
+        if (section.genre === genreStr) {
+          targetSection = section;
+          targetSlot = section.slots.find(s => s.position === position) || null;
+          break;
         }
       }
+
+      if (targetSection && targetSlot) {
+        // Wild Card can go anywhere
+        const isWildCard = activeVinyl.specialType === 'wildcard';
+        const isCorrectGenre = targetSlot.genre === activeVinyl.genre || isWildCard;
+        const isSlotEmpty = targetSlot.vinyl === null;
+
+        if (activeVinyl.isTrash) {
+          handleMistake(false, randomMessage('wrong'), activeVinyl);
+        } else if (isCorrectGenre && isSlotEmpty) {
+          handleSuccess(magnetTargetId, activeVinyl, targetSection, targetSlot);
+        } else {
+          const msg = !isSlotEmpty ? "Slot full!" : randomMessage('wrong');
+          handleMistake(!isSlotEmpty, msg, activeVinyl);
+        }
+      }
+    }
+
+    // Create dust particles when releasing vinyl
+    if (!prefersReducedMotion && dragElRef.current) {
+      const rect = dragElRef.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const particles = Array.from({ length: 6 }, (_, i) => ({
+        id: Date.now() + i + 1000,
+        x: centerX,
+        y: centerY
+      }));
+      setDustParticles(prev => [...prev, ...particles]);
+      setTimeout(() => {
+        setDustParticles(prev => prev.filter(p => !particles.some(np => np.id === p.id)));
+      }, 3000);
     }
 
     // Smooth fade-out transition before removing active vinyl
@@ -1061,7 +1247,7 @@ export default function App() {
       if (item.isTrash) {
           triggerHaptic('success');
           sfx.trash();
-          setShelfVinyls(prev => prev.filter(v => v.id !== item.id));
+          // Vinyl already removed from belt when grabbed
           if(trashRef.current && !prefersReducedMotion) {
               const r = trashRef.current.getBoundingClientRect();
               const explosionId = Date.now();
@@ -1071,8 +1257,7 @@ export default function App() {
           showFeedback(randomMessage('trash'), 'good');
       } else {
           handleMistake(false, randomMessage('wrong'), item);
-          setShelfVinyls(prev => prev.filter(v => v.id !== item.id));
-          setGameState(prev => ({ ...prev, movesLeft: prev.movesLeft - 2 }));
+          // Vinyl already removed from belt, penalty applied in handleMistake
       }
   };
 
@@ -1123,24 +1308,32 @@ export default function App() {
     }
   };
 
-  const handleSuccess = (crateId: string, vinyl: Vinyl) => {
+  const handleSuccess = (slotKey: string, vinyl: Vinyl, section: ShelfSection, slot: ShelfSlot, targetScreenPos?: { x: number; y: number }) => {
     triggerHaptic('success');
     sfx.vinylSlide(); // ASMR cardboard slide sound
-    const el = crateRefs.current[crateId];
+
+    // Get slot position: from DOM ref (2D) or from 3D scene (targetScreenPos)
+    const el = slotRefs.current.get(slotKey);
     let rect: DOMRect | undefined;
-    
-    if (el) {
-        rect = el.getBoundingClientRect();
+    if (targetScreenPos) {
+      rect = new DOMRect(targetScreenPos.x - 40, targetScreenPos.y - 40, 80, 80) as DOMRect;
+    } else if (el) {
+      rect = el.getBoundingClientRect();
+    }
+
+    if (rect) {
         // Skip particle explosions if reduced motion is enabled
         if (!prefersReducedMotion) {
           const colorMap: any = { Rock: '#ef4444', Jazz: '#3b82f6', Soul: '#eab308', Funk: '#f97316', Disco: '#a855f7', Punk: '#db2777', Electronic: '#06b6d4' };
           const explosionId = Date.now();
-          setExplosions(prev => [...prev, { id: explosionId, x: rect!.left + rect!.width/2, y: rect!.top + rect!.height/2, color: colorMap[vinyl.genre] || '#fff', genre: vinyl.genre }]);
+          const cx = rect.left + rect.width / 2;
+          const cy = rect.top + rect.height / 2;
+          setExplosions(prev => [...prev, { id: explosionId, x: cx, y: cy, color: colorMap[vinyl.genre] || '#fff', genre: vinyl.genre }]);
           setTimeout(() => setExplosions(prev => prev.filter(e => e.id !== explosionId)), PARTICLE_CLEANUP_DELAY);
         }
     }
 
-    setShelfVinyls(prev => prev.filter(v => v.id !== vinyl.id));
+    // Vinyl already removed from belt when grabbed
     const moveCost = vinyl.isGold ? -3 : 1;
     if (gameState.mode !== 'Timed') {
         setGameState(prev => ({ ...prev, movesLeft: prev.movesLeft - moveCost }));
@@ -1148,55 +1341,22 @@ export default function App() {
 
     if (vinyl.isGold) showFeedback(randomMessage('gold'), 'bonus');
 
-    const targetCrate = crates.find(c => c.id === crateId);
-    const stackEl = stackRefs.current[crateId];
-
     // Skip flying animation if reduced motion is enabled
-    if (prefersReducedMotion) {
+    if (prefersReducedMotion && rect) {
       // Instant placement
       handleLanding({
         id: Math.random().toString(36),
         vinyl,
         startPos: { x: 0, y: 0 },
-        targetPos: { x: 0, y: 0 },
-        targetRect: rect!,
-        crateId,
-        crateFilledCount: targetCrate ? targetCrate.filled : 0
-      });
-    } else if (rect && stackEl) {
-        // Get the actual stack area position from DOM
-        const stackRect = stackEl.getBoundingClientRect();
-
-        // The new vinyl will be at the front (visualOffset = 0)
-        // So its bottom edge aligns with the bottom of the stack area
-        // Vinyl is w-[85%] of stack area and aspect-square
-        const vinylSize = stackRect.width * 0.85; // 85% of stack area width
-
-        // Target X = center of stack area horizontally
-        const targetX = stackRect.left + stackRect.width / 2;
-
-        // Target Y = center of the new vinyl
-        // Vinyl bottom = stack area bottom (since visualOffset = 0)
-        // Vinyl center = vinyl bottom - half height
-        const targetY = stackRect.bottom - (vinylSize / 2);
-
-        setFlyingVinyls(prev => [...prev, {
-            id: Math.random().toString(36),
-            vinyl,
-            startPos: { x: dragPosRef.current.x, y: dragPosRef.current.y },
-            targetPos: { x: targetX, y: targetY },
-            targetRect: rect,
-            crateId,
-            crateFilledCount: targetCrate ? targetCrate.filled : 0
-        }]);
+        targetPos: { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 },
+        targetRect: rect,
+        crateId: slotKey,
+        crateFilledCount: section.filled
+      }, section, slot);
     } else if (rect) {
-        // Fallback if stack ref not available (shouldn't happen, but just in case)
-        const bottomOffset = isMobile ? 65 : 75;
-        const stackAreaWidth = rect.width * 0.85;
-        const vinylSize = stackAreaWidth * 0.85;
-        const stackAreaBottom = rect.bottom - bottomOffset;
+        // Calculate target position (center of slot)
         const targetX = rect.left + rect.width / 2;
-        const targetY = stackAreaBottom - (vinylSize / 2);
+        const targetY = rect.top + rect.height / 2;
 
         setFlyingVinyls(prev => [...prev, {
             id: Math.random().toString(36),
@@ -1204,8 +1364,8 @@ export default function App() {
             startPos: { x: dragPosRef.current.x, y: dragPosRef.current.y },
             targetPos: { x: targetX, y: targetY },
             targetRect: rect,
-            crateId,
-            crateFilledCount: targetCrate ? targetCrate.filled : 0
+            crateId: slotKey,
+            crateFilledCount: section.filled
         }]);
     }
   };
@@ -1215,7 +1375,7 @@ export default function App() {
     setTimeout(() => setFeedback(null), 1500);
   };
 
-  const handleLanding = useCallback((item: FlyingVinyl) => {
+  const handleLanding = useCallback((item: FlyingVinyl, section?: ShelfSection, slot?: ShelfSlot) => {
     triggerHaptic('light');
 
     // Play appropriate sound
@@ -1225,10 +1385,26 @@ export default function App() {
       sfx.vinylThunk(); // ASMR wood impact sound
     }
 
-    setLandingId(item.crateId);
+    setLandingId(item.crateId); // crateId is actually slotKey in new system
     setTimeout(() => setLandingId(null), 150);
     setFlyingVinyls(prev => prev.filter(f => f.id !== item.id));
-    setCrates(prev => prev.map(c => c.id === item.crateId ? { ...c, filled: c.filled + 1, vinyls: [...c.vinyls, item.vinyl] } : c));
+
+    // Update shelf sections: fill the slot
+    const [genreStr, posStr] = item.crateId.split('-');
+    const position = parseInt(posStr, 10);
+
+    setShelfSections(prev => prev.map(sec => {
+      if (sec.genre === genreStr) {
+        return {
+          ...sec,
+          filled: sec.filled + 1,
+          slots: sec.slots.map(s =>
+            s.position === position ? { ...s, vinyl: item.vinyl } : s
+          )
+        };
+      }
+      return sec;
+    }));
 
     // Add to collection if rare (gold or special type)
     if (item.vinyl.isGold || item.vinyl.specialType) {
@@ -1323,7 +1499,7 @@ export default function App() {
       } else if (!item.vinyl.isGold) {
         // Play combo milestone sound
         if (newCombo === 5 || newCombo === 10 || newCombo === 15) {
-          sfx.comboMilestone();
+          sfx.comboMilestone(newCombo >= 15 ? 3 : newCombo >= 10 ? 2 : 1);
         }
 
         if (newCombo >= 15) {
@@ -1407,7 +1583,7 @@ export default function App() {
   useEffect(() => {
     if (gameState.status === 'playing' && gameState.secondaryObjectives && gameState.secondaryObjectives.length > 0) {
       const timeElapsed = Math.floor((Date.now() - gameState.startTime) / 1000);
-      const totalDustyVinyls = shelfVinyls.filter(v => v.dustLevel > 0).length + dustyVinylsCleaned;
+      const totalDustyVinyls = conveyorVinyls.filter(v => v.dustLevel > 0).length + dustyVinylsCleaned;
 
       const updatedObjectives = updateObjectiveProgress(gameState.secondaryObjectives, {
         mistakes: gameState.mistakes,
@@ -1437,7 +1613,7 @@ export default function App() {
     gameState.totalMoves,
     hintsUsed,
     dustyVinylsCleaned,
-    shelfVinyls.length
+    conveyorVinyls.length
   ]);
 
   // Crate Swapping Timer (for levels >= 15)
@@ -1459,7 +1635,7 @@ export default function App() {
           }
         } else if (timeUntilSwap === 0) {
           // Trigger swap
-          swapCrates();
+          swapSections();
         } else {
           setSwapCountdown(null);
         }
@@ -1480,7 +1656,7 @@ export default function App() {
       }
       setSwapCountdown(null);
     }
-  }, [gameState.status, levelIndex, swapCrates, gameState.isEndlessMode]);
+  }, [gameState.status, levelIndex, swapSections, gameState.isEndlessMode]);
 
   // Haptic feedback for low moves
   useEffect(() => {
@@ -1491,10 +1667,10 @@ export default function App() {
 
   useEffect(() => {
     if (flyingVinyls.length > 0) return;
-    const allCratesFull = crates.every(c => c.filled >= c.capacity);
-    const hasVinylsLeft = shelfVinyls.some(v => !v.isTrash);
+    const allSlotsFilled = shelfSections.length > 0 && shelfSections.every(s => s.filled >= s.capacity);
+    const beltHasVinyls = conveyorVinyls.some(v => !v.isTrash);
 
-    if (allCratesFull && gameState.status === 'playing') {
+    if (allSlotsFilled && gameState.status === 'playing') {
       // Calculate stars earned using star calculation service
       const stars = currentStarCriteria ? calculateStarsEarned({ ...gameState, status: 'won' }, currentStarCriteria) : 1;
 
@@ -1524,15 +1700,16 @@ export default function App() {
     } else if (
         gameState.status === 'playing' &&
         gameState.mode !== 'Timed' &&
-        (gameState.movesLeft <= 0 || (shelfVinyls.length === 0 && !allCratesFull)) && !hasVinylsLeft
+        gameState.totalMoves > 0 && // Only check for loss after player has made at least one move
+        (gameState.movesLeft <= 0 || (conveyorVinyls.length === 0 && !allSlotsFilled)) && !beltHasVinyls
     ) {
-      if (!allCratesFull) {
+      if (!allSlotsFilled) {
         // Level lost
         setGameState(prev => ({ ...prev, status: 'lost' }));
         saveProgressRef.current(false);
       }
     }
-  }, [crates, gameState.status, gameState.movesLeft, gameState.mode, flyingVinyls.length, shelfVinyls, gameState.mistakes, gameState.maxComboThisLevel, gameState.vinylsSorted, gameState.totalMoves]);
+  }, [shelfSections, gameState.status, gameState.movesLeft, gameState.mode, flyingVinyls.length, conveyorVinyls, gameState.mistakes, gameState.maxComboThisLevel, gameState.vinylsSorted, gameState.totalMoves]);
 
   // --- RENDER MENU ---
   if (gameState.status === 'menu') {
@@ -1698,14 +1875,9 @@ export default function App() {
           onSkip={handleTutorialSkip}
           onSkipStep={handleTutorialSkipStep}
           targetElement={
-            tutorialStep === 'drag' ? firstVinylRef.current :
-            tutorialStep === 'genre' ? (crates && crates.length > 0 ? crateRefs.current[crates[0].id] : null) :
-            tutorialStep === 'mystery' ? firstVinylRef.current :
             tutorialStep === 'moves' ? movesCounterRef.current :
             tutorialStep === 'trash' ? trashRef.current :
-            tutorialStep === 'special' ? firstVinylRef.current :
             tutorialStep === 'combo' ? movesCounterRef.current :
-            tutorialStep === 'capacity' ? (crates && crates.length > 0 ? crateRefs.current[crates[0].id] : null) :
             null
           }
         />
@@ -1796,8 +1968,8 @@ export default function App() {
         </div>
       </header>
 
-      {/* MAIN - SCAFFALI AL CENTRO (MOBILE: verticale | DESKTOP: orizzontale) */}
-      <main className={`w-full max-w-3xl flex flex-col items-center relative z-10 ${isMobile ? 'h-[58%] py-2' : 'flex-1 justify-end pb-8'}`}>
+      {/* MAIN - Scena unica Fill The Fridge: layer asset + overlay gameplay */}
+      <main className={`w-full max-w-3xl flex flex-col items-center relative z-10 ${isMobile ? 'h-[58%] py-3 px-1 min-h-0 overflow-y-auto' : 'flex-1 justify-end pb-8'}`}>
         {feedback && (
           <div className="absolute top-10 z-50 animate-bounce pointer-events-none">
              <div className={`px-4 py-2 rounded-lg font-display text-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] border-2 border-white ${feedback.type === 'good' ? 'bg-green-600 rotate-2' : feedback.type === 'bonus' ? 'bg-yellow-500 rotate-0 text-black' : 'bg-red-600 -rotate-2'} text-white`}>
@@ -1808,152 +1980,43 @@ export default function App() {
 
         {!prefersReducedMotion && explosions.map(ex => <ParticleExplosion key={ex.id} x={ex.x} y={ex.y} color={ex.color} genre={ex.genre} isMobile={isMobile} />)}
 
-        {/* SCAFFALI - LAYOUT ORIZZONTALE SU MOBILE E DESKTOP */}
-        <div
-          className={`${
-            isMobile
-              ? 'flex flex-row items-center gap-2 overflow-x-auto no-scrollbar py-2 px-2 min-w-max'
-              : 'w-full overflow-x-auto no-scrollbar flex items-center gap-4 px-8 py-10 snap-x snap-mandatory h-[300px]'
-          }`}
-          style={{
-            touchAction: 'pan-x'
-          }}
-        >
-          {crates.map(crate => {
-            let highlightState: 'none' | 'neutral' | 'valid' | 'invalid' = 'none';
-            if (magnetTargetId === crate.id) {
-                if (!activeVinyl) highlightState = 'neutral';
-                else if (activeVinyl.isTrash) highlightState = 'invalid';
-                else if (activeVinyl.genre === crate.genre) highlightState = 'valid';
-                else highlightState = 'invalid';
-            }
-            if (hintSpotlight?.crateId === crate.id) {
-              highlightState = 'valid';
-            }
-             return (
-                 <div
-                   key={crate.id}
-                   className={`${isMobile ? 'flex-shrink-0 w-auto max-w-[280px]' : ''} transition-transform duration-100 ease-out ${landingId === crate.id ? 'scale-95 translate-y-1' : ''} ${activeEvent && activeEvent.type === 'magnetic_surge' ? 'magnetic-glow' : ''}`}
-                 >
-                  <CrateBox
-                    crate={crate}
-                    highlightState={highlightState}
-                    ghostVinyl={ghostPreview?.crateId === crate.id ? ghostPreview.vinyl : null}
-                    hideLabel={gameState.hideLabels || false}
-                    onRegisterRef={registerCrateRef}
-                    onRegisterStackRef={registerStackRef}
+        {/* CSS 3D Shelf Unit (Fill The Fridge style) */}
+        <div className={`relative w-full flex-1 flex flex-col min-h-0 ${isMobile ? 'min-h-[320px] pb-2' : ''}`}>
+          {/* Shelf unit with perspective */}
+          <div className="fridge-perspective w-full flex-1 flex flex-col min-h-0">
+            <div className="fridge-shelf-unit w-full flex-1 flex flex-col min-h-0 p-2 md:p-3 gap-1 overflow-y-auto">
+              {shelfSections.map((section, idx) => (
+                <React.Fragment key={section.genre}>
+                  {idx > 0 && <div className="fridge-shelf-divider h-1.5 w-full" />}
+                  <GenreSection
+                    section={section}
+                    highlightStates={slotHighlights}
+                    onRegisterSlotRef={registerSlotRef}
                   />
-                </div>
-            );
-          })}
-          {!isMobile && <div className="w-4 shrink-0"></div>}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+
+          {/* Conveyor Belt */}
+          <div className="mt-2 w-full">
+            <ConveyorBelt
+              vinyls={conveyorVinyls}
+              beltSpeed={getBeltSpeed(gameState.difficulty, levelIndex)}
+              isPaused={gameState.status !== 'playing' || !!activeVinyl}
+              grabbedVinylId={activeVinyl?.id ?? null}
+              onVinylExpired={handleVinylExpired}
+              onVinylGrabStart={handleBeltVinylGrab}
+            />
+          </div>
         </div>
       </main>
 
-      {/* SECTION - CODA VINILI IN BASSO (MOBILE: più compatta | DESKTOP: normale) */}
-      <section className={`w-full bg-wood-dark shadow-[0_-10px_50px_rgba(0,0,0,1)] border-t-[8px] border-[#2d1b15] relative z-20 flex flex-col shrink-0 animate-[shelf-sway_8s_ease-in-out_infinite] ${isMobile ? 'h-[32%] min-h-[180px]' : 'h-[320px]'}`}>
-         <div className="absolute top-0 left-0 right-0 h-[1px] bg-white/20"></div>
-         <style>{`
-           @keyframes shelf-sway {
-             0%, 100% { transform: translateY(0px) rotate(0deg); }
-             25% { transform: translateY(-1px) rotate(0.2deg); }
-             75% { transform: translateY(1px) rotate(-0.2deg); }
-           }
-         `}</style>
 
-         {/* Moves Counter e Vinyl Progress - SOLO SU DESKTOP (su mobile sono nell'HUD) */}
-         {!isMobile && (
-           <div className="absolute -top-8 md:-top-10 left-4 md:left-6 transform flex items-start gap-3">
-              {/* Vinyl Progress */}
-              <div className="bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-lg border-2 border-gray-600/40 shadow-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <Disc size={14} className="text-cyan-400" />
-                  <span className="text-white text-xs font-mono">{crates.reduce((sum, c) => sum + c.filled, 0)}/{shelfVinyls.length + crates.reduce((sum, c) => sum + c.filled, 0)}</span>
-                </div>
-                <div className="w-20 h-1 bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-cyan-500 to-green-500 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${((crates.reduce((sum, c) => sum + c.filled, 0)) / (shelfVinyls.length + crates.reduce((sum, c) => sum + c.filled, 0))) * 100}%`
-                    }}
-                  />
-                </div>
-              </div>
-           </div>
-         )}
-
-         {/* CODA VINILI - con cestino su mobile */}
-         <div className={`flex-1 flex items-center ${isMobile ? 'px-4 py-3 justify-between' : 'overflow-x-auto overflow-y-hidden no-scrollbar px-6 pt-6'} gap-0`} style={{ touchAction: 'pan-x' }}>
-            {/* VINILI - più grandi e distanziati su mobile */}
-            {isMobile ? (
-              // MOBILE: vinili più grandi, meno overlap
-              <div className="flex-1 overflow-x-auto no-scrollbar flex items-center gap-2">
-                {shelfVinyls.map((vinyl, idx) => {
-                  const isActive = activeVinyl?.id === vinyl.id;
-                  const tilt = shelfTilts.current[vinyl.id] || 0;
-                  return (
-                    <div
-                      key={vinyl.id}
-                      ref={idx === 0 ? firstVinylRef : null}
-                      className={`flex-shrink-0 transition-all duration-300 ${isActive ? 'opacity-0' : 'opacity-100'} ${hintSpotlight?.vinylId === vinyl.id ? 'ring-4 ring-cyan-400 animate-pulse z-50' : ''}`}
-                      onPointerDown={(e) => handlePointerDown(e, vinyl)}
-                      style={{
-                        transform: `rotate(${tilt}deg)`,
-                        touchAction: 'none',
-                        filter: isActive ? 'none' : 'drop-shadow(0 8px 12px rgba(0, 0, 0, 0.5))'
-                      }}
-                    >
-                      <VinylCover vinyl={vinyl} size={140} className={`${vinyl.dustLevel > 0 ? 'cursor-pointer' : 'cursor-grab'}`} isMobile={isMobile} />
-                    </div>
-                  );
-                })}
-                {shelfVinyls.length === 0 && (
-                  <div className="w-full flex flex-col items-center justify-center opacity-30">
-                    <Disc size={48} className="mb-2" />
-                    <span className="font-marker text-xl">Sold Out!</span>
-                  </div>
-                )}
-              </div>
-            ) : (
-              // DESKTOP: layout normale con overlap
-              <>
-                {shelfVinyls.map((vinyl, idx) => {
-                  const isActive = activeVinyl?.id === vinyl.id;
-                  const overlapClass = idx > 0 ? "-ml-10" : "";
-                  const tilt = shelfTilts.current[vinyl.id] || 0;
-                  return (
-                    <div
-                      key={vinyl.id}
-                      ref={idx === 0 ? firstVinylRef : null}
-                      className={`flex-shrink-0 transition-all duration-300 md:hover:-translate-y-8 md:hover:z-50 md:hover:mr-12 md:hover:ml-6 group z-0 ${isActive ? 'opacity-0' : 'opacity-100'} ${overlapClass} ${hintSpotlight?.vinylId === vinyl.id ? 'ring-4 ring-cyan-400 animate-pulse z-50' : ''}`}
-                      onPointerDown={(e) => handlePointerDown(e, vinyl)}
-                      style={{
-                        transform: `rotate(${tilt}deg)`,
-                        touchAction: 'none',
-                        filter: isActive ? 'none' : 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))'
-                      }}
-                    >
-                      <VinylCover vinyl={vinyl} size={175} className={`${vinyl.dustLevel > 0 ? 'cursor-pointer' : 'cursor-grab'}`} isMobile={isMobile} />
-                    </div>
-                  );
-                })}
-                {shelfVinyls.length === 0 && (
-                  <div className="w-full flex flex-col items-center justify-center opacity-30 mt-10">
-                    <Disc size={48} className="mb-2" />
-                    <span className="font-marker text-xl">Sold Out!</span>
-                  </div>
-                )}
-                <div className="w-24 flex-shrink-0"></div>
-              </>
-            )}
-
-         </div>
-      </section>
-
-      {/* CESTINO - FIXED in basso a destra su mobile, absolute sopra scaffali su desktop */}
+      {/* CESTINO - fissato in basso a destra su mobile (72px touch target), absolute su desktop */}
       <div ref={trashRef} className={`${
         isMobile
-          ? 'fixed bottom-6 right-6 w-[70px] h-[70px] rounded-full'
+          ? 'fixed bottom-6 right-6 w-[72px] h-[72px] rounded-full'
           : 'absolute bottom-[320px] right-8 w-28 h-32 rounded-lg'
       } border-4 bg-gray-800/95 backdrop-blur-md flex flex-col items-center justify-center gap-1 transition-all duration-200 shadow-2xl z-50 ${
         magnetTargetId === 'trash'
@@ -1964,22 +2027,30 @@ export default function App() {
         {!isMobile && <span className="text-sm font-bold font-display text-gray-300 uppercase tracking-wide">TRASH</span>}
       </div>
 
-      {flyingVinyls.map(item => <FlyingVinylItem key={item.id} item={item} onComplete={handleLanding} isMobile={isMobile} />)}
-
+      {/* Dragged vinyl HTML overlay */}
       {activeVinyl && (
-        <div className="fixed inset-0 z-[100] pointer-events-none" style={{ touchAction: 'none' }}>
-            {/* Direct DOM Element for smooth dragging */}
-            <div
-                ref={dragElRef}
-                className="absolute top-0 left-0 will-change-transform"
-                style={{
-                    transition: 'filter 0.15s ease-out, opacity 0.15s ease-out, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
-                }}
-            >
-                <VinylCover vinyl={activeVinyl} size={isMobile ? 155 : 180} className="shadow-[0_40px_80px_rgba(0,0,0,0.8)] scale-110" isMobile={isMobile} />
-            </div>
+        <div
+          ref={dragElRef}
+          className="drag-overlay vinyl-shadow vinyl-tilt"
+        >
+          <VinylCover vinyl={activeVinyl} size={isMobile ? 100 : 120} isMobile={isMobile} />
         </div>
       )}
+
+      {flyingVinyls.map(item => <FlyingVinylItem key={item.id} item={item} onComplete={handleLanding} isMobile={isMobile} />)}
+
+      {/* Dust particles */}
+      {dustParticles.map(particle => (
+        <div
+          key={particle.id}
+          className="fixed w-2 h-2 bg-gray-400/60 rounded-full pointer-events-none dust-particle"
+          style={{
+            left: particle.x + (Math.random() - 0.5) * 30,
+            top: particle.y + (Math.random() - 0.5) * 30,
+            zIndex: 90
+          }}
+        />
+      ))}
 
       {(gameState.status === 'won' || gameState.status === 'lost') && (() => {
         // Calculate stats
@@ -2161,7 +2232,7 @@ export default function App() {
       {/* Completion View Overlay */}
       {showCompletionView && (
         <CompletionView
-          crates={crates}
+          shelfSections={shelfSections}
           onClose={() => setShowCompletionView(false)}
         />
       )}

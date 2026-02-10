@@ -197,6 +197,12 @@ export interface LevelConfig {
   time: number;
   moves: number;
   starCriteria?: StarCriteria; // Optional per-level override
+
+  // Conveyor belt configuration (optional - enables conveyor mode)
+  conveyorEnabled?: boolean;
+  conveyorLanes?: number;      // Number of horizontal lanes (default: 3)
+  conveyorSpeed?: number;      // Base speed multiplier (default: 1.0)
+  spawnInterval?: number;      // Seconds between vinyl spawns (default: 2.0)
 }
 
 /**
@@ -207,4 +213,37 @@ export interface CampaignLevel {
   worldNumber: number;
   handCrafted: boolean;
   config: LevelConfig;
+}
+
+// ============================================================================
+// CONVEYOR BELT SYSTEM
+// ============================================================================
+
+/**
+ * Vinyl item on the conveyor belt (extends Vinyl with position)
+ */
+export interface ConveyorVinyl extends Vinyl {
+  x: number;           // Horizontal position on belt (0 = left edge)
+  y: number;           // Vertical position (lane index)
+  lane: number;        // Lane number (0-based)
+  spawnedAt: number;   // Timestamp when spawned
+}
+
+/**
+ * A single slot in a shelf section
+ */
+export interface ShelfSlot {
+  genre: Genre | null;  // null = empty slot
+  vinyl: Vinyl | null;  // The vinyl in this slot (null if empty)
+  position: number;     // Position index within the section
+}
+
+/**
+ * A section of the shelf (one genre zone)
+ */
+export interface ShelfSection {
+  genre: Genre;
+  slots: ShelfSlot[];
+  capacity: number;
+  filled: number;
 }

@@ -1,20 +1,20 @@
 import React from 'react';
 import { X, Package } from 'lucide-react';
-import { Crate } from '../types';
-import { CrateBox } from './CrateBox';
+import { ShelfSection } from '../types';
+import { GenreSection } from './GenreSection';
 
 interface CompletionViewProps {
-  crates: Crate[];
+  shelfSections: ShelfSection[];
   onClose: () => void;
 }
 
 /**
- * CompletionView - Shows all organized crates side-by-side
+ * CompletionView - Shows all organized shelf sections side-by-side
  * Provides visual satisfaction of seeing the completed organization
  */
-export const CompletionView: React.FC<CompletionViewProps> = ({ crates, onClose }) => {
-  const registerRef = () => {}; // Dummy - not interactive in this view
-  const registerStackRef = () => {}; // Dummy
+export const CompletionView: React.FC<CompletionViewProps> = ({ shelfSections, onClose }) => {
+  const registerSlotRef = () => {}; // Dummy - not interactive in this view
+  const slotHighlights = {}; // Dummy
 
   return (
     <div className="fixed inset-0 z-[300] bg-black/95 overflow-y-auto">
@@ -23,7 +23,7 @@ export const CompletionView: React.FC<CompletionViewProps> = ({ crates, onClose 
         <div className="flex justify-between items-center mb-8">
           <div className="flex items-center gap-3">
             <Package size={32} className="text-cyan-400" />
-            <h2 className="font-display text-3xl text-white">Organized Crates</h2>
+            <h2 className="font-display text-3xl text-white">Organized Shelf</h2>
           </div>
           <button
             onClick={onClose}
@@ -39,33 +39,31 @@ export const CompletionView: React.FC<CompletionViewProps> = ({ crates, onClose 
           Your perfectly organized vinyl collection
         </p>
 
-        {/* Crates Grid */}
+        {/* Shelf Sections Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {crates.map((crate) => (
-            <div key={crate.id} className="flex flex-col items-center">
-              {/* Crate Label */}
+          {shelfSections.map((section) => (
+            <div key={section.genre} className="flex flex-col items-center">
+              {/* Section Label */}
               <div className="mb-3 text-center">
                 <div className="font-display text-xl text-white mb-1">
-                  {crate.label}
+                  {section.genre}
                 </div>
                 <div className="text-sm text-gray-400">
-                  {crate.filled}/{crate.capacity} vinyls
+                  {section.filled}/{section.capacity} slots filled
                 </div>
               </div>
 
-              {/* Crate Box */}
+              {/* Genre Section */}
               <div className="transform hover:scale-105 transition-transform duration-300">
-                <CrateBox
-                  crate={crate}
-                  highlightState="none"
-                  hideLabel={true}
-                  onRegisterRef={registerRef}
-                  onRegisterStackRef={registerStackRef}
+                <GenreSection
+                  section={section}
+                  highlightStates={slotHighlights}
+                  onRegisterSlotRef={registerSlotRef}
                 />
               </div>
 
               {/* Completion Badge */}
-              {crate.filled === crate.capacity && (
+              {section.filled === section.capacity && (
                 <div className="mt-3 px-3 py-1 bg-gradient-to-r from-green-600 to-emerald-600 rounded-full text-white text-sm font-bold">
                   ✓ Complete
                 </div>

@@ -386,3 +386,94 @@ export const DEBUG_MODE = process.env.NODE_ENV === 'development';
  * Show detailed error information in UI (dev only).
  */
 export const SHOW_ERROR_DETAILS = process.env.NODE_ENV === 'development';
+
+// ============================================================================
+// CONVEYOR BELT SYSTEM
+// ============================================================================
+
+/**
+ * Conveyor belt configuration for belt-based gameplay mode.
+ */
+export const CONVEYOR_BELT_CONFIG = {
+  /**
+   * Default number of horizontal lanes on the conveyor belt.
+   */
+  defaultLanes: 3,
+
+  /**
+   * Base speed (pixels per second) for vinyl movement on belt.
+   */
+  baseSpeed: 50,
+
+  /**
+   * Speed multiplier per difficulty level.
+   */
+  speedMultipliers: {
+    Easy: 0.7,
+    Normal: 1.0,
+    Hard: 1.5,
+  },
+
+  /**
+   * Speed increase per level (additive).
+   */
+  speedIncreasePerLevel: 2, // +2 pixels/sec per level
+
+  /**
+   * Maximum speed cap (pixels per second).
+   */
+  maxSpeed: 150,
+
+  /**
+   * Default spawn interval (seconds) between vinyl spawns.
+   */
+  defaultSpawnInterval: 2.0,
+
+  /**
+   * Minimum spawn interval (prevents overwhelming spawn rate).
+   */
+  minSpawnInterval: 0.8,
+
+  /**
+   * Spawn interval decrease per level (makes spawning faster).
+   */
+  spawnIntervalDecreasePerLevel: 0.05,
+
+  /**
+   * Belt width (in pixels) - vinyls despawn when exceeding this.
+   */
+  beltWidth: 800,
+
+  /**
+   * Lane height (in pixels) - vertical spacing between lanes.
+   */
+  laneHeight: 120,
+} as const;
+
+/**
+ * Shelf configuration for vinyl storage in conveyor mode.
+ */
+export const SHELF_CONFIG = {
+  /**
+   * Number of slots per genre section on the shelf.
+   */
+  slotsPerGenre: 5,
+
+  /**
+   * Shelf visual layout.
+   */
+  shelfHeight: 400, // pixels
+  slotWidth: 80,    // pixels per slot
+  slotHeight: 100,  // pixels per slot
+  slotGap: 8,       // pixels between slots
+
+  /**
+   * Penalty for letting vinyl fall off the belt.
+   */
+  missedVinylPenalty: -50, // points
+
+  /**
+   * Bonus for filling a genre section completely.
+   */
+  sectionCompleteBonus: 200, // points
+} as const;

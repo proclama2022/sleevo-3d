@@ -11,6 +11,11 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  /* Fill The Fridge overlay: minimum touch target 44px (accessibility) */
+  .touch-target-min {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 /* Background textures */
@@ -64,3 +69,392 @@
 }
 
 .bounce-back { animation: bounce-back 0.4s ease-in-out; }
+
+/* Belt scroll animation (smooth conveyor movement) */
+@keyframes beltScroll {
+  0% { background-position-x: 0; }
+  100% { background-position-x: 100px; }
+}
+
+.belt-scroll {
+  animation: beltScroll 2s linear infinite;
+}
+
+/* Vinyl grab/release transitions */
+@keyframes vinylGrab {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1.1); }
+}
+
+@keyframes vinylRelease {
+  0% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+.vinyl-grab { animation: vinylGrab 0.2s ease-out forwards; }
+.vinyl-release { animation: vinylRelease 0.15s ease-in forwards; }
+
+/* Slot highlight animations (enhanced visibility) */
+@keyframes slotPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.8);
+    transform: scale(1.02);
+  }
+}
+
+@keyframes slotGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(59, 130, 246, 0.8); }
+}
+
+.slot-highlight { animation: slotPulse 0.8s ease-in-out infinite; }
+.slot-glow { animation: slotGlow 1.2s ease-in-out infinite; }
+
+/* Expiration warning pulse (stress indicator) */
+@keyframes expirationWarning {
+  0%, 100% {
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  }
+  50% {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.8);
+  }
+}
+
+@keyframes expirationFlash {
+  0%, 50%, 100% { background-color: transparent; }
+  25%, 75% { background-color: rgba(239, 68, 68, 0.2); }
+}
+
+.expiration-warning { animation: expirationWarning 0.6s ease-in-out infinite; }
+.expiration-flash { animation: expirationFlash 1s ease-in-out infinite; }
+
+/* Belt speed change notification */
+@keyframes beltSpeedUp {
+  0% { background-color: rgba(59, 130, 246, 0); }
+  50% { background-color: rgba(59, 130, 246, 0.3); }
+  100% { background-color: rgba(59, 130, 246, 0); }
+}
+
+.belt-speed-change { animation: beltSpeedUp 0.8s ease-in-out; }
+
+/* Success placement animation */
+@keyframes slotFillSuccess {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.slot-fill-success { animation: slotFillSuccess 0.4s ease-out; }
+
+/* Record Shop Atmosphere Styles */
+
+/* Checkered floor pattern (70s style) */
+.shop-floor {
+  background-image:
+    linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+    linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+    linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+  background-size: 60px 60px;
+  background-position: 0 0, 0 30px, 30px -30px, -30px 0px;
+  background-color: #2a2a2a;
+}
+
+/* Brick wall texture */
+.shop-wall {
+  background-image:
+    linear-gradient(335deg, #4a2511 23px, transparent 23px),
+    linear-gradient(155deg, #4a2511 23px, transparent 23px),
+    linear-gradient(335deg, #321809 23px, transparent 23px),
+    linear-gradient(155deg, #321809 23px, transparent 23px);
+  background-size: 58px 58px;
+  background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px;
+  background-color: #5a3520;
+}
+
+/* Window light effect */
+.window-light {
+  background: radial-gradient(
+    ellipse 600px 300px at 50% 0%,
+    rgba(255, 248, 220, 0.15) 0%,
+    rgba(255, 248, 220, 0.08) 40%,
+    transparent 80%
+  );
+  pointer-events: none;
+}
+
+/* Ambient shop lighting */
+.shop-ambient-light {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 200, 100, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 30%, rgba(255, 180, 120, 0.06), transparent 35%);
+  pointer-events: none;
+}
+
+/* Shelf wood texture (enhanced) */
+.shelf-wood {
+  background: linear-gradient(
+    90deg,
+    #3e2723 0%,
+    #4a2f2a 25%,
+    #3e2723 50%,
+    #4a2f2a 75%,
+    #3e2723 100%
+  );
+  background-size: 200px 100%;
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.3),
+    inset 0 -2px 4px rgba(0,0,0,0.2),
+    0 4px 8px rgba(0,0,0,0.4);
+}
+
+/* ========== RECORD STORE SHELF (realistic bins) ========== */
+
+/* Record bin cubby - slot where vinyls stand vertically */
+.record-bin-cubby {
+  background: linear-gradient(
+    180deg,
+    #2a1810 0%,
+    #1a0f08 30%,
+    #0f0805 70%,
+    #080403 100%
+  );
+  box-shadow:
+    inset 0 4px 12px rgba(0,0,0,0.8),
+    inset 0 -2px 6px rgba(0,0,0,0.5),
+    inset 2px 0 8px rgba(0,0,0,0.4),
+    inset -2px 0 8px rgba(0,0,0,0.4),
+    0 2px 4px rgba(0,0,0,0.6);
+  border: 1px solid rgba(80,50,30,0.5);
+}
+
+/* Shelf board (horizontal wood plank) */
+.shelf-board {
+  background: linear-gradient(
+    180deg,
+    #5c4033 0%,
+    #4a3225 15%,
+    #3e2723 50%,
+    #2a1a14 85%,
+    #1a0f0a 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.5),
+    0 4px 12px rgba(0,0,0,0.5),
+    0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Shelf unit frame - vertical sides */
+.shelf-frame {
+  background: linear-gradient(
+    90deg,
+    #3e2723 0%,
+    #4a3225 30%,
+    #4a3225 70%,
+    #3e2723 100%
+  );
+  box-shadow:
+    inset 0 0 8px rgba(0,0,0,0.4),
+    0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* Wood grain subtle texture for bins */
+.bin-wood-grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='120'%3E%3Crect fill='%23080503' width='60' height='120'/%3E%3Cpath fill='%23151008' d='M0 0h4v120H0z' opacity='0.6'/%3E%3Cpath fill='%23151008' d='M20 0h3v120h-3z' opacity='0.4'/%3E%3Cpath fill='%23151008' d='M40 0h2v120h-2z' opacity='0.3'/%3E%3Cpath fill='%23151008' d='M56 0h4v120h-4z' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  opacity: 0.7;
+  mix-blend-mode: overlay;
+}
+
+/* ========== FILL THE FRIDGE STYLE ========== */
+
+/* Fridge/shelf unit frame - cartoon blue with orange trim */
+.fridge-shelf-unit {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 40%, #1d4ed8 100%);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.4),
+    inset 0 -3px 6px rgba(0,0,0,0.25),
+    0 12px 40px rgba(0,0,0,0.4),
+    0 0 0 4px #f97316,
+    0 0 0 6px rgba(249,115,22,0.3);
+}
+
+/* Fridge shelf compartment - light background per genre */
+.fridge-compartment {
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.95) 0%,
+    rgba(241,245,249,0.9) 40%,
+    rgba(226,232,240,0.85) 100%
+  );
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,1),
+    inset 0 -3px 8px rgba(0,0,0,0.1),
+    inset 2px 0 6px rgba(0,0,0,0.05),
+    inset -2px 0 6px rgba(0,0,0,0.05),
+    0 2px 4px rgba(0,0,0,0.08);
+  border: 2px solid rgba(148,163,184,0.6);
+  border-radius: 10px;
+}
+
+/* Fridge shelf divider (orange shelf boards) */
+.fridge-shelf-divider {
+  background: linear-gradient(90deg, #fb923c 0%, #f97316 40%, #ea580c 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    0 3px 6px rgba(0,0,0,0.25);
+  border-radius: 2px;
+}
+
+/* Open crate/container (conveyor area - vibrant purple) */
+.fridge-crate {
+  background: linear-gradient(
+    180deg,
+    #7c3aed 0%,
+    #6d28d9 30%,
+    #5b21b6 70%,
+    #4c1d95 100%
+  );
+  box-shadow:
+    inset 0 2px 8px rgba(255,255,255,0.15),
+    inset 0 -4px 12px rgba(0,0,0,0.4),
+    0 8px 24px rgba(0,0,0,0.4),
+    0 0 0 3px #a78bfa,
+    0 0 0 5px rgba(167,139,250,0.3);
+  border-radius: 14px;
+}
+
+/* 3D perspective for shelf unit */
+.fridge-perspective {
+  transform: perspective(1000px) rotateX(2deg);
+  transform-style: preserve-3d;
+}
+
+/* Vinyl shadow when dragging */
+.vinyl-shadow {
+  filter: drop-shadow(0 20px 30px rgba(0,0,0,0.6)) drop-shadow(0 8px 12px rgba(0,0,0,0.5));
+}
+
+/* Drag overlay element */
+.drag-overlay {
+  pointer-events: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  transition: filter 0.15s ease;
+}
+
+/* Dust particle animation */
+@keyframes dustFloat {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.3; }
+  100% {
+    transform: translateY(-100px) translateX(20px) rotate(180deg);
+    opacity: 0;
+  }
+}
+
+.dust-particle {
+  animation: dustFloat 3s ease-out forwards;
+}
+
+/* Vinyl tilt when grabbed */
+@keyframes vinylTilt {
+  0% { transform: rotateX(0deg) rotateY(0deg) scale(1); }
+  100% { transform: rotateX(10deg) rotateY(-5deg) scale(1.05); }
+}
+
+.vinyl-tilt {
+  animation: vinylTilt 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-style: preserve-3d;
+}
+
+/* Vinyl settle animation (when placed) */
+@keyframes vinylSettle {
+  0% { transform: scale(1.05) translateY(-5px); }
+  60% { transform: scale(0.95) translateY(2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.vinyl-settle {
+  animation: vinylSettle 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Shelf slot depth effect (cartoon bin feel) */
+.slot-depth {
+  box-shadow:
+    inset 0 3px 10px rgba(0,0,0,0.5),
+    inset 0 -2px 6px rgba(0,0,0,0.3),
+    inset 2px 0 6px rgba(0,0,0,0.15),
+    inset -2px 0 6px rgba(0,0,0,0.15);
+  border-radius: 10px;
+}
+
+/* Slot with vinyl - pop-out effect */
+.slot-filled {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Cartoon bounce animation */
+@keyframes cartoonBounce {
+  0% { transform: scale(0.3) translateY(20px); opacity: 0; }
+  50% { transform: scale(1.1) translateY(-4px); opacity: 1; }
+  70% { transform: scale(0.95) translateY(1px); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.cartoon-bounce {
+  animation: cartoonBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Conveyor roller (cartoon metal) */
+.conveyor-roller {
+  background: linear-gradient(180deg, #9ca3af 0%, #6b7280 40%, #4b5563 100%);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    0 2px 4px rgba(0,0,0,0.4);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .belt-scroll,
+  .vinyl-grab,
+  .vinyl-release,
+  .slot-highlight,
+  .slot-glow,
+  .expiration-warning,
+  .expiration-flash,
+  .belt-speed-change,
+  .slot-fill-success,
+  .dust-particle,
+  .vinyl-tilt,
+  .vinyl-settle {
+    animation: none;
+  }
+
+  .slot-highlight {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.8);
+  }
+
+  .expiration-warning {
+    border-color: rgba(239, 68, 68, 1);
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.8);
+  }
+}

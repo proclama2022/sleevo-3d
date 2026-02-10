@@ -36,6 +36,16 @@ export const POSTERS = {
 
 export const LOGO = '/assets/logo.png';
 
+/** Fill The Fridge style: AI-generated shelf and crate assets (Runware CDN) */
+export const FILL_THE_FRIDGE = {
+  /** Main shelf cabinet - front view, blue frame, orange dividers, white compartments */
+  shelf:
+    'https://im.runware.ai/image/ws/4/ii/65dc4816-1f07-4e88-bb49-a044d6d90a77.png',
+  /** Bottom open crates - purple containers for incoming vinyls */
+  crate:
+    'https://im.runware.ai/image/ws/3/ii/0caeb50b-cf0e-4a6a-a769-1ad23d0845ad.png',
+};
+
 // Fallback to current CSS-based design if images not loaded
 export const useImageWithFallback = (src: string, fallback: () => JSX.Element) => {
   const [loaded, setLoaded] = React.useState(false);

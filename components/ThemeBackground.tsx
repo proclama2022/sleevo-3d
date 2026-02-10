@@ -12,64 +12,72 @@ const BACKGROUNDS = {
   Expo: 'https://im.runware.ai/image/ws/2/ii/8d81370c-79aa-4127-a3e4-c034944636f3.jpg',
 };
 
-// Color themes per ambiente (per mobile) - molto più chiari
-const THEME_COLORS = {
-  Basement: {
-    from: '#4d3535',
-    via: '#3a2828',
-    to: '#2a2020',
-    accent: '#8b4513'
-  },
-  Store: {
-    from: '#3a4a5d',
-    via: '#2a3848',
-    to: '#1f2a35',
-    accent: '#4a90e2'
-  },
-  Expo: {
-    from: '#4d3545',
-    via: '#3a2835',
-    to: '#2a2025',
-    accent: '#9b59b6'
-  }
-};
-
 export const ThemeBackground: React.FC<ThemeBackgroundProps> = ({ theme }) => {
   const { isMobile } = useWindowSize();
   const bgUrl = BACKGROUNDS[theme] || BACKGROUNDS.Basement;
-  const colors = THEME_COLORS[theme];
 
-  // STESSO SFONDO SU MOBILE E DESKTOP: AI images nitide con spotlight centrale
   return (
     <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* AI Background - nitido e visibile */}
+      {/* Checkered floor */}
+      <div className="absolute inset-0 shop-floor" style={{ opacity: 0.3 }} />
+
+      {/* AI Background - the actual shop photo */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: `url(${bgUrl})`,
-          opacity: 0.4,
-          filter: 'saturate(0.8) brightness(1.1)',
+          opacity: 0.5,
+          filter: 'saturate(1.2) brightness(1.2)',
         }}
       />
 
-      {/* FORTE spotlight centrale per area di gioco */}
+      {/* Window light effect (natural daylight from top) */}
+      <div className="absolute inset-0 window-light" />
+
+      {/* Warm ambient shop lighting */}
+      <div className="absolute inset-0 shop-ambient-light" />
+
+      {/* Decorative elements - vintage posters on walls */}
+      {!isMobile && (
+        <>
+          {/* Left wall decoration */}
+          <div className="absolute left-4 top-20 w-24 h-32 bg-gradient-to-br from-orange-900/20 to-red-900/20 border-2 border-orange-800/30 rounded-sm shadow-xl transform -rotate-3" style={{ opacity: 0.6 }}>
+            <div className="absolute inset-0 flex items-center justify-center text-orange-300/40 font-bold text-xs">LIVE</div>
+          </div>
+
+          {/* Right wall decoration */}
+          <div className="absolute right-4 top-32 w-28 h-36 bg-gradient-to-br from-blue-900/20 to-purple-900/20 border-2 border-blue-800/30 rounded-sm shadow-xl transform rotate-2" style={{ opacity: 0.6 }}>
+            <div className="absolute inset-0 flex items-center justify-center text-blue-300/40 font-bold text-xs">JAZZ</div>
+          </div>
+        </>
+      )}
+
+      {/* Hanging lamp effect (warm spotlight) */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse 80% 65% at 50% 45%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.12) 45%, transparent 75%)'
+          background: 'radial-gradient(ellipse 70% 50% at 50% 35%, rgba(255,220,150,0.25) 0%, rgba(255,200,120,0.08) 40%, transparent 70%)'
         }}
       />
 
-      {/* Oscura solo i bordi */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-transparent to-black/25" />
-
-      {/* Vignetta SOLO sui bordi estremi */}
+      {/* Central play area highlight */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.5) 100%)'
+          background: 'radial-gradient(ellipse 75% 60% at 50% 50%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 45%, transparent 75%)'
         }}
       />
+
+      {/* Subtle vignette */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.4) 100%)'
+        }}
+      />
+
+      {/* Bottom shadow (counter/desk shadow) */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black/30 to-transparent" />
     </div>
   );
 };
