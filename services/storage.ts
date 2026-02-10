@@ -19,6 +19,8 @@ export interface SaveData {
   accessibilitySettings?: AccessibilitySettings; // optional for backward compatibility
   customization?: CustomizationSettings; // optional for backward compatibility
   levelStars: Record<number, number>; // level index -> stars earned (0-3)
+  totalStars: number; // denormalized total for quick access
+  highestLevelUnlocked: number; // tracks furthest level reached
   collection: CollectionItem[]; // Rare vinyls collected
   achievements: string[]; // Array of unlocked achievement IDs
   stats: {
@@ -44,6 +46,8 @@ const getDefaultSaveData = (): SaveData => ({
   totalXP: 0,
   tutorialCompleted: false,
   levelStars: {},
+  totalStars: 0,
+  highestLevelUnlocked: 1,
   collection: [],
   achievements: [],
   stats: {
@@ -99,6 +103,8 @@ export const loadSaveData = (): SaveData => {
         unlockedThemes: ['default']
       },
       levelStars: parsed.data.levelStars ?? {},
+      totalStars: parsed.data.totalStars ?? 0,
+      highestLevelUnlocked: parsed.data.highestLevelUnlocked ?? (parsed.data.level || 1),
       collection: parsed.data.collection ?? [],
       achievements: parsed.data.achievements ?? [],
       levelRecords: parsed.data.levelRecords ?? {},
@@ -257,6 +263,41 @@ export const checkNewRecords = (
   const currentRecord = currentSave.levelRecords[levelIndex];
   return {
     newBestScore: !currentRecord || score > currentRecord.bestScore,
+  };
+};
+
+/**
+ * Update star progress after level completion
+ * Only updates if player earned more stars than previous best
+ * Also handles level unlocking and totalStars calculation
+ */
+export const updateStarProgress = (
+  currentSave: SaveData,
+  levelIndex: number,
+  starsEarned: number
+): SaveData => {
+  const previousStars = currentSave.levelStars[levelIndex] || 0;
+  const newStars = Math.max(previousStars, starsEarned);
+
+  // Only update if improvement
+  if (newStars <= previousStars) {
+    return currentSave;
+  }
+
+  const updatedLevelStars = { ...currentSave.levelStars, [levelIndex]: newStars };
+  const totalStars = Object.values(updatedLevelStars).reduce((sum, s) => sum + s, 0);
+
+  // Unlock next level if this is current highest
+  const highestLevelUnlocked = Math.max(
+    currentSave.highestLevelUnlocked,
+    levelIndex + 2 // levelIndex is 0-based, unlock next level (level numbers are 1-based)
+  );
+
+  return {
+    ...currentSave,
+    levelStars: updatedLevelStars,
+    totalStars,
+    highestLevelUnlocked,
   };
 };
 
