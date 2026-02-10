@@ -969,10 +969,18 @@ export default function App() {
       }
     }
 
-    setActiveVinyl(null);
-    setMagnetTargetId(null);
-    setGhostPreview(null);
-    prevMagnetRef.current = null;
+    // Smooth fade-out transition before removing active vinyl
+    if (dragElRef.current) {
+      dragElRef.current.style.opacity = '0';
+      dragElRef.current.style.transform = dragElRef.current.style.transform.replace('scale(1.1)', 'scale(0.95)');
+    }
+
+    setTimeout(() => {
+      setActiveVinyl(null);
+      setMagnetTargetId(null);
+      setGhostPreview(null);
+      prevMagnetRef.current = null;
+    }, 150); // Match transition duration
   };
 
   const handleTrashDrop = (item: Vinyl) => {
@@ -1839,7 +1847,7 @@ export default function App() {
                 ref={dragElRef}
                 className="absolute top-0 left-0 will-change-transform"
                 style={{
-                    transition: 'filter 0.15s ease-out'
+                    transition: 'filter 0.15s ease-out, opacity 0.15s ease-out, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
                 }}
             >
                 <VinylCover vinyl={activeVinyl} size={isMobile ? 155 : 180} className="shadow-[0_40px_80px_rgba(0,0,0,0.8)] scale-110" isMobile={isMobile} />
