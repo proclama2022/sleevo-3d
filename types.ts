@@ -162,3 +162,47 @@ export interface CustomizationSettings {
   fontStyle: FontStyle;
   unlockedThemes: VisualTheme[];
 }
+
+// Campaign & Level Configuration
+// (for star system and future level progression)
+
+/**
+ * Star criteria for a level (optional per-level override)
+ */
+export interface StarCriteria {
+  twoStar: {
+    accuracyThreshold: number;
+    timeThreshold?: number;
+    description: string;
+  };
+  threeStar: {
+    accuracyThreshold: number;
+    minCombo?: number;
+    maxTimeRatio?: number;
+    timeThreshold?: number;
+    description: string;
+  };
+}
+
+/**
+ * Level configuration for campaign levels
+ */
+export interface LevelConfig {
+  crates: number;
+  genres: Genre[];
+  mode: LevelMode;
+  theme: ShopTheme;
+  time: number;
+  moves: number;
+  starCriteria?: StarCriteria; // Optional per-level override
+}
+
+/**
+ * Campaign level definition
+ */
+export interface CampaignLevel {
+  levelNumber: number;
+  worldNumber: number;
+  handCrafted: boolean;
+  config: LevelConfig;
+}
