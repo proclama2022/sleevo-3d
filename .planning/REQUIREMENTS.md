@@ -89,13 +89,56 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (To be populated by roadmapper) | | |
+| STAR-01 | Phase 1 | Pending |
+| STAR-02 | Phase 1 | Pending |
+| STAR-03 | Phase 1 | Pending |
+| STAR-04 | Phase 1 | Pending |
+| STAR-05 | Phase 1 | Pending |
+| STAR-06 | Phase 1 | Pending |
+| LEVEL-04 | Phase 1 | Pending |
+| LEVEL-01 | Phase 2 | Pending |
+| LEVEL-02 | Phase 2 | Pending |
+| LEVEL-03 | Phase 2 | Pending |
+| LEVEL-05 | Phase 2 | Pending |
+| LEVEL-06 | Phase 2 | Pending |
+| VFX-01 | Phase 3 | Pending |
+| VFX-02 | Phase 3 | Pending |
+| VFX-03 | Phase 3 | Pending |
+| VFX-04 | Phase 3 | Pending |
+| VFX-05 | Phase 3 | Pending |
+| VFX-06 | Phase 3 | Pending |
+| VFX-07 | Phase 3 | Pending |
+| VFX-08 | Phase 3 | Pending |
+| UI-01 | Phase 4 | Pending |
+| UI-02 | Phase 4 | Pending |
+| UI-03 | Phase 4 | Pending |
+| UI-04 | Phase 4 | Pending |
+| UI-05 | Phase 4 | Pending |
+| UI-06 | Phase 4 | Pending |
+| UI-07 | Phase 4 | Pending |
+| COSM-01 | Phase 5 | Pending |
+| COSM-02 | Phase 5 | Pending |
+| COSM-03 | Phase 5 | Pending |
+| COSM-04 | Phase 5 | Pending |
+| COSM-05 | Phase 5 | Pending |
+| COSM-06 | Phase 5 | Pending |
+| COSM-07 | Phase 5 | Pending |
+| DAILY-01 | Phase 6 (v2) | Deferred |
+| DAILY-02 | Phase 6 (v2) | Deferred |
+| DAILY-03 | Phase 6 (v2) | Deferred |
+| DAILY-04 | Phase 6 (v2) | Deferred |
+| DAILY-05 | Phase 6 (v2) | Deferred |
 
 **Coverage:**
-- v1 requirements: TBD total
-- Mapped to phases: TBD
-- Unmapped: TBD
+- v1 requirements: 34 total
+- Mapped to phases: 34/34 (100%)
+- Unmapped: 0
+
+**Notes:**
+- LEVEL-04 (initial 10 levels for validation) maps to Phase 1 to enable early testing of star system
+- DAILY-* requirements are v2 scope but included in Phase 6 structure for completeness
+- All 34 v1 requirements have explicit phase mapping with no orphans
 
 ---
 *Requirements defined: 2026-02-10*
-*Last updated: 2026-02-10 after initial definition*
+*Last updated: 2026-02-10 after roadmap creation*
