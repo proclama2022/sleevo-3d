@@ -5,8 +5,8 @@
  */
 
 import React from 'react';
-import { RandomEvent, RANDOM_EVENT_CONFIG, isBlackoutActive, isEarthquakeActive } from '../types/events';
-import { getEventProgress } from '../services/randomEvents';
+import { RandomEvent, RANDOM_EVENT_CONFIG } from '../types/events';
+import { getEventProgress, isBlackoutActive, isEarthquakeActive } from '../services/randomEvents';
 
 interface RandomEventOverlayProps {
   activeEvent: RandomEvent | null;
