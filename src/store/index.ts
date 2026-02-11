@@ -1,0 +1,13 @@
+export { useGameStore, 
+  selectPhase, 
+  selectScore, 
+  selectProgress,
+  selectTimeRemaining,
+  selectVinyls,
+  selectSlots,
+  selectDraggedVinyl,
+  selectHoveredSlot,
+  selectIsPlaying,
+  selectIsPaused,
+  selectIsGameOver,
+} from './gameStore';
