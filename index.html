@@ -2,20 +2,25 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Sleevo 3D - Vinyl Shop Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sleevo - Vinyl Shop Manager</title>
   <link rel="stylesheet" href="/src/style.css">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
     }
+
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-family: var(--font-family-ui, 'Poppins', sans-serif);
       overflow: hidden;
-      background: linear-gradient(135deg, #2d1b1b 0%, #1a1110 50%, #0f0808 100%);
+      background: radial-gradient(120% 90% at 50% 0%, #4b423a 0%, #2b2622 58%, #181513 100%);
     }
+
     #canvas-container {
       width: 100vw;
       height: 100vh;
@@ -23,6 +28,7 @@
       top: 0;
       left: 0;
     }
+
     #ui-overlay {
       position: fixed;
       top: 0;
@@ -32,127 +38,470 @@
       pointer-events: none;
       z-index: 10;
     }
-    .ui-button {
-      pointer-events: all;
-      padding: 12px 24px;
-      background: rgba(139, 92, 46, 0.9);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 16px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    }
-    .ui-button:hover {
-      background: rgba(139, 92, 46, 1);
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    }
-    #hud {
+
+    #ai-overlay {
       position: absolute;
-      top: 20px;
-      left: 20px;
-      color: white;
-      font-size: 18px;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.18;
+      background-image:
+        linear-gradient(180deg, rgba(20, 15, 13, 0.52) 0%, rgba(12, 9, 8, 0.6) 100%),
+        url('https://im.runware.ai/image/ws/4/ii/455156ce-83b2-442d-94b0-efe9970676ac.png');
+      background-repeat: no-repeat, no-repeat;
+      background-size: cover, cover;
+      background-position: center, center;
+      mix-blend-mode: normal;
+      filter: blur(1px) saturate(0.94) contrast(0.98);
     }
+
+    #top-bar,
+    #instruction,
+    #controls,
+    #tutorial {
+      z-index: 2;
+    }
+
+    #build-badge {
+      position: fixed;
+      top: max(8px, env(safe-area-inset-top));
+      right: max(10px, env(safe-area-inset-right));
+      z-index: 999;
+      font-size: 11px;
+      font-weight: 700;
+      color: #1a120e;
+      letter-spacing: 0.08em;
+      background: #ff9a6f;
+      border: 1px solid #ffd8c7;
+      border-radius: 999px;
+      padding: 4px 10px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      pointer-events: none;
+    }
+
+    /* ══════ TOP BAR (10-12% height) ══════ */
+    #top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--hud-height, 80px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--page-padding-vertical, 12px) 20px;
+      padding-top: max(var(--page-padding-vertical, 12px), env(safe-area-inset-top));
+      padding-left: max(20px, env(safe-area-inset-left));
+      padding-right: max(20px, env(safe-area-inset-right));
+      background: linear-gradient(180deg, rgba(17, 15, 14, 0.78) 0%, rgba(17, 15, 14, 0.12) 100%);
+      backdrop-filter: blur(10px) saturate(130%);
+      pointer-events: none;
+      gap: var(--space-sm, 8px);
+    }
+
+    #game-title {
+      font-size: var(--font-size-logo, 24px);
+      font-weight: var(--font-weight-logo, 700);
+      color: #ff7a4c;
+      letter-spacing: 0.08em;
+      text-shadow: 0 8px 24px rgba(255, 122, 76, 0.32);
+      pointer-events: all;
+    }
+
+    #hud {
+      display: flex;
+      gap: 14px;
+      width: 100%;
+      max-width: 330px;
+      justify-content: space-between;
+      pointer-events: all;
+    }
+
+    .stat-card {
+      background: linear-gradient(180deg, rgba(46, 35, 30, 0.84) 0%, rgba(24, 20, 18, 0.82) 100%);
+      backdrop-filter: blur(14px) saturate(150%);
+      border: 1.5px solid rgba(255, 120, 76, 0.72);
+      padding: var(--space-xs, 4px) var(--space-lg, 16px);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm, 6px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      flex: 1;
+      justify-content: center;
+    }
+
+    .stat-label {
+      font-size: var(--font-size-hud-label, 11px);
+      font-weight: var(--font-weight-hud-label, 600);
+      text-transform: uppercase;
+      color: rgba(255, 224, 204, 0.75);
+      letter-spacing: var(--letter-spacing-label, 0.5px);
+    }
+
+    .stat-value {
+      font-size: var(--font-size-hud-value, 20px);
+      font-weight: var(--font-weight-logo, 700);
+      color: #ffd6c0;
+      text-shadow: 0 0 18px rgba(255, 116, 64, 0.32);
+    }
+
+    /* ══════ INSTRUCTION BAR (5-8% height) ══════ */
+    #instruction {
+      position: absolute;
+      top: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: var(--font-size-guide, 14px);
+      font-weight: var(--font-weight-hud-label, 600);
+      color: #f7efe9;
+      text-align: center;
+      pointer-events: none;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+      white-space: nowrap;
+      max-width: 90%;
+      line-height: var(--line-height-normal, 1.4);
+      background: rgba(22, 18, 17, 0.42);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      padding: 6px 14px;
+      backdrop-filter: blur(8px);
+    }
+
+    /* ══════ BOTTOM BAR (10-15% height) ══════ */
     #controls {
       position: absolute;
-      bottom: 100px;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: var(--controls-height, 80px);
       display: flex;
-      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      padding-bottom: max(0px, env(safe-area-inset-bottom));
+      padding-left: max(40px, env(safe-area-inset-left));
+      padding-right: max(40px, env(safe-area-inset-right));
+      background: linear-gradient(0deg, rgba(14, 12, 11, 0.88) 0%, rgba(14, 12, 11, 0.06) 100%);
+      backdrop-filter: blur(10px);
+      pointer-events: all;
     }
-    #carousel-hint {
-      position: absolute;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
-      text-align: center;
-      animation: pulse 2s ease-in-out infinite;
+
+    .control-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-sm, 6px);
+      cursor: pointer;
+      transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease;
+      background: linear-gradient(180deg, rgba(39, 31, 28, 0.92) 0%, rgba(24, 20, 18, 0.92) 100%);
+      border: 1.5px solid rgba(255, 126, 86, 0.75);
+      border-radius: 16px;
+      padding: 12px 20px;
+      min-width: 80px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
+
+    .control-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 14px 26px rgba(0, 0, 0, 0.4), 0 0 22px rgba(255, 122, 76, 0.18);
+      border-color: rgba(255, 145, 110, 0.9);
+      background: linear-gradient(180deg, rgba(49, 37, 32, 0.94) 0%, rgba(27, 22, 20, 0.94) 100%);
     }
+
+    .control-btn:active {
+      transform: translateY(0) scale(0.99);
+      background: linear-gradient(180deg, rgba(34, 28, 25, 0.98) 0%, rgba(21, 17, 15, 0.98) 100%);
+    }
+
+    .control-btn-icon {
+      font-size: 24px;
+      color: #ff8a5f;
+      text-shadow: 0 0 16px rgba(255, 122, 76, 0.35);
+    }
+
+    .control-btn-label {
+      font-size: var(--font-size-hud-label, 11px);
+      font-weight: var(--font-weight-hud-label, 600);
+      text-transform: uppercase;
+      color: rgba(255, 223, 205, 0.82);
+      letter-spacing: 0.06em;
+    }
+
+    /* ══════ TUTORIAL MODAL (Modern Glassmorphism) ══════ */
     #tutorial {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: rgba(0, 0, 0, 0.85);
-      backdrop-filter: blur(20px);
-      padding: 32px 48px;
+      background: linear-gradient(180deg, rgba(31, 25, 23, 0.95) 0%, rgba(20, 16, 15, 0.95) 100%);
+      backdrop-filter: blur(14px) saturate(160%);
+      padding: 40px;
       border-radius: 20px;
-      color: white;
       text-align: center;
-      font-size: 20px;
-      line-height: 1.6;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-      border: 2px solid rgba(139, 92, 46, 0.5);
-      animation: fadeIn 0.5s ease-out;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      border: 1.5px solid rgba(255, 124, 84, 0.8);
+      animation: fadeIn var(--motion-duration-slow, 260ms) var(--motion-easing-out, ease-out);
       z-index: 100;
       pointer-events: all;
+      max-width: 420px;
     }
+
     #tutorial.hidden {
       display: none;
     }
+
     #tutorial h2 {
-      font-size: 28px;
-      margin: 0 0 16px 0;
-      color: #ff6b35;
+      font-size: 36px;
+      font-weight: var(--font-weight-logo, 700);
+      margin: 0 0 var(--space-sm, 8px) 0;
+      color: var(--color-accent-main, #ff6b35);
+      letter-spacing: var(--letter-spacing-logo, 1px);
     }
+
+    #tutorial .subtitle {
+      font-size: var(--font-size-button, 13px);
+      font-weight: 500;
+      color: rgba(255, 210, 183, 0.7);
+      text-transform: uppercase;
+      letter-spacing: var(--letter-spacing-logo, 1px);
+      margin-bottom: 20px;
+    }
+
+    #tutorial p {
+      font-size: 16px;
+      line-height: 1.7;
+      margin: var(--space-md, 12px) 0;
+      color: #f4e7dd;
+    }
+
     #tutorial button {
-      margin-top: 24px;
-      padding: 12px 32px;
-      font-size: 18px;
-      background: #ff6b35;
+      margin-top: 28px;
+      padding: var(--space-lg, 16px) 48px;
+      min-height: 48px;
+      font-size: 16px;
+      font-weight: var(--font-weight-hud-label, 600);
+      background: linear-gradient(180deg, #ff8f62 0%, #ff7043 100%);
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-lg, 12px);
       color: white;
       cursor: pointer;
-      font-weight: 600;
-      transition: all 0.2s;
+      transition: all var(--motion-duration-default, 180ms) var(--motion-easing-out, ease);
+      box-shadow: 0 10px 20px rgba(255, 107, 53, 0.4);
+      text-transform: uppercase;
+      letter-spacing: var(--letter-spacing-logo, 1px);
     }
+
     #tutorial button:hover {
-      background: #ff8555;
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px rgba(255, 107, 53, 0.5);
+      background: linear-gradient(180deg, #ff986f 0%, #ff7a4c 100%);
     }
+
+    #tutorial button:active {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(255,107,53,0.35);
+    }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translate(-50%, -45%); }
-      to { opacity: 1; transform: translate(-50%, -50%); }
+      from {
+        opacity: 0;
+        transform: translate(-50%, -45%) scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    /* ══════ MOBILE LAYOUT ══════ */
+    @media (max-width: 768px) {
+      :root {
+        --hud-height: 75px;
+        --controls-height: 70px;
+        --font-size-logo: 20px;
+        --font-size-hud-value: 18px;
+        --font-size-hud-label: 10px;
+        --font-size-guide: 13px;
+      }
+
+      #top-bar {
+        padding: 10px var(--page-padding-horizontal);
+        padding-top: max(10px, env(safe-area-inset-top));
+        padding-left: max(var(--page-padding-horizontal), env(safe-area-inset-left));
+        padding-right: max(var(--page-padding-horizontal), env(safe-area-inset-right));
+        gap: var(--space-sm);
+      }
+
+      #hud {
+        max-width: 250px;
+        gap: var(--space-lg);
+      }
+
+      .stat-card {
+        padding: var(--space-xs) var(--space-md);
+        gap: var(--space-xs);
+      }
+
+      #instruction {
+        top: 82px;
+        padding: 0 20px;
+        white-space: normal;
+      }
+
+      #controls {
+        padding: 0 20px;
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+        padding-left: max(20px, env(safe-area-inset-left));
+        padding-right: max(20px, env(safe-area-inset-right));
+      }
+
+      .control-btn {
+        padding: 10px var(--space-lg);
+        min-width: 70px;
+        min-height: 48px;
+        gap: var(--space-xs);
+      }
+
+      .control-btn-icon {
+        font-size: 22px;
+      }
+
+      #tutorial {
+        max-width: 90%;
+        padding: 32px var(--space-xl);
+      }
+
+      #tutorial h2 {
+        font-size: 32px;
+      }
+
+      #tutorial .subtitle {
+        font-size: 11px;
+      }
+
+      #tutorial p {
+        font-size: 15px;
+      }
+
+      #tutorial button {
+        padding: 14px 36px;
+        font-size: 15px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      :root {
+        --hud-height: 70px;
+        --controls-height: 65px;
+        --font-size-logo: 20px;
+        --font-size-hud-value: 16px;
+        --font-size-hud-label: 9px;
+        --font-size-guide: 12px;
+      }
+
+      #top-bar {
+        gap: var(--space-xs);
+      }
+
+      #hud {
+        max-width: 200px;
+        gap: var(--space-md);
+      }
+
+      .stat-card {
+        padding: 3px 10px;
+      }
+
+      #instruction {
+        top: 76px;
+      }
+
+      #controls {
+        padding: 0 var(--page-padding-horizontal);
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+        padding-left: max(var(--page-padding-horizontal), env(safe-area-inset-left));
+        padding-right: max(var(--page-padding-horizontal), env(safe-area-inset-right));
+      }
+
+      .control-btn {
+        padding: 12px 16px;
+        min-width: 72px;
+        min-height: 48px;
+      }
+
+      .control-btn-icon {
+        font-size: 20px;
+      }
+
+      #tutorial h2 {
+        font-size: 28px;
+      }
+
+      #tutorial .subtitle {
+        font-size: 10px;
+      }
+
+      #tutorial p {
+        font-size: 14px;
+      }
+
+      #tutorial button {
+        padding: var(--space-md) 32px;
+        font-size: 14px;
+      }
     }
   </style>
 </head>
 <body>
-  <div id="canvas-container"></div>
-  
+  <div id="canvas-container" role="application" aria-label="Area di gioco 3D - Usa touch o mouse per trascinare i vinili"></div>
+
   <div id="ui-overlay">
-    <div id="tutorial">
-      <h2>🎵 Welcome to Sleevo!</h2>
-      <p>👆 <strong>Grab</strong> vinyl records from the carousel below</p>
-      <p>📦 <strong>Drag & drop</strong> them in the genre bins</p>
-      <p>⭐ Match colors to genres!</p>
-      <button id="btn-start">Let's Go!</button>
+    <div id="build-badge" aria-hidden="true">v5.4</div>
+    <div id="ai-overlay" aria-hidden="true"></div>
+    <!-- Tutorial Modal -->
+    <div id="tutorial" role="dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description">
+      <h2 id="tutorial-title">🎵 SLEEVO</h2>
+      <div class="subtitle">Vinyl Shop Manager</div>
+      <p id="tutorial-description">Organizza i vinili negli scaffali giusti<br>abbinando ogni disco al suo genere musicale</p>
+      <button id="btn-start" aria-label="Inizia a giocare">Inizia a Giocare</button>
     </div>
 
-    <div id="hud">
-      <div>Level: <span id="level">1</span></div>
-      <div>Score: <span id="score">0</span></div>
-    </div>
-    
-    <div id="controls">
-      <button class="ui-button" id="btn-undo">↶ Undo</button>
-      <button class="ui-button" id="btn-restart">↻ Restart</button>
+    <!-- Top Bar: Title + Stats -->
+    <div id="top-bar">
+      <div id="game-title" role="heading" aria-level="1">SLEEVO</div>
+      <div id="hud">
+        <div class="stat-card" role="status" aria-live="polite">
+          <span class="stat-label" id="level-label">Level</span>
+          <span class="stat-value" id="level" aria-labelledby="level-label">1</span>
+        </div>
+        <div class="stat-card" role="status" aria-live="polite">
+          <span class="stat-label" id="score-label">Score</span>
+          <span class="stat-value" id="score" aria-labelledby="score-label">0</span>
+        </div>
+      </div>
     </div>
 
-    <div id="carousel-hint">
-      ← Vinils scrolling | Grab one! →
+    <!-- Instruction -->
+    <div id="instruction" role="status" aria-live="polite">
+      Sistema i vinili negli scaffali giusti
+    </div>
+
+    <!-- Bottom Bar: Controls -->
+    <div id="controls" role="toolbar" aria-label="Controlli di gioco">
+      <button class="control-btn" id="btn-undo"
+              aria-label="Annulla ultima mossa"
+              title="Annulla ultima mossa">
+        <span class="control-btn-icon" aria-hidden="true">↶</span>
+        <span class="control-btn-label">Undo</span>
+      </button>
+      <button class="control-btn" id="btn-restart"
+              aria-label="Ricomincia livello"
+              title="Ricomincia livello">
+        <span class="control-btn-icon" aria-hidden="true">↻</span>
+        <span class="control-btn-label">Restart</span>
+      </button>
     </div>
   </div>
 

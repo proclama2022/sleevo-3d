@@ -11,12 +11,14 @@ const level1: Level = {
     cols: 5,
   },
   vinyls: [
-    { id: 'v1', width: 1, color: '#e74c3c', genre: 'Rock', year: 1975 },
-    { id: 'v2', width: 1, color: '#3498db', genre: 'Jazz', year: 1959 },
-    { id: 'v3', width: 1, color: '#2ecc71', genre: 'Folk', year: 1969 },
-    { id: 'v4', width: 1, color: '#f39c12', genre: 'Blues', year: 1968 },
-    { id: 'v5', width: 1, color: '#9b59b6', genre: 'Funk', year: 1973 },
-    { id: 'v6', width: 1, color: '#1abc9c', genre: 'Soul', year: 1971 },
+    { id: 'v1', width: 1, color: '#D7263D', genre: 'Rock', year: 1975 },
+    { id: 'v2', width: 1, color: '#2563EB', genre: 'Jazz', year: 1959 },
+    { id: 'v3', width: 1, color: '#EC4899', genre: 'Pop', year: 1989 },
+    { id: 'v4', width: 1, color: '#F97316', genre: 'Hip-Hop', year: 1992 },
+    { id: 'v5', width: 1, color: '#A78BFA', genre: 'Classica', year: 1791 },
+    { id: 'v6', width: 1, color: '#D7263D', genre: 'Rock', year: 1969 },
+    { id: 'v7', width: 1, color: '#2563EB', genre: 'Jazz', year: 1965 },
+    { id: 'v8', width: 1, color: '#EC4899', genre: 'Pop', year: 2001 },
   ],
   rules: {
     fillAllSlots: false,
@@ -43,7 +45,7 @@ class Game {
     this.inputController = new InputController(
       this.sceneRenderer,
       (vinyl, row, col) => {
-        console.log('Vinyl dropped on shelf:', { vinyl: vinyl.name, row, col });
+        this.gameManager.placeVinylOnShelf(vinyl, row, col);
       }
     );
 
@@ -66,19 +68,15 @@ class Game {
   }
 
   private setupUI(): void {
-    // Add touch debug indicator
-    const touchDebug = document.createElement('div');
-    touchDebug.id = 'touch-debug';
-    touchDebug.textContent = '👆 Touch & drag vinyl';
-    document.body.appendChild(touchDebug);
-
     const btnUndo = document.getElementById('btn-undo');
     const btnRestart = document.getElementById('btn-restart');
     const btnStart = document.getElementById('btn-start');
     const tutorial = document.getElementById('tutorial');
+    const instruction = document.getElementById('instruction');
 
     btnStart?.addEventListener('click', () => {
       tutorial?.classList.add('hidden');
+      if (instruction) instruction.style.display = 'block';
     });
 
     btnUndo?.addEventListener('click', () => {
