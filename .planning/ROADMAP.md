@@ -39,11 +39,13 @@
 
 **Priority:** P0 - Must complete before any component work
 
-**Plans:** 3 plans (Wave 1: all parallel)
+**Plans:** 5 plans (Wave 1: 01, 02a, 03a | Wave 2: 02b, 03b)
 
 - [ ] 01-foundation-design-system-01-PLAN.md — Color and spacing design tokens with WCAG AA validation
-- [ ] 01-foundation-design-system-02-PLAN.md — Typography scale and responsive breakpoints
-- [ ] 01-foundation-design-system-03-PLAN.md — styled-components ThemeProvider setup
+- [ ] 01-foundation-design-system-02a-PLAN.md — Typography and breakpoint token JSON files
+- [ ] 01-foundation-design-system-02b-PLAN.md — Google Fonts import and TypeScript token exports
+- [ ] 01-foundation-design-system-03a-PLAN.md — Install dependencies and create theme structure
+- [ ] 01-foundation-design-system-03b-PLAN.md — Complete theme, ThemeProvider, GlobalStyles, App.tsx integration
 
 ---
 
@@ -186,5 +188,6 @@ Phase 5 (Polish)
 
 *Roadmap created: 2026-02-11*
 *Phase 1 planned: 2026-02-11*
+*Phase 1 revised: 2026-02-11 (split into 5 plans with wave structure)*
 *Total requirements mapped: 16*
 *All v1 requirements covered: ✓*
