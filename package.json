@@ -1,0 +1,20 @@
+{
+  "name": "sleevo-3d",
+  "version": "1.0.0",
+  "description": "Sleevo 3D - Vinyl Shop Manager Game",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "keywords": ["game", "three.js", "vinyl", "puzzle"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/three": "^0.182.0",
+    "three": "^0.182.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1"
+  }
+}

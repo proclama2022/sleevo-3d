@@ -1,0 +1,58 @@
+/* Cursor feedback */
+body {
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#canvas-container {
+  cursor: grab;
+}
+
+#canvas-container:active {
+  cursor: grabbing;
+}
+
+/* UI polish */
+.ui-button {
+  backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.ui-button:active {
+  transform: translateY(0px) scale(0.95);
+}
+
+#hud {
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.3);
+  padding: 16px;
+  border-radius: 12px;
+}
+
+/* Touch feedback */
+canvas {
+  touch-action: none;
+  transition: filter 0.1s ease-out;
+}
+
+canvas.touch-feedback {
+  filter: brightness(1.2);
+}
+
+#touch-debug {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  background: rgba(255, 170, 0, 0.9);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 100;
+  pointer-events: none;
+  font-family: monospace;
+}
