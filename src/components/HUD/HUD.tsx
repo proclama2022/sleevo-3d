@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { ProgressBar } from '../ProgressBar';
+import { animations, TIMING, reducedMotion } from '../../animations';
 
 export interface HUDProps {
   levelName: string;
@@ -93,6 +94,31 @@ const StatLabel = styled.span`
   letter-spacing: 0.5px;
 `;
 
+const AnimatedScore = styled.span<{ $isAnimating: boolean }>`
+  font-family: ${(props) => props.theme.typography.fontFamily.monospace};
+  font-size: ${(props) => props.theme.typography.fontSize.monospace.md};
+  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
+  color: ${(props) => props.theme.colors.accent.primary};
+  display: inline-block;
+  transform-origin: center;
+  
+  ${(props) => props.$isAnimating && `
+    animation: scorePop ${TIMING.SCORE_POP.duration}ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  `}
+  
+  @keyframes scorePop {
+    0% { transform: scale(1); color: inherit; }
+    50% { transform: scale(1.3); color: #4ade80; }
+    100% { transform: scale(1); color: inherit; }
+  }
+  
+  @media (max-width: ${(props) => props.theme.breakpoints.compact}) {
+    font-size: ${(props) => props.theme.typography.fontSize.monospace.sm};
+  }
+  
+  ${reducedMotion}
+`;
+
 const TimerValue = styled(StatValue)<{ $lowTime?: boolean }>`
   color: ${(props) => 
     props.$lowTime ? '#ef4444' : props.theme.colors.accent.primary
@@ -106,9 +132,7 @@ const TimerValue = styled(StatValue)<{ $lowTime?: boolean }>`
     50% { opacity: 0.5; }
   }
   
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-  }
+  ${reducedMotion}
 `;
 
 const formatTime = (seconds: number): string => {
@@ -124,7 +148,23 @@ export const HUD: React.FC<HUDProps> = ({
   moves,
   progress,
 }) => {
+  const [displayScore, setDisplayScore] = useState(score);
+  const [isAnimating, setIsAnimating] = useState(false);
   const isLowTime = timeRemaining !== undefined && timeRemaining < 30;
+
+  // Animate score changes
+  useEffect(() => {
+    if (score !== displayScore) {
+      setIsAnimating(true);
+      
+      const timer = setTimeout(() => {
+        setDisplayScore(score);
+        setIsAnimating(false);
+      }, TIMING.SCORE_POP.duration);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [score, displayScore]);
 
   return (
     <HUDWrapper role="banner" aria-label="Game status">
@@ -144,7 +184,9 @@ export const HUD: React.FC<HUDProps> = ({
 
       <StatsSection>
         <StatItem>
-          <StatValue>{score.toLocaleString()}</StatValue>
+          <AnimatedScore $isAnimating={isAnimating}>
+            {displayScore.toLocaleString()}
+          </AnimatedScore>
           <StatLabel>Score</StatLabel>
         </StatItem>
 

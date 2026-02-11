@@ -31,6 +31,15 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 - [x] ProgressBar component (circular SVG gauge)
 - [x] HUD component (level, score, timer, moves)
 
+### Phase 3: Micro-Interactions & Animation
+- [x] Animation timing constants (src/animations/timing.ts)
+- [x] Keyframe animations (src/animations/keyframes.ts)
+- [x] ScorePopup component with float animation
+- [x] ComboPopup component with appear/hold/disappear phases
+- [x] VinylCard with shake/settle animations
+- [x] ShelfSlot with glow pulse and hover transitions
+- [x] HUD with animated score counter
+
 ---
 
 ## Project Reference
@@ -49,7 +58,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 |-------|--------|--------------|
 | Phase 1: Foundation | ✅ Complete (5/5) | DESIGN-01 to DESIGN-05, ARCH-01 |
 | Phase 2: Components | ✅ Complete (4/4) | COMP-01 to COMP-04, A11Y-01 |
-| Phase 3: Interactions | ⬜ Pending | MOTION-01 to MOTION-05 |
+| Phase 3: Interactions | ✅ Complete | MOTION-01 to MOTION-05 |
 | Phase 4: Integration | ⬜ Pending | ARCH-02, ARCH-03, COMP-05 |
 | Phase 5: Polish | ⬜ Pending | A11Y-02, performance |
 

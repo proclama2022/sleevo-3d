@@ -10,3 +10,10 @@ export type { ProgressBarProps } from './ProgressBar';
 
 export { HUD } from './HUD';
 export type { HUDProps } from './HUD';
+
+// Phase 3: Animation Components
+export { ScorePopup } from './ScorePopup';
+export type { ScorePopupProps } from './ScorePopup';
+
+export { ComboPopup } from './ComboPopup';
+export type { ComboPopupProps } from './ComboPopup';

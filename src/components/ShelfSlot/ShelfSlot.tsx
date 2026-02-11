@@ -1,5 +1,6 @@
 import React from 'react';
 import styled, { css } from 'styled-components';
+import { TIMING, reducedMotion } from '../../animations';
 
 export interface ShelfSlotProps {
   id: string;
@@ -10,13 +11,6 @@ export interface ShelfSlotProps {
   onDragOver?: () => void;
   onDragLeave?: () => void;
 }
-
-const glowAnimation = css`
-  @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 10px currentColor; }
-    50% { box-shadow: 0 0 20px currentColor; }
-  }
-`;
 
 const SlotWrapper = styled.div<{ $state: ShelfSlotProps['state'] }>`
   display: flex;
@@ -44,25 +38,27 @@ const SlotWrapper = styled.div<{ $state: ShelfSlotProps['state'] }>`
   }};
   border-radius: 8px;
   position: relative;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: 
+    border-color ${TIMING.SHELF_HOVER.in}ms ${TIMING.SHELF_HOVER.easing},
+    box-shadow ${TIMING.SHELF_HOVER.in}ms ${TIMING.SHELF_HOVER.easing},
+    transform ${TIMING.TRANSITION_NORMAL}ms ${TIMING.SHELF_HOVER.easing};
 
   ${(props) => props.$state === 'highlight' && css`
-    ${glowAnimation}
-    animation: pulse-glow 1.5s ease-in-out infinite;
-    color: #4ade80;
-    box-shadow: 0 0 15px #4ade80;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.6), 0 0 40px rgba(74, 222, 128, 0.3);
+    transform: scale(1.02);
   `}
 
   ${(props) => props.$state === 'invalid' && css`
-    ${glowAnimation}
-    animation: pulse-glow 0.8s ease-in-out infinite;
-    color: #ef4444;
-    box-shadow: 0 0 15px #ef4444;
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.3);
+    animation: shake 400ms ease-in-out;
   `}
-
-  @media (prefers-reduced-motion: reduce) {
-    animation: none;
-    transition: none;
+  
+  ${reducedMotion}
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+    20%, 40%, 60%, 80% { transform: translateX(3px); }
   }
 `;
 
@@ -95,7 +91,7 @@ const SlotLabel = styled.span<{ $visible: boolean }>`
   opacity: ${(props) => props.$visible ? 0.6 : 0};
   text-transform: uppercase;
   letter-spacing: 1px;
-  transition: opacity 0.15s ease;
+  transition: opacity ${TIMING.SHELF_HOVER.in}ms ${TIMING.SHELF_HOVER.easing};
 `;
 
 const ExpectedGenre = styled.span`
@@ -109,14 +105,15 @@ const FeedbackIcon = styled.div<{ $type: 'valid' | 'invalid' | 'none' }>`
   position: absolute;
   bottom: 8px;
   right: 8px;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 16px;
   font-weight: bold;
+  animation: popIn 200ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   
   ${(props) => {
     switch (props.$type) {
@@ -136,6 +133,36 @@ const FeedbackIcon = styled.div<{ $type: 'valid' | 'invalid' | 'none' }>`
         return 'display: none;';
     }
   }}
+  
+  @keyframes popIn {
+    0% { transform: scale(0); }
+    60% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+  }
+  
+  ${reducedMotion}
+`;
+
+const GlowRing = styled.div<{ $active: boolean; $color: string }>`
+  position: absolute;
+  inset: -4px;
+  border-radius: 12px;
+  border: 2px solid ${(props) => props.$color};
+  opacity: ${(props) => props.$active ? 0.8 : 0};
+  animation: ${(props) => props.$active ? 'pulse 1.5s ease-in-out infinite' : 'none'};
+  
+  @keyframes pulse {
+    0%, 100% { 
+      opacity: 0.6;
+      transform: scale(1);
+    }
+    50% { 
+      opacity: 1;
+      transform: scale(1.02);
+    }
+  }
+  
+  ${reducedMotion}
 `;
 
 export const ShelfSlot: React.FC<ShelfSlotProps> = ({
@@ -161,6 +188,12 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
     return 'none';
   };
 
+  const getGlowColor = (): string => {
+    if (state === 'highlight') return '#4ade80';
+    if (state === 'invalid') return '#ef4444';
+    return 'transparent';
+  };
+
   return (
     <SlotWrapper
       $state={state}
@@ -172,6 +205,12 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
       aria-dropeffect={state === 'empty' || state === 'highlight' ? 'move' : 'none'}
     >
       {state === 'empty' && <ShelfTexture />}
+      
+      <GlowRing 
+        $active={state === 'highlight' || state === 'invalid'} 
+        $color={getGlowColor()}
+        aria-hidden="true"
+      />
       
       <SlotContent>
         <SlotLabel $visible={state === 'empty' || state === 'highlight'}>

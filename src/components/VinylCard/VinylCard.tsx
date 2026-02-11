@@ -1,5 +1,6 @@
-import React from 'react';
-import styled from 'styled-components';
+import React, { useState, useEffect } from 'react';
+import styled, { css } from 'styled-components';
+import { animations, TIMING, reducedMotion } from '../../animations';
 
 export interface VinylCardProps {
   id: string;
@@ -9,11 +10,22 @@ export interface VinylCardProps {
   year: number;
   coverImage?: string;
   state: 'idle' | 'dragging' | 'placed';
+  isValid?: boolean;
   onDragStart?: () => void;
   onDragEnd?: () => void;
 }
 
-const CardWrapper = styled.div<{ $state: VinylCardProps['state'] }>`
+const CardContainer = styled.div`
+  position: relative;
+  min-width: 44px;
+  min-height: 44px;
+`;
+
+const CardWrapper = styled.div<{ 
+  $state: VinylCardProps['state']; 
+  $isValid: boolean;
+  $isAnimating: boolean;
+}>`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,27 +38,41 @@ const CardWrapper = styled.div<{ $state: VinylCardProps['state'] }>`
     switch (props.$state) {
       case 'idle': return props.theme.colors.background.primary;
       case 'dragging': return props.theme.colors.accent.primary;
-      case 'placed': return '#4ade80';
+      case 'placed': return props.$isValid ? '#4ade80' : '#ef4444';
       default: return props.theme.colors.background.primary;
     }
   }};
   border-radius: 8px;
   cursor: grab;
-  opacity: ${(props) => props.$state === 'dragging' ? 0.8 : 1};
+  opacity: ${(props) => props.$state === 'dragging' ? 0.9 : 1};
   transform: ${(props) => props.$state === 'dragging' ? 'scale(1.05)' : 'scale(1)'};
-  transition: transform 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
-  box-shadow: ${(props) => 
-    props.$state === 'dragging' 
-      ? `0 8px 24px rgba(0, 0, 0, 0.3)` 
-      : `0 2px 8px rgba(0, 0, 0, 0.1)`};
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
-
-  &:active {
+  transition: 
+    transform ${TIMING.CARD_SETTLE.duration}ms ${TIMING.CARD_SETTLE.easing},
+    border-color ${TIMING.TRANSITION_NORMAL}ms ${TIMING.CARD_SETTLE.easing},
+    opacity ${TIMING.TRANSITION_NORMAL}ms ${TIMING.CARD_SETTLE.easing};
+  
+  /* Animation states */
+  ${(props) => {
+    if (props.$isAnimating && props.$state === 'placed') {
+      if (props.$isValid) {
+        return css`${animations.cardSettle}`;
+      } else {
+        return css`${animations.shake}`;
+      }
+    }
+    return css``;
+  }}
+  
+  ${(props) => props.$state === 'dragging' && css`
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     cursor: grabbing;
-  }
+  `}
+  
+  ${(props) => props.$state !== 'dragging' && css`
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  `}
+  
+  ${reducedMotion}
 `;
 
 const CoverArt = styled.div<{ $imageUrl?: string }>`
@@ -108,26 +134,23 @@ const Year = styled.span`
   opacity: 0.7;
 `;
 
-const PlacedIndicator = styled.div`
+const PlacedIndicator = styled.div<{ $isValid: boolean }>`
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 20px;
-  height: 20px;
-  background: #4ade80;
+  width: 24px;
+  height: 24px;
+  background: ${(props) => props.$isValid ? '#4ade80' : '#ef4444'};
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
-`;
-
-const CardContainer = styled.div`
-  position: relative;
-  min-width: 44px;
-  min-height: 44px;
+  ${animations.checkPop}
+  
+  ${reducedMotion}
 `;
 
 export const VinylCard: React.FC<VinylCardProps> = ({
@@ -137,13 +160,26 @@ export const VinylCard: React.FC<VinylCardProps> = ({
   year,
   coverImage,
   state,
+  isValid = true,
   onDragStart,
   onDragEnd,
 }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (state === 'placed') {
+      setIsAnimating(true);
+      const timer = setTimeout(() => setIsAnimating(false), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [state]);
+
   return (
     <CardContainer>
       <CardWrapper
         $state={state}
+        $isValid={isValid}
+        $isAnimating={isAnimating}
         draggable
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
@@ -161,7 +197,11 @@ export const VinylCard: React.FC<VinylCardProps> = ({
           </MetaRow>
         </InfoSection>
       </CardWrapper>
-      {state === 'placed' && <PlacedIndicator>✓</PlacedIndicator>}
+      {state === 'placed' && (
+        <PlacedIndicator $isValid={isValid} aria-hidden="true">
+          {isValid ? '✓' : '✕'}
+        </PlacedIndicator>
+      )}
     </CardContainer>
   );
 };
