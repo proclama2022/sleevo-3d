@@ -48,6 +48,18 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 - [x] GameProvider context (src/ui/GameProvider.tsx)
 - [x] Store selectors for optimized re-renders
 
+### Phase 5: Accessibility & Final Polish
+- [x] Accessibility utilities (src/utils/a11y.ts)
+- [x] Performance monitoring (src/utils/performance.ts)
+- [x] A11y hooks (src/hooks/useA11y.ts)
+- [x] VisuallyHidden, LiveRegion, SkipLink components
+- [x] PerformanceOverlay debug component
+- [x] Focus trap utility
+- [x] Screen reader announcer
+- [x] Reduced motion support
+- [x] Adaptive quality for low-end devices
+- [x] Viewport/breakpoint hooks
+
 ---
 
 ## Project Reference
@@ -68,7 +80,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | Phase 2: Components | ✅ Complete (4/4) | COMP-01 to COMP-04, A11Y-01 |
 | Phase 3: Interactions | ✅ Complete | MOTION-01 to MOTION-05 |
 | Phase 4: Integration | ✅ Complete | ARCH-02, ARCH-03, COMP-05 |
-| Phase 5: Polish | ⬜ Pending | A11Y-02, performance |
+| Phase 5: Polish | ✅ Complete | A11Y-02, performance |
 
 ---
 
