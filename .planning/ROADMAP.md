@@ -3,7 +3,7 @@
 **Project:** Sleevo Vinyl Shop Manager
 **Created:** 2026-02-11
 **Mode:** Standard (5-8 phases)
-**Status:** Ready for Planning
+**Status:** Phase 1 Planned
 
 ---
 
@@ -39,6 +39,12 @@
 
 **Priority:** P0 - Must complete before any component work
 
+**Plans:** 3 plans (Wave 1: all parallel)
+
+- [ ] 01-foundation-design-system-01-PLAN.md — Color and spacing design tokens with WCAG AA validation
+- [ ] 01-foundation-design-system-02-PLAN.md — Typography scale and responsive breakpoints
+- [ ] 01-foundation-design-system-03-PLAN.md — styled-components ThemeProvider setup
+
 ---
 
 ## Phase 2: Core UI Components
@@ -62,6 +68,8 @@
 5. All touch targets meet 44x44px minimum
 
 **Priority:** P0 - Core gameplay UI
+
+**Plans:** To be created
 
 ---
 
@@ -87,6 +95,8 @@
 
 **Priority:** P1 - Polish layer
 
+**Plans:** To be created
+
 ---
 
 ## Phase 4: Architecture Integration
@@ -97,7 +107,7 @@
 
 **Deliverables:**
 - Zustand store for game state
-- GameBridge service for UI ↔ Game communication
+- GameBridge service for UI <-> Game communication
 - Canvas event layering (pointer-events configuration)
 - Touch feedback with haptic support
 
@@ -108,6 +118,8 @@
 4. Touch feedback feels responsive
 
 **Priority:** P1 - Required for functional game
+
+**Plans:** To be created
 
 ---
 
@@ -131,18 +143,20 @@
 
 **Priority:** P2 - Quality assurance
 
+**Plans:** To be created
+
 ---
 
 ## Dependency Graph
 
 ```
-Phase 1 (Foundation)
-    ↓
-Phase 2 (Components) ──────┐
-    ↓                      │
-Phase 3 (Interactions)     │
-    ↓                      ↓
-Phase 4 (Integration) ←────┘
+Phase 1 (Foundation) ————————┐
+    ↓                          │
+Phase 2 (Components) ────────┤
+    ↓                          │
+Phase 3 (Interactions)         │
+    ↓                          ↓
+Phase 4 (Integration) ←────────┘
     ↓
 Phase 5 (Polish)
 ```
@@ -164,12 +178,13 @@ Phase 5 (Polish)
 
 ## Next Steps
 
-1. **Now:** Run `/gsd:plan-phase 1` to create detailed execution plan
+1. **Now:** Run `/gsd:execute-phase 01-foundation-design-system` to execute Phase 1 plans
 2. **After Phase 1:** Proceed to Phase 2 component development
 3. **Recommended:** Use `/clear` between phases for fresh context
 
 ---
 
 *Roadmap created: 2026-02-11*
+*Phase 1 planned: 2026-02-11*
 *Total requirements mapped: 16*
 *All v1 requirements covered: ✓*
