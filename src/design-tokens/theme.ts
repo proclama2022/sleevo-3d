@@ -1,6 +1,8 @@
-// Theme interface defining custom theme properties
-// Note: Actual token imports will be added in plan 03b after plans 01 and 02b complete
-export interface CustomTheme {
+import { colors, spacing, typography, breakpoints } from './tokens';
+
+// Theme interface defining custom theme properties (not extending DefaultTheme to avoid circular reference)
+// Module augmentation is handled in styled-components.d.ts
+export interface Theme {
   colors: {
     background: {
       primary: string;
@@ -61,7 +63,15 @@ export interface CustomTheme {
   };
 }
 
-// Theme object placeholder - will be populated in plan 03b
-// export const theme: Theme = { ... };
+// Theme object consuming design tokens
+export const theme: Theme = {
+  colors,
+  spacing,
+  typography,
+  breakpoints,
+};
 
-export type { CustomTheme as Theme };
+// Re-export CustomTheme for backwards compatibility with styled-components.d.ts
+export type { Theme as CustomTheme };
+
+export default theme;
