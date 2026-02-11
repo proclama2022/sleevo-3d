@@ -9,6 +9,8 @@
 
 **Phase 1: Foundation & Design System** — Complete (5/5 plans)
 
+**Phase 2: Core UI Components** — In Progress (4/4 components created)
+
 ### Goal
 Establish design tokens, typography, and theming infrastructure for the "vinyl store Sunday morning" aesthetic.
 
@@ -22,6 +24,12 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 - [x] TypeScript token exports (plan 02b)
 - [x] Theme infrastructure setup (plan 03a)
 - [x] ThemeProvider and token integration (plan 03b)
+
+### Phase 2: Core UI Components
+- [x] VinylCard component (3 states: idle, dragging, placed)
+- [x] ShelfSlot component (4 states: empty, highlight, filled, invalid)
+- [x] ProgressBar component (circular SVG gauge)
+- [x] HUD component (level, score, timer, moves)
 
 ---
 
@@ -40,7 +48,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | Phase | Status | Requirements |
 |-------|--------|--------------|
 | Phase 1: Foundation | ✅ Complete (5/5) | DESIGN-01 to DESIGN-05, ARCH-01 |
-| Phase 2: Components | ⬜ Pending | COMP-01 to COMP-04, A11Y-01 |
+| Phase 2: Components | ✅ Complete (4/4) | COMP-01 to COMP-04, A11Y-01 |
 | Phase 3: Interactions | ⬜ Pending | MOTION-01 to MOTION-05 |
 | Phase 4: Integration | ⬜ Pending | ARCH-02, ARCH-03, COMP-05 |
 | Phase 5: Polish | ⬜ Pending | A11Y-02, performance |
@@ -77,15 +85,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | 2026-02-11 | Color and spacing design tokens created (plan 01) | Phase 1 |
 | 2026-02-11 | Google Fonts and TypeScript exports (plan 02b) | Phase 1 |
 | 2026-02-11 | ThemeProvider integration complete (plan 03b) | Phase 1 |
+| 2026-02-11 | Phase 2 context and research captured | Phase 2 |
+| 2026-02-11 | VinylCard, ShelfSlot, ProgressBar, HUD components created | Phase 2 |
+| 2026-02-11 | styled-components.d.ts type augmentation added | Phase 2 |
 
 ---
 
 ## Next Action
 
-Phase 1 complete. Proceed to Phase 2: Component Library.
+Phase 2 complete. Proceed to Phase 3: Micro-Interactions & Animation.
 
 ```
-/gsd:execute-phase 02-component-library
+/gsd:execute-phase 03-micro-interactions
 ```
 
 ---
