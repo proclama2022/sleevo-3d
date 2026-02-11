@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="it">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Sleevo - Vinyl Shop Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/style.css">
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
+    :root {
+      --hud-panel-max: 1020px;
+      --hud-side-gap: clamp(14px, 2.5vw, 28px);
+      --hud-top-gap: max(12px, env(safe-area-inset-top));
+      --hud-bottom-gap: max(2px, env(safe-area-inset-bottom));
+      --glass-border: rgba(255, 255, 255, 0.38);
+      --glass-fill: rgba(255, 250, 244, 0.72);
+      --ink-main: #24180f;
+      --ink-soft: #6f5947;
+      --accent-main: #ff6c3f;
+      --accent-ice: #2db2d7;
+    }
 
     * {
       margin: 0;
@@ -16,298 +31,595 @@
     }
 
     body {
-      font-family: var(--font-family-ui, 'Poppins', sans-serif);
+      font-family: var(--font-family-ui, 'Manrope', sans-serif);
       overflow: hidden;
-      background: radial-gradient(120% 90% at 50% 0%, #4b423a 0%, #2b2622 58%, #181513 100%);
+      background:
+        radial-gradient(100% 80% at 50% 6%, rgba(255, 215, 186, 0.42) 0%, rgba(255, 215, 186, 0) 56%),
+        linear-gradient(180deg, #f8f3eb 0%, #efe5d7 56%, #dfd0bc 100%);
+      color: var(--ink-main);
     }
 
     #canvas-container {
       width: 100vw;
       height: 100vh;
       position: fixed;
-      top: 0;
-      left: 0;
+      inset: 0;
+      cursor: grab;
+    }
+
+    #canvas-container:active {
+      cursor: grabbing;
     }
 
     #ui-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      inset: 0;
       pointer-events: none;
       z-index: 10;
+      isolation: isolate;
+    }
+
+    #ui-overlay::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(95% 48% at 50% 102%, rgba(20, 12, 7, 0.45) 0%, rgba(20, 12, 7, 0) 60%),
+        radial-gradient(120% 75% at 50% -12%, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0) 52%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #ui-overlay::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        0deg,
+        rgba(255, 255, 255, 0.02) 0,
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      opacity: 0.55;
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+      z-index: 1;
     }
 
     #ai-overlay {
       position: absolute;
       inset: 0;
-      z-index: 0;
+      z-index: 2;
       pointer-events: none;
-      opacity: 0.18;
+      opacity: 0.06;
       background-image:
-        linear-gradient(180deg, rgba(20, 15, 13, 0.52) 0%, rgba(12, 9, 8, 0.6) 100%),
-        url('https://im.runware.ai/image/ws/4/ii/455156ce-83b2-442d-94b0-efe9970676ac.png');
-      background-repeat: no-repeat, no-repeat;
-      background-size: cover, cover;
-      background-position: center, center;
-      mix-blend-mode: normal;
-      filter: blur(1px) saturate(0.94) contrast(0.98);
+        linear-gradient(180deg, rgba(25, 19, 14, 0.18) 0%, rgba(23, 17, 12, 0.03) 45%, rgba(23, 17, 12, 0.14) 100%);
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: center;
+      filter: saturate(0.95) contrast(1.0);
+    }
+
+    #build-badge {
+      position: fixed;
+      top: var(--hud-top-gap);
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 40;
+      font-size: 11px;
+      font-weight: 800;
+      color: #2b1308;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #ffd8b8 0%, #ff8e5f 100%);
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      border-radius: 999px;
+      padding: 6px 11px;
+      box-shadow: 0 10px 20px rgba(58, 32, 20, 0.25);
+      pointer-events: none;
     }
 
     #top-bar,
     #instruction,
     #controls,
     #tutorial {
-      z-index: 2;
+      position: absolute;
+      z-index: 8;
     }
 
-    #build-badge {
-      position: fixed;
-      top: max(8px, env(safe-area-inset-top));
-      right: max(10px, env(safe-area-inset-right));
-      z-index: 999;
-      font-size: 11px;
-      font-weight: 700;
-      color: #1a120e;
-      letter-spacing: 0.08em;
-      background: #ff9a6f;
-      border: 1px solid #ffd8c7;
-      border-radius: 999px;
-      padding: 4px 10px;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+    #top-bar {
+      top: var(--hud-top-gap);
+      left: var(--hud-side-gap);
+      right: var(--hud-side-gap);
+      margin-inline: auto;
+      width: min(100% - (var(--hud-side-gap) * 2), var(--hud-panel-max));
+      min-height: 86px;
+      padding: 12px 14px;
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 247, 238, 0.76) 100%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.3) 0%, rgba(255, 252, 248, 0.08) 100%);
+      backdrop-filter: blur(14px) saturate(130%);
+      box-shadow:
+        0 14px 30px rgba(56, 32, 20, 0.17),
+        inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
       pointer-events: none;
     }
 
-    /* ══════ TOP BAR (10-12% height) ══════ */
-    #top-bar {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: var(--hud-height, 80px);
+    .brand-cluster {
       display: flex;
       flex-direction: column;
-      align-items: center;
       justify-content: center;
-      padding: var(--page-padding-vertical, 12px) 20px;
-      padding-top: max(var(--page-padding-vertical, 12px), env(safe-area-inset-top));
-      padding-left: max(20px, env(safe-area-inset-left));
-      padding-right: max(20px, env(safe-area-inset-right));
-      background: linear-gradient(180deg, rgba(17, 15, 14, 0.78) 0%, rgba(17, 15, 14, 0.12) 100%);
-      backdrop-filter: blur(10px) saturate(130%);
-      pointer-events: none;
-      gap: var(--space-sm, 8px);
-    }
-
-    #game-title {
-      font-size: var(--font-size-logo, 24px);
-      font-weight: var(--font-weight-logo, 700);
-      color: #ff7a4c;
-      letter-spacing: 0.08em;
-      text-shadow: 0 8px 24px rgba(255, 122, 76, 0.32);
+      min-width: 0;
       pointer-events: all;
     }
 
+    #game-title {
+      font-family: var(--font-family-display, 'Bebas Neue', sans-serif);
+      font-size: clamp(34px, 4vw, 48px);
+      line-height: 0.9;
+      letter-spacing: 0.07em;
+      color: #2e180d;
+      text-shadow: 0 7px 16px rgba(255, 134, 94, 0.28);
+    }
+
+    .brand-subtitle {
+      margin-top: 2px;
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(90, 64, 45, 0.9);
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+    }
+
     #hud {
-      display: flex;
-      gap: 14px;
-      width: 100%;
-      max-width: 330px;
-      justify-content: space-between;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(84px, 1fr));
+      gap: 10px;
+      width: min(460px, 66vw);
       pointer-events: all;
     }
 
     .stat-card {
-      background: linear-gradient(180deg, rgba(46, 35, 30, 0.84) 0%, rgba(24, 20, 18, 0.82) 100%);
-      backdrop-filter: blur(14px) saturate(150%);
-      border: 1.5px solid rgba(255, 120, 76, 0.72);
-      padding: var(--space-xs, 4px) var(--space-lg, 16px);
-      border-radius: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(253, 241, 228, 0.82) 100%);
+      box-shadow:
+        0 8px 18px rgba(68, 45, 30, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      min-height: 56px;
+      padding: 8px 10px;
       display: flex;
-      align-items: center;
-      gap: var(--space-sm, 6px);
-      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-      flex: 1;
+      flex-direction: column;
       justify-content: center;
+      align-items: center;
+      gap: 1px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(255, 108, 63, 0) 0%, rgba(255, 108, 63, 0.9) 45%, rgba(45, 178, 215, 0.8) 100%);
     }
 
     .stat-label {
-      font-size: var(--font-size-hud-label, 11px);
-      font-weight: var(--font-weight-hud-label, 600);
+      font-size: 10px;
+      font-weight: 700;
       text-transform: uppercase;
-      color: rgba(255, 224, 204, 0.75);
-      letter-spacing: var(--letter-spacing-label, 0.5px);
+      color: rgba(90, 69, 52, 0.88);
+      letter-spacing: 0.12em;
     }
 
     .stat-value {
-      font-size: var(--font-size-hud-value, 20px);
-      font-weight: var(--font-weight-logo, 700);
-      color: #ffd6c0;
-      text-shadow: 0 0 18px rgba(255, 116, 64, 0.32);
+      font-family: var(--font-family-display, 'Bebas Neue', sans-serif);
+      font-size: clamp(28px, 3.2vw, 34px);
+      line-height: 0.8;
+      letter-spacing: 0.06em;
+      color: var(--accent-main);
+      text-shadow: 0 0 18px rgba(255, 108, 63, 0.2);
     }
 
-    /* ══════ INSTRUCTION BAR (5-8% height) ══════ */
+    #progress {
+      font-size: clamp(22px, 2.8vw, 30px);
+      letter-spacing: 0.04em;
+    }
+
     #instruction {
-      position: absolute;
-      top: 90px;
+      bottom: calc(var(--hud-bottom-gap) + 64px);
       left: 50%;
       transform: translateX(-50%);
-      font-size: var(--font-size-guide, 14px);
-      font-weight: var(--font-weight-hud-label, 600);
-      color: #f7efe9;
-      text-align: center;
-      pointer-events: none;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
-      white-space: nowrap;
-      max-width: 90%;
-      line-height: var(--line-height-normal, 1.4);
-      background: rgba(22, 18, 17, 0.42);
-      border: 1px solid rgba(255, 255, 255, 0.14);
+      max-width: min(90vw, 700px);
+      padding: 9px 14px;
       border-radius: 999px;
-      padding: 6px 14px;
-      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.75);
+      background:
+        linear-gradient(120deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 243, 229, 0.7) 100%);
+      box-shadow:
+        0 8px 16px rgba(67, 42, 28, 0.14),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      font-size: clamp(11px, 1.35vw, 14px);
+      font-weight: 800;
+      color: #3a2518;
+      text-align: center;
+      letter-spacing: 0.03em;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      pointer-events: none;
     }
 
-    /* ══════ BOTTOM BAR (10-15% height) ══════ */
-    #controls {
+    #pickup-hint:not(.hidden) ~ #instruction {
+      opacity: 0;
+      transform: translate(-50%, 8px);
+      transition: opacity 180ms ease-out, transform 180ms ease-out;
+    }
+
+    #pickup-hint {
       position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: var(--controls-height, 80px);
+      left: 50%;
+      bottom: calc(var(--hud-bottom-gap) + 10px);
+      transform: translateX(-50%);
+      max-width: min(92vw, 680px);
+      padding: 10px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.74);
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 239, 221, 0.85) 100%);
+      box-shadow: 0 12px 24px rgba(67, 42, 28, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      color: #3f281a;
+      font-size: clamp(11px, 1.5vw, 14px);
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      text-align: center;
+      line-height: 1.3;
+      z-index: 9;
+      opacity: 0.96;
+      pointer-events: none;
+      animation: pickupHintPulse 1.9s ease-in-out infinite;
+    }
+
+    #pickup-hint.hidden {
+      opacity: 0;
+      transform: translate(-50%, 10px);
+      transition: opacity 220ms ease-out, transform 220ms ease-out;
+      animation: none;
+    }
+
+    @keyframes pickupHintPulse {
+      0%, 100% {
+        box-shadow: 0 12px 24px rgba(67, 42, 28, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+      }
+      50% {
+        box-shadow: 0 16px 28px rgba(67, 42, 28, 0.24), 0 0 24px rgba(255, 131, 87, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+      }
+    }
+
+    #onboarding {
+      position: absolute;
+      left: var(--hud-side-gap);
+      bottom: calc(var(--hud-bottom-gap) + 66px);
+      width: min(88vw, 360px);
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 239, 221, 0.86) 100%);
+      box-shadow: 0 14px 28px rgba(58, 34, 21, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+      z-index: 9;
+      pointer-events: none;
+      opacity: 0.98;
+      transform: translateY(0);
+      transition: opacity 220ms ease-out, transform 220ms ease-out;
+    }
+
+    #onboarding.hidden {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .onboarding-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: #7a5a46;
+      margin-bottom: 8px;
+    }
+
+    .onboarding-step {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 40px;
-      padding-bottom: max(0px, env(safe-area-inset-bottom));
-      padding-left: max(40px, env(safe-area-inset-left));
-      padding-right: max(40px, env(safe-area-inset-right));
-      background: linear-gradient(0deg, rgba(14, 12, 11, 0.88) 0%, rgba(14, 12, 11, 0.06) 100%);
-      backdrop-filter: blur(10px);
+      gap: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #8b6e5b;
+      line-height: 1.3;
+      transition: color 160ms ease-out;
+    }
+
+    .onboarding-step + .onboarding-step {
+      margin-top: 7px;
+    }
+
+    .onboarding-dot {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      background: rgba(122, 90, 70, 0.3);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+      transition: background 160ms ease-out, box-shadow 160ms ease-out;
+    }
+
+    .onboarding-step.active {
+      color: #3d2719;
+    }
+
+    .onboarding-step.active .onboarding-dot {
+      background: linear-gradient(130deg, #ff915f 0%, #ff6b3f 100%);
+      box-shadow: 0 0 16px rgba(255, 130, 92, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    .onboarding-step.done {
+      color: #14532d;
+    }
+
+    .onboarding-step.done .onboarding-dot {
+      background: linear-gradient(130deg, #4ade80 0%, #22c55e 100%);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.68);
+    }
+
+    #target-column-arrow {
+      position: fixed;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -100%);
+      padding: 6px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      background: linear-gradient(135deg, rgba(38, 149, 185, 0.92) 0%, rgba(45, 178, 215, 0.95) 100%);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      line-height: 1;
+      z-index: 11;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 120ms ease-out;
+      box-shadow: 0 14px 24px rgba(19, 84, 104, 0.34);
+      white-space: nowrap;
+    }
+
+    #target-column-arrow.visible {
+      opacity: 1;
+      animation: targetArrowBob 620ms ease-in-out infinite alternate;
+    }
+
+    #target-column-arrow .arrow-icon {
+      margin-right: 6px;
+      font-size: 12px;
+    }
+
+    @keyframes targetArrowBob {
+      from { transform: translate(-50%, -100%); }
+      to { transform: translate(-50%, -108%); }
+    }
+
+    #controls {
+      bottom: var(--hud-bottom-gap);
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(100% - (var(--hud-side-gap) * 2), var(--hud-panel-max));
+      max-width: 640px;
+      min-height: 74px;
+      padding: 8px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.54) 0%, rgba(255, 242, 227, 0.78) 100%);
+      backdrop-filter: blur(16px) saturate(130%);
+      box-shadow:
+        0 14px 34px rgba(54, 32, 20, 0.22),
+        inset 0 1px 0 rgba(255, 255, 255, 0.83);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 8px;
       pointer-events: all;
     }
 
     .control-btn {
+      flex: 1;
+      min-height: 54px;
+      min-width: 0;
+      width: 100%;
       display: flex;
-      flex-direction: column;
       align-items: center;
-      gap: var(--space-sm, 6px);
+      justify-content: center;
+      gap: 8px;
+      overflow: hidden;
       cursor: pointer;
-      transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease;
-      background: linear-gradient(180deg, rgba(39, 31, 28, 0.92) 0%, rgba(24, 20, 18, 0.92) 100%);
-      border: 1.5px solid rgba(255, 126, 86, 0.75);
-      border-radius: 16px;
-      padding: 12px 20px;
-      min-width: 80px;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      border-radius: 14px;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.88) 0%, rgba(253, 235, 216, 0.96) 100%);
+      color: #2c190f;
+      transition: transform var(--motion-duration-default) var(--motion-easing-out),
+                  box-shadow var(--motion-duration-default) var(--motion-easing-out),
+                  background var(--motion-duration-fast) var(--motion-easing-out),
+                  border-color var(--motion-duration-fast) var(--motion-easing-out);
+      box-shadow:
+        0 10px 24px rgba(59, 34, 21, 0.16),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+      padding: 6px 10px;
     }
 
     .control-btn:hover {
-      transform: translateY(-2px) scale(1.02);
-      box-shadow: 0 14px 26px rgba(0, 0, 0, 0.4), 0 0 22px rgba(255, 122, 76, 0.18);
-      border-color: rgba(255, 145, 110, 0.9);
-      background: linear-gradient(180deg, rgba(49, 37, 32, 0.94) 0%, rgba(27, 22, 20, 0.94) 100%);
+      transform: translateY(-1px);
+      border-color: rgba(255, 130, 92, 0.86);
+      background: linear-gradient(130deg, rgba(255, 193, 163, 0.94) 0%, rgba(255, 122, 77, 0.95) 100%);
+      box-shadow: 0 16px 28px rgba(58, 31, 17, 0.22), 0 0 24px rgba(255, 122, 77, 0.2);
+      color: #fff;
     }
 
     .control-btn:active {
-      transform: translateY(0) scale(0.99);
-      background: linear-gradient(180deg, rgba(34, 28, 25, 0.98) 0%, rgba(21, 17, 15, 0.98) 100%);
+      transform: translateY(0) scale(0.985);
+      background: linear-gradient(130deg, rgba(255, 174, 138, 0.96) 0%, rgba(255, 111, 61, 0.97) 100%);
     }
 
     .control-btn-icon {
       font-size: 24px;
-      color: #ff8a5f;
-      text-shadow: 0 0 16px rgba(255, 122, 76, 0.35);
+      line-height: 1;
+      color: var(--accent-main);
+      text-shadow: 0 0 16px rgba(255, 108, 63, 0.25);
+      transition: color var(--motion-duration-fast) var(--motion-easing-out);
     }
 
     .control-btn-label {
-      font-size: var(--font-size-hud-label, 11px);
-      font-weight: var(--font-weight-hud-label, 600);
+      font-size: 10px;
+      font-weight: 800;
       text-transform: uppercase;
-      color: rgba(255, 223, 205, 0.82);
-      letter-spacing: 0.06em;
+      letter-spacing: 0.08em;
+      color: #4c3629;
+      transition: color var(--motion-duration-fast) var(--motion-easing-out);
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
     }
 
-    /* ══════ TUTORIAL MODAL (Modern Glassmorphism) ══════ */
+    .control-btn:hover .control-btn-icon,
+    .control-btn:hover .control-btn-label {
+      color: #ffffff;
+      text-shadow: none;
+    }
+
     #tutorial {
-      position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      background: linear-gradient(180deg, rgba(31, 25, 23, 0.95) 0%, rgba(20, 16, 15, 0.95) 100%);
-      backdrop-filter: blur(14px) saturate(160%);
-      padding: 40px;
-      border-radius: 20px;
+      width: min(92vw, 500px);
+      padding: 30px 28px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.78);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.84) 0%, rgba(255, 240, 224, 0.94) 100%);
+      box-shadow:
+        0 24px 52px rgba(48, 28, 18, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.94);
       text-align: center;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-      border: 1.5px solid rgba(255, 124, 84, 0.8);
-      animation: fadeIn var(--motion-duration-slow, 260ms) var(--motion-easing-out, ease-out);
-      z-index: 100;
       pointer-events: all;
-      max-width: 420px;
+      z-index: 100;
+      animation: tutorialIn var(--motion-duration-slow, 320ms) var(--motion-easing-out, ease-out);
+      overflow: hidden;
+    }
+
+    #tutorial::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url('https://im.runware.ai/image/ws/4/ii/eb730e15-e1f0-4d46-82b4-671b9467961a.png');
+      background-size: 170%;
+      background-position: center;
+      mix-blend-mode: soft-light;
+      opacity: 0.16;
+      pointer-events: none;
+    }
+
+    #tutorial > * {
+      position: relative;
+      z-index: 1;
     }
 
     #tutorial.hidden {
       display: none;
     }
 
+    /* Hide instruction when tutorial is visible to avoid text overlap */
+    #tutorial:not(.hidden) ~ #instruction,
+    #tutorial:not(.hidden) ~ #pickup-hint,
+    #tutorial:not(.hidden) ~ #onboarding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
     #tutorial h2 {
-      font-size: 36px;
-      font-weight: var(--font-weight-logo, 700);
-      margin: 0 0 var(--space-sm, 8px) 0;
-      color: var(--color-accent-main, #ff6b35);
-      letter-spacing: var(--letter-spacing-logo, 1px);
+      font-family: var(--font-family-display, 'Bebas Neue', sans-serif);
+      font-size: clamp(44px, 9vw, 60px);
+      line-height: 0.86;
+      color: #2a1308;
+      letter-spacing: 0.08em;
+      text-shadow: 0 8px 24px rgba(255, 128, 85, 0.25);
+      margin-bottom: 4px;
     }
 
     #tutorial .subtitle {
-      font-size: var(--font-size-button, 13px);
-      font-weight: 500;
-      color: rgba(255, 210, 183, 0.7);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      letter-spacing: var(--letter-spacing-logo, 1px);
-      margin-bottom: 20px;
+      color: rgba(97, 70, 52, 0.86);
+      margin-bottom: 18px;
     }
 
     #tutorial p {
-      font-size: 16px;
-      line-height: 1.7;
-      margin: var(--space-md, 12px) 0;
-      color: #f4e7dd;
+      font-size: 15px;
+      line-height: 1.58;
+      color: #412d20;
+      margin-bottom: 22px;
+      font-weight: 600;
     }
 
     #tutorial button {
-      margin-top: 28px;
-      padding: var(--space-lg, 16px) 48px;
-      min-height: 48px;
-      font-size: 16px;
-      font-weight: var(--font-weight-hud-label, 600);
-      background: linear-gradient(180deg, #ff8f62 0%, #ff7043 100%);
-      border: none;
-      border-radius: var(--radius-lg, 12px);
-      color: white;
-      cursor: pointer;
-      transition: all var(--motion-duration-default, 180ms) var(--motion-easing-out, ease);
-      box-shadow: 0 10px 20px rgba(255, 107, 53, 0.4);
+      min-height: 52px;
+      padding: 14px 36px;
+      border: 0;
+      border-radius: 16px;
+      background: linear-gradient(130deg, #ff9266 0%, #ff6439 100%);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
       text-transform: uppercase;
-      letter-spacing: var(--letter-spacing-logo, 1px);
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      transition: transform var(--motion-duration-default) var(--motion-easing-out),
+                  box-shadow var(--motion-duration-default) var(--motion-easing-out),
+                  filter var(--motion-duration-fast) var(--motion-easing-out);
+      box-shadow: 0 14px 28px rgba(255, 101, 56, 0.38);
     }
 
     #tutorial button:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 24px rgba(255, 107, 53, 0.5);
-      background: linear-gradient(180deg, #ff986f 0%, #ff7a4c 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 18px 30px rgba(255, 101, 56, 0.44);
+      filter: saturate(1.05) brightness(1.03);
     }
 
     #tutorial button:active {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(255,107,53,0.35);
+      transform: translateY(0);
     }
 
-    @keyframes fadeIn {
+    @keyframes tutorialIn {
       from {
         opacity: 0;
-        transform: translate(-50%, -45%) scale(0.9);
+        transform: translate(-50%, -47%) scale(0.94);
       }
       to {
         opacity: 1;
@@ -315,141 +627,164 @@
       }
     }
 
-    /* ══════ MOBILE LAYOUT ══════ */
-    @media (max-width: 768px) {
-      :root {
-        --hud-height: 75px;
-        --controls-height: 70px;
-        --font-size-logo: 20px;
-        --font-size-hud-value: 18px;
-        --font-size-hud-label: 10px;
-        --font-size-guide: 13px;
-      }
-
+    @media (max-width: 900px) {
       #top-bar {
-        padding: 10px var(--page-padding-horizontal);
-        padding-top: max(10px, env(safe-area-inset-top));
-        padding-left: max(var(--page-padding-horizontal), env(safe-area-inset-left));
-        padding-right: max(var(--page-padding-horizontal), env(safe-area-inset-right));
-        gap: var(--space-sm);
+        min-height: 84px;
+        padding: 11px;
       }
 
       #hud {
-        max-width: 250px;
-        gap: var(--space-lg);
-      }
-
-      .stat-card {
-        padding: var(--space-xs) var(--space-md);
-        gap: var(--space-xs);
+        width: min(420px, 64vw);
       }
 
       #instruction {
-        top: 82px;
-        padding: 0 20px;
-        white-space: normal;
+        bottom: calc(var(--hud-bottom-gap) + 58px);
       }
 
       #controls {
-        padding: 0 20px;
-        padding-bottom: max(0px, env(safe-area-inset-bottom));
-        padding-left: max(20px, env(safe-area-inset-left));
-        padding-right: max(20px, env(safe-area-inset-right));
+        min-height: 68px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --hud-side-gap: max(10px, env(safe-area-inset-left));
+      }
+
+      #build-badge {
+        top: calc(var(--hud-top-gap) + 2px);
+        right: max(8px, env(safe-area-inset-right));
+        font-size: 10px;
+        padding: 5px 9px;
+      }
+
+      #top-bar {
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: center;
+        gap: 8px;
+        min-height: 106px;
+        border-radius: 20px;
+      }
+
+      .brand-cluster {
+        align-items: center;
+      }
+
+      #game-title {
+        font-size: clamp(32px, 10vw, 44px);
+      }
+
+      #hud {
+        width: 100%;
+        gap: 8px;
+      }
+
+      .stat-card {
+        min-height: 48px;
+      }
+
+      .stat-value {
+        font-size: clamp(24px, 8vw, 30px);
+      }
+
+      #instruction {
+        bottom: calc(var(--hud-bottom-gap) + 52px);
+        max-width: 92vw;
+        font-size: 11px;
+        white-space: normal;
+        border-radius: 18px;
+      }
+
+      #pickup-hint {
+        max-width: 94vw;
+        border-radius: 16px;
+      }
+
+      #onboarding {
+        left: 50%;
+        transform: translateX(-50%);
+        width: min(94vw, 420px);
+      }
+
+      #onboarding.hidden {
+        transform: translate(-50%, 12px);
+      }
+
+      #controls {
+        padding: 8px;
+        gap: 8px;
+        border-radius: 16px;
+        min-height: 64px;
       }
 
       .control-btn {
-        padding: 10px var(--space-lg);
-        min-width: 70px;
         min-height: 48px;
-        gap: var(--space-xs);
+        border-radius: 12px;
+        gap: 8px;
       }
 
       .control-btn-icon {
         font-size: 22px;
       }
 
+      .control-btn-label {
+        font-size: 10px;
+      }
+
       #tutorial {
-        max-width: 90%;
-        padding: 32px var(--space-xl);
-      }
-
-      #tutorial h2 {
-        font-size: 32px;
-      }
-
-      #tutorial .subtitle {
-        font-size: 11px;
+        padding: 26px 20px;
+        border-radius: 24px;
       }
 
       #tutorial p {
-        font-size: 15px;
-      }
-
-      #tutorial button {
-        padding: 14px 36px;
-        font-size: 15px;
+        font-size: 14px;
       }
     }
 
-    @media (max-width: 480px) {
-      :root {
-        --hud-height: 70px;
-        --controls-height: 65px;
-        --font-size-logo: 20px;
-        --font-size-hud-value: 16px;
-        --font-size-hud-label: 9px;
-        --font-size-guide: 12px;
-      }
-
+    @media (max-width: 430px) {
       #top-bar {
-        gap: var(--space-xs);
-      }
-
-      #hud {
-        max-width: 200px;
-        gap: var(--space-md);
-      }
-
-      .stat-card {
-        padding: 3px 10px;
+        min-height: 98px;
       }
 
       #instruction {
-        top: 76px;
+        bottom: calc(var(--hud-bottom-gap) + 46px);
+        padding: 10px 12px;
+      }
+
+      #pickup-hint {
+        bottom: calc(var(--hud-bottom-gap) + 8px);
+        padding: 9px 11px;
+        font-size: 11px;
+      }
+
+      #onboarding {
+        bottom: calc(var(--hud-bottom-gap) + 60px);
+        padding: 10px 11px;
+      }
+
+      .onboarding-step {
+        font-size: 11px;
+      }
+
+      #target-column-arrow {
+        font-size: 10px;
       }
 
       #controls {
-        padding: 0 var(--page-padding-horizontal);
-        padding-bottom: max(0px, env(safe-area-inset-bottom));
-        padding-left: max(var(--page-padding-horizontal), env(safe-area-inset-left));
-        padding-right: max(var(--page-padding-horizontal), env(safe-area-inset-right));
+        min-height: 58px;
       }
 
       .control-btn {
-        padding: 12px 16px;
-        min-width: 72px;
-        min-height: 48px;
+        min-height: 44px;
       }
 
       .control-btn-icon {
         font-size: 20px;
       }
 
-      #tutorial h2 {
-        font-size: 28px;
-      }
-
-      #tutorial .subtitle {
-        font-size: 10px;
-      }
-
-      #tutorial p {
-        font-size: 14px;
-      }
-
-      #tutorial button {
-        padding: var(--space-md) 32px;
-        font-size: 14px;
+      .control-btn-label {
+        font-size: 9px;
       }
     }
   </style>
@@ -458,19 +793,21 @@
   <div id="canvas-container" role="application" aria-label="Area di gioco 3D - Usa touch o mouse per trascinare i vinili"></div>
 
   <div id="ui-overlay">
-    <div id="build-badge" aria-hidden="true">v5.4</div>
+    <div id="build-badge" aria-hidden="true">v6.4</div>
     <div id="ai-overlay" aria-hidden="true"></div>
-    <!-- Tutorial Modal -->
+
     <div id="tutorial" role="dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description">
-      <h2 id="tutorial-title">🎵 SLEEVO</h2>
+      <h2 id="tutorial-title">SLEEVO</h2>
       <div class="subtitle">Vinyl Shop Manager</div>
-      <p id="tutorial-description">Organizza i vinili negli scaffali giusti<br>abbinando ogni disco al suo genere musicale</p>
-      <button id="btn-start" aria-label="Inizia a giocare">Inizia a Giocare</button>
+      <p id="tutorial-description">Scopo: porta Progress a 8/8. Ogni vinile va nella colonna del suo genere. +10 corretto, -2 errore.</p>
+      <button id="btn-start" aria-label="Inizia a giocare">Start Session</button>
     </div>
 
-    <!-- Top Bar: Title + Stats -->
     <div id="top-bar">
-      <div id="game-title" role="heading" aria-level="1">SLEEVO</div>
+      <div class="brand-cluster">
+        <div id="game-title" role="heading" aria-level="1">SLEEVO</div>
+        <div class="brand-subtitle">Analog Puzzle Mode</div>
+      </div>
       <div id="hud">
         <div class="stat-card" role="status" aria-live="polite">
           <span class="stat-label" id="level-label">Level</span>
@@ -480,29 +817,37 @@
           <span class="stat-label" id="score-label">Score</span>
           <span class="stat-value" id="score" aria-labelledby="score-label">0</span>
         </div>
+        <div class="stat-card" role="status" aria-live="polite">
+          <span class="stat-label" id="progress-label">Progress</span>
+          <span class="stat-value" id="progress" aria-labelledby="progress-label">0/0</span>
+        </div>
       </div>
     </div>
 
-    <!-- Instruction -->
-    <div id="instruction" role="status" aria-live="polite">
-      Sistema i vinili negli scaffali giusti
+    <div id="pickup-hint" aria-hidden="true">
+      Prendi un vinile dal carosello in basso.
     </div>
 
-    <!-- Bottom Bar: Controls -->
-    <div id="controls" role="toolbar" aria-label="Controlli di gioco">
-      <button class="control-btn" id="btn-undo"
-              aria-label="Annulla ultima mossa"
-              title="Annulla ultima mossa">
-        <span class="control-btn-icon" aria-hidden="true">↶</span>
-        <span class="control-btn-label">Undo</span>
-      </button>
-      <button class="control-btn" id="btn-restart"
-              aria-label="Ricomincia livello"
-              title="Ricomincia livello">
-        <span class="control-btn-icon" aria-hidden="true">↻</span>
-        <span class="control-btn-label">Restart</span>
-      </button>
+    <div id="onboarding" aria-hidden="true">
+      <div class="onboarding-title">Flow di Gioco</div>
+      <div id="onboarding-step-grab" class="onboarding-step active">
+        <span class="onboarding-dot">1</span>
+        <span>Afferra un vinile dal carosello.</span>
+      </div>
+      <div id="onboarding-step-drop" class="onboarding-step">
+        <span class="onboarding-dot">2</span>
+        <span>Rilascia nella colonna del genere corretto.</span>
+      </div>
     </div>
+
+    <div id="instruction" role="status" aria-live="polite">
+      Scopo: porta Progress a 8/8. Trascina ogni copertina nella colonna del suo genere.
+    </div>
+
+    <div id="target-column-arrow" aria-hidden="true">
+      <span class="arrow-icon">↓</span><span id="target-column-arrow-label">Target</span>
+    </div>
+
   </div>
 
   <script type="module" src="/src/main.ts"></script>
