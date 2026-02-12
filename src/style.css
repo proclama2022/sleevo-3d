@@ -4,13 +4,14 @@
 
 :root {
   /* ────── Typography ────── */
-  --font-family-ui: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-ui: 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-display: 'Bebas Neue', 'Arial Narrow Bold', 'Arial Narrow', sans-serif;
 
   --font-weight-logo: 700;
   --font-weight-hud-label: 600;
   --font-weight-body: 400;
 
-  --font-size-logo: 24px;
+  --font-size-logo: 30px;
   --font-size-hud-value: 20px;
   --font-size-hud-label: 11px;
   --font-size-guide: 15px;
@@ -35,52 +36,53 @@
   --controls-height: 80px;
 
   /* ────── Radius ────── */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
 
   /* ────── Shadows ────── */
-  --shadow-btn-default: 0 2px 8px rgba(255, 107, 53, 0.15);
-  --shadow-btn-hover: 0 4px 12px rgba(255, 107, 53, 0.25);
-  --shadow-hud: 0 2px 10px rgba(0, 0, 0, 0.10);
-  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-btn-default: 0 10px 24px rgba(10, 7, 3, 0.22);
+  --shadow-btn-hover: 0 16px 30px rgba(10, 7, 3, 0.3);
+  --shadow-hud: 0 12px 26px rgba(14, 11, 8, 0.18);
+  --shadow-soft: 0 6px 18px rgba(14, 11, 8, 0.1);
 
   /* ────── Colors: Base ────── */
-  --color-bg-app: #FAFAF9;
-  --color-bg-canvas: #FAFAF9;
+  --color-bg-app: #f4efe6;
+  --color-bg-canvas: #f6f1e8;
 
-  --color-wood-light: #E8D5B7;
-  --color-wood-medium: #D4B896;
-  --color-wood-divider: #C4A882;
+  --color-wood-light: #ead5b2;
+  --color-wood-medium: #d3b085;
+  --color-wood-divider: #be9569;
 
-  --color-text-primary: #1F2937;
-  --color-text-secondary: #6B7280;
-  --color-text-muted: #9CA3AF;
+  --color-text-primary: #1d140d;
+  --color-text-secondary: #5f4e42;
+  --color-text-muted: #8a7667;
   --color-text-inverse: #F5F2FF;
 
   /* ────── Colors: Accent & Feedback ────── */
-  --color-accent-main: #FF6B35;
-  --color-accent-main-soft: #FFF5F2;
-  --color-accent-hover: #FF824F;
+  --color-accent-main: #ff6c3f;
+  --color-accent-main-soft: #fff2eb;
+  --color-accent-hover: #ff865f;
+  --color-accent-ice: #44b7d8;
 
   --color-state-success: #22C55E;
   --color-state-error: #EF4444;
   --color-state-warning: #F59E0B;
 
   /* ────── Colors: HUD ────── */
-  --color-hud-bg-gradient-top: rgba(245, 241, 237, 0.95);
-  --color-hud-bg-gradient-bottom: rgba(245, 241, 237, 0);
+  --color-hud-bg-gradient-top: rgba(255, 250, 244, 0.88);
+  --color-hud-bg-gradient-bottom: rgba(255, 250, 244, 0);
 
-  --color-hud-card-bg: #FFFFFF;
-  --color-hud-card-border: #FF6B35;
-  --color-hud-label: #666666;
-  --color-hud-value: #E85A25;
+  --color-hud-card-bg: rgba(255, 250, 244, 0.78);
+  --color-hud-card-border: rgba(255, 108, 63, 0.55);
+  --color-hud-label: #725f4f;
+  --color-hud-value: #f2653a;
 
   /* ────── Colors: Buttons ────── */
-  --color-btn-bg-default: #FFFFFF;
-  --color-btn-bg-hover: #FFF5F2;
-  --color-btn-bg-active: #FFE3D4;
+  --color-btn-bg-default: rgba(255, 249, 241, 0.9);
+  --color-btn-bg-hover: #fff1e5;
+  --color-btn-bg-active: #ffe2cf;
 
   --color-btn-border: #FF6B35;
   --color-btn-icon: #FF6B35;
@@ -94,9 +96,9 @@
   --color-genre-classical: #A78BFA;
 
   /* ────── Motion ────── */
-  --motion-duration-fast: 120ms;
-  --motion-duration-default: 180ms;
-  --motion-duration-slow: 260ms;
+  --motion-duration-fast: 130ms;
+  --motion-duration-default: 200ms;
+  --motion-duration-slow: 320ms;
 
   --motion-easing-out: cubic-bezier(0.16, 1, 0.3, 1);
   --motion-easing-inout: cubic-bezier(0.4, 0, 0.2, 1);
