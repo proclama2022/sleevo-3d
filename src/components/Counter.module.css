@@ -1,0 +1,197 @@
+.counter {
+  width: 100%;
+  max-width: 404px;
+  margin-top: 9px;
+  z-index: 2;
+  perspective: 620px;
+  position: relative;
+}
+
+.base {
+  height: 60px;
+  margin: 0 8px;
+  border-radius: 10px 10px 14px 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 214, 154, 0.14), rgba(255, 214, 154, 0) 25%),
+    linear-gradient(180deg, #8a5431 0%, #6d4327 45%, #4f311f 100%);
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, 0.58),
+    inset 0 1px 0 rgba(255, 226, 175, 0.18),
+    inset 0 -3px 8px rgba(0, 0, 0, 0.25);
+}
+
+.surface {
+  margin-top: -45px;
+  border-radius: 12px;
+  padding: 14px 11px 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.08) 22%, rgba(255, 255, 255, 0.1) 100%),
+    linear-gradient(180deg, rgba(67, 58, 78, 0.48) 0%, rgba(27, 23, 34, 0.58) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.26);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow:
+    0 12px 22px rgba(0, 0, 0, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.28);
+  min-height: 94px;
+  transform: rotateX(5deg);
+  transform-origin: top center;
+  position: relative;
+  overflow: hidden;
+}
+
+.glassShine {
+  position: absolute;
+  inset: 4px;
+  border-radius: 10px;
+  pointer-events: none;
+  background:
+    linear-gradient(118deg, rgba(255, 255, 255, 0.36) 0%, rgba(255, 255, 255, 0.08) 30%, rgba(255, 255, 255, 0) 52%),
+    radial-gradient(circle at 88% 78%, rgba(229, 170, 81, 0.2) 0%, rgba(229, 170, 81, 0) 45%);
+}
+
+.surface::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 8%;
+  right: 8%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 234, 194, 0.74), transparent);
+  pointer-events: none;
+}
+
+.vinyls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8px;
+  gap: 0;
+  flex-wrap: nowrap;
+  position: relative;
+  z-index: 1;
+}
+
+.vinylSpot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -24px;
+  animation: vinylBob 3.2s ease-in-out infinite;
+}
+
+.vinylSpot:first-child {
+  margin-left: 0;
+}
+
+.vinylSpot:nth-child(2) {
+  animation-delay: -0.8s;
+}
+
+.vinylSpot:nth-child(3) {
+  animation-delay: -1.6s;
+}
+
+.vinylSpot:nth-child(4) {
+  animation-delay: -2.4s;
+}
+
+@keyframes vinylBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+.shadow {
+  position: absolute;
+  bottom: -9px;
+  width: 64px;
+  height: 16px;
+  background: radial-gradient(ellipse, rgba(18, 12, 9, 0.74) 0%, transparent 72%);
+  border-radius: 50%;
+  animation: shadowPulse 3.2s ease-in-out infinite;
+}
+
+.vinylSpot:nth-child(2) .shadow {
+  animation-delay: -0.8s;
+}
+
+.vinylSpot:nth-child(3) .shadow {
+  animation-delay: -1.6s;
+}
+
+.vinylSpot:nth-child(4) .shadow {
+  animation-delay: -2.4s;
+}
+
+@keyframes shadowPulse {
+  0%,
+  100% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleX(0.86);
+    opacity: 0.66;
+  }
+}
+
+.hand {
+  position: absolute;
+  right: 6px;
+  bottom: -2px;
+  width: 78px;
+  height: 72px;
+  border-radius: 56% 46% 34% 50%;
+  background:
+    linear-gradient(180deg, rgba(255, 226, 193, 0.5), rgba(255, 226, 193, 0) 24%),
+    linear-gradient(135deg, #e0a277 0%, #d39268 52%, #bd774d 100%);
+  box-shadow:
+    0 10px 18px rgba(0, 0, 0, 0.4),
+    inset 0 1px 1px rgba(255, 236, 214, 0.42),
+    inset -5px -8px 14px rgba(125, 76, 47, 0.38);
+  transform: rotate(-7deg);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.hand::before {
+  content: '';
+  position: absolute;
+  left: 21px;
+  top: 14px;
+  width: 40px;
+  height: 18px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #f0b286 0%, #cf8c61 100%);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  transform: rotate(16deg);
+}
+
+.hand::after {
+  content: '';
+  position: absolute;
+  right: 8px;
+  top: 18px;
+  width: 36px;
+  height: 40px;
+  border-radius: 50% 42% 54% 46%;
+  background:
+    linear-gradient(180deg, rgba(255, 231, 201, 0.4), rgba(255, 231, 201, 0) 24%),
+    linear-gradient(160deg, #ebb086 0%, #cc865b 100%);
+  box-shadow: inset -3px -5px 8px rgba(118, 67, 38, 0.3);
+  transform: rotate(22deg);
+}
+
+@media (max-width: 450px) {
+  .hand {
+    width: 72px;
+    height: 64px;
+  }
+}

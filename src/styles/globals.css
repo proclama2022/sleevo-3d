@@ -1,0 +1,43 @@
+:root {
+  --color-bg: #111112;
+  --color-shelf-wood: #6b4a2a;
+  --color-panel-bg: rgba(42, 38, 45, 0.86);
+  --color-teal: #3ec6d7;
+  --color-btn-bg: #2a2930;
+  --color-btn-hover: #34333c;
+  --color-text: #f8f7f4;
+  --color-text-dim: rgba(255, 255, 255, 0.72);
+  --color-combo-red: #f8cb6d;
+  --color-amber: #ffc574;
+  --color-wood-dark: #2a180f;
+  --color-wood-mid: #5e3820;
+  --shadow-soft: 0 8px 18px rgba(0, 0, 0, 0.34);
+  --shadow-deep: 0 22px 46px rgba(0, 0, 0, 0.58);
+  --easing-snap: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --font-ui: 'Barlow Condensed', sans-serif;
+  --font-display: 'Bungee', sans-serif;
+  --font: var(--font-ui);
+}
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  touch-action: none;
+}
+
+body {
+  font-family: var(--font-ui);
+  background:
+    radial-gradient(circle at 50% -20%, #2d1d14 0%, #151113 44%, #0b0a0d 100%),
+    var(--color-bg);
+  color: var(--color-text);
+  text-rendering: optimizeLegibility;
+}

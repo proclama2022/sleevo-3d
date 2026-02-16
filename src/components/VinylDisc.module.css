@@ -1,0 +1,173 @@
+.disc {
+  position: relative;
+  border-radius: 50%;
+  --disc-color: #d34b50;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--disc-color) 72%, #ffd5ab) 0%,
+    color-mix(in srgb, var(--disc-color) 80%, #4a2426) 16%,
+    color-mix(in srgb, var(--disc-color) 62%, #22161b) 33%,
+    #0f0f13 46%,
+    color-mix(in srgb, var(--disc-color) 48%, #111119) 66%,
+    #0b0a11 79%,
+    color-mix(in srgb, var(--disc-color) 38%, #101018) 90%,
+    #1a1823 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 11px 20px rgba(0, 0, 0, 0.64),
+    0 2px 4px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.44);
+  flex-shrink: 0;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.disc::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    conic-gradient(from 95deg, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.24)),
+    radial-gradient(circle at 28% 25%, color-mix(in srgb, var(--disc-color) 48%, transparent) 0%, transparent 56%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.disc::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    linear-gradient(130deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0.12) 100%),
+    radial-gradient(circle at 68% 72%, color-mix(in srgb, var(--disc-color) 34%, transparent), transparent 64%);
+  pointer-events: none;
+}
+
+.disc:hover {
+  transform: scale(1.08) translateY(-3px);
+  box-shadow:
+    0 12px 24px rgba(0, 0, 0, 0.74),
+    0 3px 8px rgba(0, 0, 0, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 1px color-mix(in srgb, var(--disc-color) 44%, transparent);
+}
+
+.disc:active {
+  cursor: grabbing;
+}
+
+/* Draggable vinyl on counter */
+.draggable {
+  cursor: grab;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.draggable:hover {
+  transform: scale(1.12) translateY(-4px);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.72),
+    0 4px 8px rgba(0, 0, 0, 0.46),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 0 0 1px color-mix(in srgb, var(--disc-color) 48%, transparent);
+}
+
+/* ── Lean when placed on shelf ── */
+.lean {
+  transform: perspective(420px) rotateY(-12deg) rotateX(3deg);
+  cursor: default;
+}
+
+.lean:hover {
+  transform: perspective(420px) rotateY(-12deg) rotateX(3deg) scale(1.04);
+}
+
+/* ── Grooves (concentric rings) ── */
+.grooves {
+  position: absolute;
+  inset: 5.8%;
+  border-radius: 50%;
+  background: transparent;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    inset 0 0 0 3px rgba(255, 255, 255, 0.052),
+    inset 0 0 0 5px rgba(255, 255, 255, 0.044),
+    inset 0 0 0 7px rgba(255, 255, 255, 0.038),
+    inset 0 0 0 9px rgba(255, 255, 255, 0.033),
+    inset 0 0 0 11px rgba(255, 255, 255, 0.028),
+    inset 0 0 0 13px rgba(255, 255, 255, 0.024),
+    inset 0 0 0 15px rgba(255, 255, 255, 0.02),
+    inset 0 0 0 17px rgba(255, 255, 255, 0.017),
+    inset 0 0 0 19px rgba(255, 255, 255, 0.014);
+  pointer-events: none;
+  animation: grooveSpin 10s linear infinite;
+}
+
+@keyframes grooveSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ── Center label ── */
+.label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40%;
+  height: 40%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 0 10px rgba(0, 0, 0, 0.48),
+    inset 0 2px 6px rgba(255, 255, 255, 0.36),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.42);
+  z-index: 1;
+}
+
+/* Highlight reflection on label */
+.label::after {
+  content: '';
+  position: absolute;
+  top: 10%;
+  left: 15%;
+  width: 48%;
+  height: 32%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* ── Spindle hole ── */
+.hole {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7%;
+  height: 7%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, #050505 0%, #131217 100%);
+  box-shadow:
+    inset 0 1px 3px rgba(0, 0, 0, 0.95),
+    0 0 4px rgba(0, 0, 0, 0.68);
+  z-index: 2;
+}
+
+/* ── Dragging state ── */
+.dragging {
+  transform: scale(1.15) translateY(-8px) !important;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.8),
+    0 6px 16px rgba(0, 0, 0, 0.6) !important;
+  z-index: 100;
+  cursor: grabbing;
+}
+
+/* Stop groove animation when placed */
+.lean .grooves {
+  animation-play-state: paused;
+}

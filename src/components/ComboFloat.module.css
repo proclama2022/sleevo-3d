@@ -1,0 +1,47 @@
+.combo {
+  position: absolute;
+  top: 198px;
+  right: 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  z-index: 2;
+  animation: comboPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.45));
+}
+
+@keyframes comboPopIn {
+  0% {
+    transform: scale(0.8) translateY(6px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+.label {
+  font-family: var(--font-ui);
+  font-size: clamp(17px, 2.1vw, 24px);
+  line-height: 1;
+  font-weight: 800;
+  color: var(--color-combo-red);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-style: italic;
+  text-shadow:
+    0 2px 0 rgba(184, 131, 43, 0.72),
+    0 7px 10px rgba(0, 0, 0, 0.44);
+}
+
+.multiplier {
+  font-family: var(--font-ui);
+  font-size: clamp(16px, 1.9vw, 22px);
+  line-height: 1;
+  font-weight: 800;
+  color: var(--color-combo-red);
+  text-shadow:
+    0 2px 0 rgba(184, 131, 43, 0.72),
+    0 7px 10px rgba(0, 0, 0, 0.44);
+}
