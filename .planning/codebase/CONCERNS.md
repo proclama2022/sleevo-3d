@@ -1,157 +1,144 @@
 # Codebase Concerns
 
-**Analysis Date:** 2026-02-10
+**Analysis Date:** 2026-02-11
 
 ## Tech Debt
 
-**Massive App.tsx Component:**
-- Issue: App.tsx contains 2,225+ lines of code with mixed responsibilities
-- Files: `App.tsx`
-- Impact: Difficult to maintain, test, and understand. Hot reload performance suffers
-- Fix approach: Split into smaller components based on features (GameScreen, MenuScreen, SettingsScreen)
+**Excessive Console Logging:**
+- Issue: Development console statements remain in production code
+- Files:
+  - `src/GameManager.ts` (5 console.log statements)
+  - `src/InputController.ts` (19 console.log statements)
+  - `src/main.ts` (2 console.log statements)
+  - `src/vinyl-demo.ts` (3 console.log statements)
+- Impact: Performance overhead, cluttered browser console, unprofessional debug output
+- Fix approach: Create logging utility with levels (DEBUG/INFO/WARN/ERROR), replace all console statements with proper logging calls
 
-**Missing Error Logging Service:**
-- Issue: ErrorBoundary logs only to console
-- Files: `components/ErrorBoundary.tsx:49`
-- Impact: Production errors cannot be tracked or analyzed
-- Fix approach: Integrate Sentry or similar error tracking service
+**TypeScript Type Safety Issues:**
+- Issue: Extensive use of `any` type bypassing TypeScript's type checking
+- Files:
+  - `src/InputController.ts` (5 instances of `any`)
+  - `src/SceneRenderer.ts` (3 instances of `any`)
+  - `src/GameManager.ts` (5 instances of `any`)
+- Impact: Reduced type safety, potential runtime errors, loss of IDE autocompletion
+- Fix approach: Define proper interfaces for userData objects, use generic types, eliminate `any` usage
 
-**Inline Style Constants:**
-- Issue: CSS magic numbers and durations scattered throughout code
-- Files: `App.tsx`, `constants/gameConfig.ts`
-- Impact: Inconsistent animations, hard to maintain theme
-- Fix approach: Centralize all animation constants in a single file with CSS variables
+**Large Monolithic Files:**
+- Issue: Single files contain multiple responsibilities and are oversized
+- Files:
+  - `src/GameManager.ts` (1762 lines) - Handles game logic, rendering, input, and scene management
+  - `src/VinylMesh.ts` (935 lines) - Handles all vinyl rendering and art generation
+- Impact: Hard to maintain, difficult to test, violates single responsibility principle
+- Fix approach: Split into smaller modules (e.g., GameLogic.ts, SceneManager.ts, VinylRenderer.ts, VinylArtGenerator.ts)
+
+**Missing Error Handling:**
+- Issue: No error boundaries or try-catch blocks for async operations
+- Files: All source files lack proper error handling
+- Impact: Silent failures, poor user experience, debugging difficulties
+- Fix approach: Implement global error handler, add try-catch around async operations, user-friendly error messages
 
 ## Known Bugs
 
-**Mobile Performance Issues:**
-- Symptoms: Particle explosions lag on mobile devices
-- Files: `App.tsx:93`
-- Trigger: High particle count on mobile
-- Workaround: Particles already limited to 8 on mobile, but could be further optimized
+**Animation Implementation Incomplete:**
+- Symptoms: Animation features exist in documentation (ANIMATION_IMPLEMENTATION.md) but not fully implemented in code
+- Files: `src/GameManager.ts`, `src/InputController.ts`
+- Trigger: When animations should occur but don't
+- Workaround: Manual implementation required following the markdown spec
 
-**Potential Memory Leaks:**
-- Symptoms: Timers and intervals may not clean up properly
-- Files: `App.tsx:414, 470`
-- Trigger: Component unmount during active intervals
-- Workaround: Add cleanup useEffects for all intervals
+**AI Texture Loading Issues:**
+- Symptoms: Italian warning message in console about AI textures not loading
+- Files: `src/GameManager.ts:1755`
+- Trigger: When AI-generated textures fail to load
+- Workaround: Missing fallback mechanism for texture loading
 
-**Audio Context State:**
-- Symptoms: Audio may not initialize properly on iOS
-- Files: `services/audio.ts:40`
-- Trigger: iOS requires user interaction before audio context
-- Workaround: Already handled with `initAudioContext()` but may need fallback
+**Missing Undo Functionality:**
+- Symptoms: Console log indicates "Undo not yet implemented"
+- Files: `src/GameManager.ts:1500`
+- Trigger: When user attempts to undo an action
+- Workaround: No current workaround available
 
 ## Security Considerations
 
-**localStorage Storage:**
-- Risk: User data exposed if device is compromised
-- Files: `services/storage.ts`
-- Current mitigation: Data is JSON serialized and versioned
-- Recommendations: Consider encrypting sensitive save data
+**External URL Dependencies:**
+- Risk: Hardcoded external URLs for AI resources
+- Files: `src/GameManager.ts:6-8`
+- Current mitigation: URLs are publicly accessible
+- Recommendations: Move to configuration file, add CORS validation, implement fallback local resources
 
-**No CSP Headers:**
-- Risk: Potential for XSS if added in future
-- Files: No CSP configuration found
-- Current mitigation: React's built-in XSS protection
-- Recommendations: Add Content Security Policy headers when deploying
+**Canvas Texture Generation:**
+- Risk: Potential memory leaks with canvas textures
+- Files: `src/VinylMesh.ts`, `src/GameManager.ts`
+- Current mitigation: Basic canvas cleanup
+- Recommendations: Implement texture pooling, add memory usage monitoring, optimize texture generation
 
 ## Performance Bottlenecks
 
-**Heavy DOM Manipulation:**
-- Problem: Frequent style updates during drag/drop
-- Files: `App.tsx`
-- Cause: Direct CSS property manipulation on RAF
-- Improvement path: Use CSS transforms with will-change property
+**Procedural Texture Generation:**
+- Problem: Heavy canvas operations creating textures at runtime
+- Files: `src/VinylMesh.ts` (multiple canvas drawing operations)
+- Cause: Synchronous texture generation on main thread
+- Improvement path: Implement texture caching, use Web Workers for generation, pre-generate textures
 
-**Particle System Performance:**
-- Problem: Many DOM elements created/destroyed
-- Files: `App.tsx`
-- Cause: CSS-based particle explosions
-- Improvement path: Canvas-based particle system for better performance
-
-**Unnecessary Re-renders:**
-- Problem: Complex game state causes frequent re-renders
-- Files: `App.tsx`
-- Cause: Large game state object passed to many components
-- Improvement path: Split state into multiple useState hooks, use React.memo
+**Excessive Raycasting:**
+- Problem: Raycasting operations on every frame for input handling
+- Files: `src/InputController.ts`
+- Cause: No spatial optimization for object detection
+- Improvement path: Implement spatial partitioning, reduce raycast frequency, use bounding box hierarchy
 
 ## Fragile Areas
 
-**Random Events System:**
-- Files: `services/randomEvents.ts`, `App.tsx`
-- Why fragile: Complex conditional logic, multiple active events possible
-- Safe modification: Add state validation before applying event effects
-- Test coverage: Limited testing of event combinations
+**Input Controller Coupling:**
+- Files: `src/InputController.ts` (872 lines)
+- Why fragile: Tightly coupled with GameManager, SceneRenderer, and DOM elements
+- Safe modification: Extract input handling strategy pattern
+- Test coverage: Currently limited unit tests for edge cases
 
-**Achievement System:**
-- Files: `constants/achievements.ts`, `services/storage.ts`
-- Why fragile: Hardcoded achievement IDs, complex progression logic
-- Safe modification: Create achievement registry type
-- Test coverage: Missing achievement edge case tests
-
-**Game State Management:**
-- Files: `App.tsx`
-- Why fragile: Single large state object, many dependent updates
-- Safe modification: Break into smaller state slices
-- Test coverage: No comprehensive game state tests
+**Hardcoded Genre Data:**
+- Files: `src/VinylMesh.ts:333-356`, `src/GameManager.ts:790-804`
+- Why fragile: Genre data duplicated across files
+- Safe modification: Centralize genre configuration in separate file
+- Test coverage: Genre-specific logic not well tested
 
 ## Scaling Limits
 
-**Memory Usage:**
-- Current capacity: Unknown, no memory monitoring
-- Limit: Browser tabs may crash with large save data
-- Scaling path: Implement save data compression and chunking
-
-**Save Data Size:**
-- Current capacity: Grows with collection and achievements
-- Limit: localStorage typically 5-10MB
-- Scaling path: IndexedDB for larger save data
+**Single Shelf Mode Constraint:**
+- Current capacity: Only supports single row of vinyls
+- Limit: Cannot handle complex shelf arrangements
+- Scaling path: Implement dynamic grid system, multiple shelf layouts
 
 ## Dependencies at Risk
 
-**React 19:**
-- Risk: New version may break existing patterns
-- Impact: All components
-- Migration plan: Monitor React 19 stability, test early
-
-**Capacitor:**
-- Risk: Platform updates may break iOS build
-- Impact: Mobile deployment
-- Migration plan: Keep Capacitor updated, test on new iOS versions
+**Three.js Version:**
+- Risk: Version ^0.182.0 is quite specific
+- Impact: Major version upgrade could cause breaking changes
+- Migration plan: Keep minor version updates, prepare for major refactor if needed
 
 ## Missing Critical Features
 
-**Cloud Save Sync:**
-- Problem: Only local storage
-- Blocks: Player progression loss if device changed
-- Priority: Medium
+**Save/Load Game State:**
+- Problem: No persistence of game progress
+- Blocks: Long-term gameplay sessions, user progress retention
+- Implementation needed: LocalStorage or IndexedDB integration
 
-**Analytics:**
-- Problem: No user behavior tracking
-- Blocks: Game balance improvements
-- Priority: Low
+**Mobile Optimization:**
+- Problem: Touch input handled but not optimized for various screen sizes
+- Blocks: Consistent mobile experience
+- Implementation needed: Responsive design, touch gesture improvements
 
 ## Test Coverage Gaps
 
-**Game Logic Tests:**
-- What's not tested: Score calculation, combo mechanics, level generation
-- Files: `services/gameLogic.ts`
-- Risk: Game-breaking bugs in core mechanics
-- Priority: High
+**Unit Tests:**
+- What's not tested: Game logic validation, input handling edge cases, animation system
+- Files: No test files present
+- Risk: Regression risk during feature additions
+- Priority: High - no safety net for code changes
 
-**Component Integration Tests:**
-- What's not tested: Component interactions, drag/drop flow
-- Files: All components
-- Risk: UI state inconsistencies
-- Priority: Medium
-
-**Audio Integration Tests:**
-- What's not tested: Audio context initialization, volume controls
-- Files: `services/audio.ts`
-- Risk: Silent game or audio errors
-- Priority: Low
+**Integration Tests:**
+- What's not tested: Scene rendering, texture loading, user interaction flow
+- Files: No integration test files
+- Risk: Component interaction failures
+- Priority: Medium - important for UI-heavy application
 
 ---
 
-*Concerns audit: 2026-02-10*
+*Concerns audit: 2026-02-11*

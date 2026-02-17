@@ -1,171 +1,167 @@
 # Coding Conventions
 
-**Analysis Date:** 2026-02-10
+**Analysis Date:** 2026-02-11
 
 ## Naming Patterns
 
 **Files:**
-- PascalCase for components: `VinylDisc.tsx`, `CollectionScreen.tsx`, `ErrorBoundary.tsx`
-- camelCase for services and hooks: `gameLogic.ts`, `useWindowSize.ts`
-- kebab-case for assets: `constants/gameConfig.ts`
+- Lower case with hyphens: `gameRules.ts`, `sceneRenderer.ts`, `vinylMesh.ts`
+- Index files not used (no `index.ts`)
+- Feature files follow component naming: `main.ts`, `inputController.ts`
 
-**Functions:**
-- PascalCase for React components and class constructors
-- camelCase for utility functions and methods: `calculateScore`, `generateLevel`, `saveAudioSettings`
-- Private functions start with underscore: `_handleInternalLogic`
+**Functions & Methods:**
+- PascalCase for class methods: `loadLevel()`, `createVinyls()`, `update()`
+- PascalCase for functions: `setupVinylDemo()`, `getColumnForGenre()`
+- Private methods prefixed with `private`: `initializeGrid()`, `buildShelf()`
 
 **Variables:**
-- camelCase for all variables: `currentMusicSource`, `windowSize`, `filterGenre`
-- Constants are UPPER_SNAKE_CASE: `MAX_DUST_LEVEL`, `COMBO_TIMEOUT`, `FLYING_VINYL_DURATION`
-- Type parameters use T, U, V: `debounce<T extends (...args: any[]) => void>`
+- camelCase for local variables: `shelfWidth`, `vinylCount`, `deltaTime`
+- PascalCase for class properties: `this.sceneRenderer`, this.shelfGroup`
+- Constants using UPPER_SNAKE_CASE: `AI_REF_SCENE_URL`, `COLUMN_GENRE_LABELS`
 
-**Types:**
-- PascalCase for interfaces and type aliases: `Vinyl`, `GameState`, `AudioSettings`
-- enum names are PascalCase with members UPPER_SNAKE_CASE: `Genre.ROCK`, `RandomEventType.EARTHQUAKE`
-- Generic types use T, U, V: `<T>`, `<T, U>`
+**Types & Interfaces:**
+- PascalCase for interfaces: `Vinyl`, `Level`, `ShelfConfig`
+- Types follow same pattern: `VinylWidth`, `GameStatus`
 
 ## Code Style
 
 **Formatting:**
-- 2 spaces for indentation (consistent with Tailwind)
-- Semicolons at end of statements
-- Single quotes for strings (except JSX attributes)
-- Trailing commas in multiline objects and arrays
-- Line length: 100-120 characters (wrapped where appropriate)
+- No explicit formatter configured (using defaults)
+- 2-space indentation (observed in code)
+- Semicolons consistently used
+- Trailing commas in multi-line objects and arrays
 
 **Linting:**
-- No formal ESLint configuration detected
-- Consistent formatting across files
-- TypeScript compiler strict mode enabled
+- TypeScript strict mode enabled in `tsconfig.json`
+- ESLint not configured (no `.eslintrc` found)
+- Rules enforced by TypeScript compiler:
+  - `strict: true`
+  - `noUnusedLocals: true`
+  - `noUnusedParameters: true`
+  - `noFallthroughCasesInSwitch: true`
 
-**Import Organization:**
+## Import Organization
+
+**Order:**
+1. External imports (THREE.js, libraries)
+2. Relative imports from local modules
+3. Type imports (when needed)
+
+**Pattern:**
 ```typescript
-// 1. React and third-party imports
-import React, { useState, useEffect, useRef } from 'react';
-import { Crate, Vinyl, GameState } from '../types';
-import { generateLevel, calculateScore } from '../services/gameLogic';
-
-// 2. Internal module imports
-import { useWindowSize } from '../hooks/useWindowSize';
-import { VinylDisc } from './VinylDisc';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { SceneRenderer } from './SceneRenderer';
+import { GameManager } from './GameManager';
+import { Level, Vinyl } from './types';
 ```
+
+**Path Aliases:**
+- Not configured - using relative imports only
 
 ## Error Handling
 
 **Patterns:**
+- Constructor validation: Throw errors for missing dependencies
+- Console logging for debugging (extensive use)
+- No try-catch blocks found in production code
+- Graceful fallbacks for texture loading
+
+**Examples:**
 ```typescript
-// Error boundaries with fallback UI
-class ErrorBoundary extends Component<Props, State> {
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Error caught:', error);
+constructor(container: HTMLElement) {
+  if (!container) {
+    throw new Error('Canvas container not found');
   }
 }
+```
 
-// Try-catch for async operations
-try {
-  const result = await riskyOperation();
-} catch (error) {
-  console.error('Operation failed:', error);
-  // Fallback or error state
+```typescript
+// Fallback texture loading
+() => {
+  const hasFallback = index + 1 < candidates.length;
+  if (hasFallback) {
+    tryLoad(index + 1);
+    return;
+  }
+  console.warn(`AI texture non caricata: ${candidate}`);
 }
-
-// Null checks with optional chaining
-const user = data?.user?.profile?.name;
 ```
 
 ## Logging
 
-**Framework:** Console logging for debugging
+**Framework:**
+- `console.log` for debugging (extensive throughout codebase)
+- Descriptive messages with emojis for visual grouping
+- No structured logging library
 
 **Patterns:**
-- Console.error for errors: `console.error('Failed to save audio settings:', error);`
-- Console.warn for warnings: `console.warn('Save data version mismatch, using defaults');`
-- Console.log for development info (limited usage)
-- No production logging service configured
+```typescript
+console.log('🎮 Sleevo 3D initialized!');
+console.log('👆 Pick a vinyl from the carousel and drop it in its matching genre column.');
+console.log(`Level loaded: ${level.id} with ${this.shelfCols} columns (Single Row mode)`);
+```
 
 ## Comments
 
 **When to Comment:**
-- Complex algorithms or game mechanics
-- External dependencies and their usage
-- Configuration constants and their purpose
-- TODO items marked with `// TODO: description`
+- Complex Three.js geometry creation
+- Vintage/retro design decisions
+- Genre-specific artwork logic
+- Animation timing and effects
 
 **JSDoc/TSDoc:**
-- Used extensively for functions and components
-- Describes purpose, parameters, and return values
-- Example from gameLogic.ts:
+- Interface definitions have detailed comments
+- Complex functions documented with purpose
+- No consistent function-level documentation
+
+**Examples:**
 ```typescript
 /**
- * Generate theme-specific background music using Web Audio API
- * Each theme has a different tempo, chord progression, and feel
+ * Represents a vinyl record in the game.
+ * Each vinyl has a unique id and properties used for sorting rules.
  */
-const generateThemeMusic = (theme: ShopTheme): AudioBuffer => {
+export interface Vinyl {
+  id: string;
+  width: VinylWidth;
+  color: string;
+  genre: string;
+  year: number;
+  title?: string;
+  artist?: string;
+  coverImage?: string;
+}
 ```
 
 ## Function Design
 
 **Size:**
-- Small, focused functions (10-50 lines)
-- Maximum 1 level of nesting where possible
-- Early returns for error cases
+- Large functions acceptable for complex operations (e.g., `buildShelf()` - 300+ lines)
+- Smaller functions for specific operations
+- No strict line limit enforcement
 
 **Parameters:**
-- 3-5 parameters maximum
-- Use objects for complex parameter sets
-- Optional parameters with default values
+- 3-5 parameters typical
+- Optional parameters with defaults where appropriate
+- Object parameters for complex configurations
 
 **Return Values:**
 - Consistent return types
-- Union types for multiple possibilities
-- Void for side-effect-only functions
+- Void for operations that modify state
+- Values for calculations and queries
 
 ## Module Design
 
 **Exports:**
-- Named exports preferred over default
-- Interface exports for types
-- Utility functions exported from service modules
+- Default exports only for entry points
+- Named exports for utilities and types
+- No re-exports (no barrel files)
 
-**Barrel Files:** Not used - direct imports from specific files
-
-## React Patterns
-
-**Components:**
-- Functional components with hooks
-- TypeScript interfaces for props
-- Inline styles only for dynamic values
-- Tailwind classes for styling
-
-**State Management:**
-- useState for local state
-- useRef for DOM references and persistent values
-- useEffect for side effects with proper cleanup
-
-**Event Handlers:**
-- Arrow functions for inline handlers
-- useCallback for event handlers passed to child components
-- Proper typing for event parameters
-
-## TypeScript Patterns
-
-**Types:**
-- Strong typing throughout
-- Interfaces for object shapes
-- Enums for fixed sets of values
-- Generics for reusable components
-
-**Strict Mode:**
-- Enabled in tsconfig.json
-- No implicit any types
-- Strict null checks
-- No unused variables
+**File Structure:**
+- One class per file
+- Types centralized in `types.ts`
+- Game logic separated by responsibility
 
 ---
 
-*Convention analysis: 2026-02-10*
-```
+*Convention analysis: 2026-02-11*

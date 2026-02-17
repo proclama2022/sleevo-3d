@@ -1,184 +1,96 @@
-# Codebase Structure
-
-**Analysis Date:** 2026-02-10
+# Structure
 
 ## Directory Layout
 
 ```
-/Users/martha2022/Documents/Claude code/Sleevo Vinyl Shop Manager/
-├── App.tsx                 # Main game component
-├── index.tsx               # React app entry point
-├── types.ts                # TypeScript type definitions
-├── package.json            # Project dependencies and scripts
-├── vite.config.ts          # Vite build configuration
-├── capacitor.config.ts     # Capacitor mobile app config
-├── tailwind.config.js      # Tailwind CSS configuration
-├── postcss.config.js       # PostCSS configuration
+Sleevo Vinyl Shop Manager/
+├── src/                    # Source code
+│   ├── main.ts            # Entry point, initialization
+│   ├── GameManager.ts     # Core game logic (~1500 lines)
+│   ├── InputController.ts # User input handling (~900 lines)
+│   ├── SceneRenderer.ts   # Three.js rendering
+│   ├── VinylMesh.ts       # Vinyl 3D objects
+│   ├── types.ts           # TypeScript interfaces
+│   ├── gameRules.ts       # Genre-to-column mappings
+│   └── style.css          # UI styling
+│
 ├── public/                 # Static assets
-│   └── icons/             # App icons
-├── assets/                 # Game assets
-│   └── images.ts          # Image asset definitions
-├── components/             # React UI components
-│   ├── VinylCover.tsx     # Vinyl disc component
-│   ├── CrateBox.tsx       # Crate container component
-│   ├── ThemeBackground.tsx # Background theming
-│   ├── Tutorial.tsx       # Game tutorial overlay
-│   ├── CollectionScreen.tsx # Vinyl collection viewer
-│   ├── StatsScreen.tsx    # Player statistics
-│   ├── AchievementScreen.tsx # Achievements system
-│   ├── CustomizationScreen.tsx # Game customization
-│   ├── AccessibilitySettings.tsx # Accessibility options
-│   ├── AudioSettings.tsx  # Audio controls
-│   ├── HintButton.tsx     # Game hints
-│   ├── InGameStats.tsx    # Live game stats
-│   ├── SecondaryObjectives.tsx # Bonus objectives
-│   ├── RandomEventOverlay.tsx # Special events
-│   ├── AchievementToast.tsx # Achievement notifications
-│   ├── ErrorBoundary.tsx  # Error handling
-│   └── VinylDisc.tsx     # Vinyl disc component
-├── services/               # Business logic services
-│   ├── gameLogic.ts       # Core game mechanics
-│   ├── storage.ts         # Data persistence
-│   ├── audio.ts           # Audio generation
-│   ├── objectives.ts      # Game objectives
-│   └── randomEvents.ts    # Random gameplay events
-├── constants/              # Game constants and config
-│   ├── gameConfig.ts      # Game mechanics constants
-│   └── achievements.ts    # Achievement definitions
-├── hooks/                 # Custom React hooks
-│   └── useWindowSize.ts   # Window size hook
-├── types/                 # Additional type definitions
-│   └── events.ts          # Event-related types
-├── dist/                  # Built application
-├── node_modules/          # Dependencies
-├── ios/                   # iOS native project
-└── .planning/             # Planning documentation
-    └── codebase/          # Architecture analysis
+├── ios/                    # Capacitor iOS app
+├── dist/                   # Build output
+├── node_modules/           # Dependencies
+│
+├── index.html              # HTML entry point
+├── package.json            # NPM configuration
+├── vite.config.ts          # Vite bundler config
+├── tsconfig.json           # TypeScript config
+└── .env.local              # Environment variables
 ```
 
-## Directory Purposes
+## Key Files
 
-**components/:**
-- Purpose: UI components and game visual elements
-- Contains: React components for all game screens and UI elements
-- Key files: `VinylCover.tsx` (vinyl discs), `CrateBox.tsx` (crates), `CollectionScreen.tsx` (collection viewer)
+### Core Systems
+| File | Purpose | Size |
+|------|---------|------|
+| `src/GameManager.ts` | Game state, vinyl creation, shelf rendering | ~1500 lines |
+| `src/InputController.ts` | Drag-drop, raycasting, touch handling | ~900 lines |
+| `src/SceneRenderer.ts` | Three.js scene, camera, lights | ~200 lines |
+| `src/main.ts` | App initialization, game loop | ~100 lines |
 
-**services/:**
-- Purpose: Business logic and game mechanics
-- Contains: Services handling game logic, storage, audio, and events
-- Key files: `gameLogic.ts` (core mechanics), `storage.ts` (persistence), `audio.ts` (audio generation)
+### Data & Types
+| File | Purpose |
+|------|---------|
+| `src/types.ts` | Vinyl, Level, Cell, ShelfConfig interfaces |
+| `src/gameRules.ts` | getColumnForGenre(), genre mappings |
 
-**constants/:**
-- Purpose: Game configuration and constants
-- Contains: Achievement definitions and game mechanic constants
-- Key files: `gameConfig.ts` (game settings), `achievements.ts` (achievement definitions)
-
-**types/:**
-- Purpose: Extended type definitions
-- Contains: Type definitions for events and other complex types
-- Key files: `events.ts` (event-related interfaces)
-
-**hooks/:**
-- Purpose: Custom React hooks
-- Contains: Reusable logic hooks
-- Key files: `useWindowSize.ts` (responsive sizing)
-
-**assets/ & public/:**
-- Purpose: Static assets and resources
-- Contains: Icons and image definitions
-- Key files: `images.ts` (asset definitions), `icons/` (app icons)
-
-## Key File Locations
-
-**Entry Points:**
-- `index.tsx`: React app initialization
-- `App.tsx`: Main game controller and state management
-
-**Configuration:**
-- `vite.config.ts`: Build tool configuration
-- `tailwind.config.js`: CSS framework configuration
-- `capacitor.config.ts`: Mobile app configuration
-
-**Core Logic:**
-- `services/gameLogic.ts`: Level generation and scoring
-- `services/storage.ts`: Data persistence and statistics
-- `services/audio.ts`: Procedural audio generation
-
-**UI Components:**
-- `components/VinylCover.tsx`: Vinyl disc rendering
-- `components/CrateBox.tsx`: Crate interface
-- `components/CollectionScreen.tsx`: Collection viewer
-- `components/StatsScreen.tsx`: Player statistics
+### Configuration
+| File | Purpose |
+|------|---------|
+| `vite.config.ts` | Vite bundler settings |
+| `package.json` | Dependencies, scripts |
+| `tsconfig.json` | TypeScript compiler options |
 
 ## Naming Conventions
 
-**Files:**
-- PascalCase for components: `VinylCover.tsx`, `CrateBox.tsx`
-- camelCase for services: `gameLogic.ts`, `storage.ts`
-- kebab-case for config: `tailwind.config.js`, `postcss.config.js`
+### Files
+- **Components:** PascalCase.ts (GameManager.ts)
+- **Utilities:** camelCase.ts (gameRules.ts)
+- **Types:** lowercase.ts (types.ts)
 
-**Functions:**
-- camelCase for all functions: `generateLevel`, `calculateScore`
-- Verb-noun pattern for actions: `loadSaveData`, `playThemeMusic`
-- is-prefixed for boolean checks: `isEventActive`, `shouldTriggerEvent`
+### TypeScript
+- **Classes:** PascalCase (GameManager, InputController)
+- **Methods:** camelCase (placeVinylOnShelf, snapToShelfGrid)
+- **Private methods:** prefixed with underscore or private keyword
+- **Interfaces:** PascalCase (Vinyl, Level, Cell)
 
-**Variables:**
-- camelCase for variables: `vinylCount`, `cratePosition`
-- PascalCase for interfaces and types: `Vinyl`, `Crate`
-- UPPER_CASE for constants: `MAX_VINYL_COUNT`, `PARTICLE_COUNT`
+### Three.js Objects
+- **Groups:** `shelfGroup`, `vinylsGroup`, `carouselGroup`
+- **Meshes:** Named with `.name` property for lookup
+- **Materials:** Descriptive names (coverMaterial, sleeveMaterial)
 
-**React Components:**
-- PascalCase for component names: `VinylCover`, `CrateBox`
-- camelCase for props and state: `vinylData`, `isDragging`
+## Key Locations
 
-## Where to Add New Code
+### Adding New Genres
+1. `src/gameRules.ts` - Add to COLUMN_GENRE_LABELS array
+2. `src/GameManager.ts` - Add case in drawAlbumArt() switch
 
-**New Game Feature:**
-- Primary code: `services/` for logic, `components/` for UI
-- Example: New vinyl type → `services/gameLogic.ts` + `components/VinylCover.tsx`
+### Modifying Vinyl Appearance
+- `src/GameManager.ts:createVinylMesh()` - Vinyl geometry
+- `src/GameManager.ts:drawAlbumArt()` - Cover art generation
 
-**New UI Component:**
-- Implementation: `components/[ComponentName].tsx`
-- Types: Update `types.ts` if needed
-- Styling: Use Tailwind CSS classes
+### Changing Shelf Layout
+- `src/GameManager.ts:buildShelf()` - Shelf geometry
+- `src/GameManager.ts:placeVinylOnShelf()` - Placement logic
 
-**New Game Mode:**
-- Logic: `services/gameLogic.ts`
-- UI: `components/[ModeName]Screen.tsx`
-- Config: Update `constants/gameConfig.ts`
+### UI Modifications
+- `index.html` - DOM structure
+- `src/style.css` - Styling
+- `src/InputController.ts` - UI element references
 
-**New Audio Effect:**
-- Implementation: `services/audio.ts`
-- Integration: Update `App.tsx` imports
-- Usage: Call from component interaction handlers
+## Asset Locations
 
-**New Achievement:**
-- Definition: `constants/achievements.ts`
-- Logic: `services/storage.ts` (check/unlock)
-- UI: `components/AchievementScreen.tsx` and `AchievementToast.tsx`
-
-## Special Directories
-
-**dist/:**
-- Purpose: Built application output
-- Generated: Yes (by Vite build process)
-- Committed: No (in .gitignore)
-
-**ios/:**
-- Purpose: iOS native project for Capacitor
-- Generated: Yes (capacitor create/ios)
-- Committed: Yes (part of project)
-
-**node_modules/:**
-- Purpose: Third-party dependencies
-- Generated: Yes (npm install)
-- Committed: No (in .gitignore)
-
-**public/icons/:**
-- Purpose: App icons for mobile deployment
-- Generated: No (manually added)
-- Committed: Yes
-
----
-
-*Structure analysis: 2026-02-10*
+| Asset Type | Location |
+|------------|----------|
+| Procedural textures | Generated in GameManager.ts via Canvas |
+| 3D models | None (all procedural geometry) |
+| Fonts | System fonts via CSS |
+| Icons | None (text-based UI) |

@@ -1,136 +1,1235 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    
-    <!-- PWA / Mobile Settings -->
-    <meta name="theme-color" content="#1a1110" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Sleevo" />
-    
-    <!-- Links -->
-    <link rel="manifest" href="/manifest.json" />
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png" />
-    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167x167.png" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-    <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-120x120.png" />
-    <link rel="apple-touch-icon" sizes="76x76" href="/icons/icon-76x76.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sleevo - Vinyl Shop Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css">
+  <style>
 
-    <title>Sleevo - Vinyl Shop</title>
-    <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@400;600;800&family=Permanent+Marker&family=Bebas+Neue&family=Space+Mono&display=swap" rel="stylesheet">
-    <style>
-      body {
-        font-family: 'Inter', sans-serif;
-        background-color: #111;
-        color: #f3f4f6;
-        overflow: hidden;
-        /* Prevent pull-to-refresh and rubber-banding on mobile */
-        overscroll-behavior: none;
-        touch-action: none;
-        -webkit-user-select: none;
-        user-select: none;
-        -webkit-tap-highlight-color: transparent;
+    :root {
+      /* 🎨 GLASSMORPHISM PALETTE */
+      --glass-bg: rgba(255, 255, 255, 0.08);
+      --glass-border: rgba(255, 255, 255, 0.18);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      --text-primary: #FFFFFF;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+
+      /* Accent colors (kept for game elements) */
+      --cartoon-orange: #FF7B54;
+      --cartoon-orange-light: #FFB26B;
+      --cartoon-pink: #FF6B9D;
+      --cartoon-blue: #54A0FF;
+      --cartoon-blue-light: #7EC8E3;
+      --cartoon-green: #5FE3A1;
+      --cartoon-purple: #9B59B6;
+      --cartoon-yellow: #FFD93D;
+
+      --font-display: 'Fredoka', 'Nunito', sans-serif;
+      --font-ui: 'Nunito', sans-serif;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      overflow: hidden;
+      background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: var(--text-primary);
+      max-width: 430px;
+      margin: 0 auto;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    #canvas-container {
+      width: 100%;
+      max-width: 430px;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      cursor: grab;
+    }
+
+    #canvas-container:active {
+      cursor: grabbing;
+    }
+
+    #ui-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    /* Removed warm shop atmosphere - using clean glassmorphism */
+
+    /* 🏷️ BUILD BADGE */
+    #build-badge {
+      position: fixed;
+      top: max(12px, env(safe-area-inset-top));
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 40;
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 4px 10px;
+      pointer-events: none;
+    }
+
+    #top-bar,
+    #instruction,
+    #controls,
+    #tutorial {
+      position: absolute;
+      z-index: 8;
+    }
+
+    /* 🎮 HEADER - Logo centered */
+    #header {
+      position: absolute;
+      top: max(12px, env(safe-area-inset-top));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 8;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* 📊 INFO PANELS - Mobile-first semi-transparent over scene */
+    #info-panels {
+      position: absolute;
+      top: max(68px, calc(env(safe-area-inset-top) + 68px));
+      left: max(12px, env(safe-area-inset-left));
+      right: max(12px, env(safe-area-inset-right));
+      z-index: 8;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      max-width: 100%;
+      padding: 0 8px;
+      pointer-events: none;
+    }
+
+    .info-panel {
+      padding: 10px 14px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      box-shadow: var(--glass-shadow);
+      pointer-events: all;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 24px;
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      color: #FFFFFF;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .info-row:not(:last-child) {
+      margin-bottom: 5px;
+      padding-bottom: 5px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .info-label {
+      color: var(--text-secondary);
+      font-size: 10px;
+    }
+
+    .info-value {
+      color: var(--text-primary);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .info-value.highlight {
+      color: var(--cartoon-orange);
+      font-size: 14px;
+    }
+
+    #top-bar {
+      display: none; /* Hide old top bar */
+    }
+
+    .brand-cluster {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      pointer-events: all;
+    }
+
+    /* 🎯 GAME TITLE - "SLEEVO 3D" style from mockup */
+    #game-title {
+      font-family: var(--font-display);
+      font-size: clamp(32px, 7vw, 48px);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      position: relative;
+      display: inline-block;
+    }
+
+    #game-title .title-main {
+      color: var(--cartoon-orange);
+      text-shadow:
+        3px 3px 0 #FFFFFF,
+        6px 6px 0 rgba(255, 123, 84, 0.3);
+    }
+
+    #game-title .title-3d {
+      color: var(--cartoon-green);
+      text-shadow:
+        3px 3px 0 #FFFFFF,
+        6px 6px 0 rgba(95, 227, 161, 0.3);
+      margin-left: 8px;
+    }
+
+    .game-subtitle {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--cartoon-text);
+      margin-top: 4px;
+    }
+
+    .brand-subtitle {
+      display: none;
+    }
+
+    .brand-meta {
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* 🏷️ MODE CHIP - Cute bubble badge */
+    .mode-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 3px solid #FFFFFF;
+      background: linear-gradient(135deg, var(--cartoon-pink) 0%, #E91E63 100%);
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: #FFFFFF;
+      box-shadow:
+        0 3px 0 rgba(233, 30, 99, 0.4),
+        0 4px 8px rgba(45, 27, 78, 0.15);
+      position: relative;
+      overflow: hidden;
+      animation: chipBounce 2s ease-in-out infinite;
+    }
+
+    @keyframes chipBounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+
+    /* 📊 HUD STATS - Fun cards */
+    #hud {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(70px, 1fr));
+      gap: 8px;
+      width: min(350px, 55vw);
+      pointer-events: all;
+    }
+
+    .stat-card {
+      border-radius: 16px;
+      border: 3px solid #FFFFFF;
+      background: var(--cartoon-card);
+      box-shadow:
+        0 4px 0 rgba(45, 27, 78, 0.1),
+        0 5px 12px rgba(45, 27, 78, 0.1);
+      min-height: 56px;
+      padding: 6px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
+      position: relative;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px) scale(1.02);
+    }
+
+    .stat-card.stat-level {
+      background: linear-gradient(135deg, var(--cartoon-yellow) 0%, #FFB800 100%);
+    }
+
+    .stat-card.stat-score {
+      background: linear-gradient(135deg, var(--cartoon-green) 0%, #27AE60 100%);
+    }
+
+    .stat-card.stat-progress {
+      background: linear-gradient(135deg, var(--cartoon-blue) 0%, #2980B9 100%);
+    }
+
+    .stat-card.stat-level,
+    .stat-card.stat-score,
+    .stat-card.stat-progress {
+      border-color: #FFFFFF;
+    }
+
+    .stat-label {
+      font-family: var(--font-display);
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.9);
+      letter-spacing: 0.08em;
+    }
+
+    .stat-value {
+      font-family: var(--font-display);
+      font-size: clamp(22px, 4vw, 28px);
+      font-weight: 700;
+      line-height: 1;
+      color: #FFFFFF;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    #progress {
+      font-size: clamp(18px, 3.5vw, 24px);
+    }
+
+    /* 📝 CENTRAL INSTRUCTION - Glassmorphism pill */
+    #instruction {
+      position: absolute;
+      bottom: 140px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 8;
+      font-family: var(--font-display);
+      font-size: clamp(14px, 3.5vw, 17px);
+      font-weight: 700;
+      color: var(--text-primary);
+      text-align: center;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(15px) saturate(160%);
+      -webkit-backdrop-filter: blur(15px) saturate(160%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 10px 24px;
+      pointer-events: none;
+      max-width: 90%;
+    }
+
+    #pickup-hint {
+      display: none !important;
+    }
+
+    #onboarding {
+      display: none !important;
+    }
+
+    /* 🎯 TARGET ARROW */
+    #target-column-arrow {
+      position: fixed;
+      left: 0;
+      top: 0;
+      transform: translate(-50%, -100%);
+      padding: 8px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--glass-border);
+      background: rgba(84, 160, 255, 0.2);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      z-index: 11;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 120ms ease-out;
+    }
+
+    #target-column-arrow.visible {
+      opacity: 1;
+      animation: targetArrowBounce 500ms ease-in-out infinite alternate;
+    }
+
+    #target-column-arrow .arrow-icon {
+      margin-right: 6px;
+      font-size: 16px;
+      display: inline-block;
+      animation: arrowWiggle 300ms ease-in-out infinite alternate;
+    }
+
+    @keyframes targetArrowBounce {
+      from { transform: translate(-50%, -100%); }
+      to { transform: translate(-50%, -108%); }
+    }
+
+    @keyframes arrowWiggle {
+      from { transform: translateY(0); }
+      to { transform: translateY(4px); }
+    }
+
+    /* 🎛️ CONTROLS - Glassmorphism buttons */
+    #controls {
+      bottom: max(12px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(100% - 24px, 430px);
+      max-width: 430px;
+      min-height: 72px;
+      padding: 10px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      box-shadow: var(--glass-shadow);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      align-items: stretch;
+      gap: 10px;
+      pointer-events: all;
+    }
+
+    .control-btn {
+      flex: 1;
+      min-height: 52px;
+      min-width: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+      transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  background 0.15s ease-out;
+      padding: 8px 12px;
+      position: relative;
+    }
+
+    .control-btn:hover {
+      transform: translateY(-2px) scale(1.02);
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .control-btn:active {
+      transform: translateY(0) scale(0.98);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .control-btn-icon {
+      font-size: 26px;
+      line-height: 1;
+      text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2);
+    }
+
+    .control-btn-label {
+      font-family: var(--font-display);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    /* 📖 TUTORIAL MODAL - Cartoon popup */
+    #tutorial {
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(92vw, 450px);
+      padding: 32px 24px 24px;
+      border-radius: 32px;
+      border: 5px solid #FFFFFF;
+      background: var(--cartoon-card);
+      box-shadow:
+        0 8px 0 rgba(45, 27, 78, 0.1),
+        0 12px 40px rgba(45, 27, 78, 0.2);
+      text-align: center;
+      pointer-events: all;
+      z-index: 100;
+      animation: tutorialPop 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+      overflow: hidden;
+    }
+
+    #tutorial::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255, 123, 84, 0.1) 0%, transparent 30%),
+        radial-gradient(circle at 70% 80%, rgba(84, 160, 255, 0.1) 0%, transparent 30%);
+      pointer-events: none;
+    }
+
+    #tutorial > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    #tutorial.hidden {
+      display: none;
+    }
+
+    #tutorial:not(.hidden) ~ #instruction,
+    #tutorial:not(.hidden) ~ #pickup-hint,
+    #tutorial:not(.hidden) ~ #onboarding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #tutorial h2 {
+      font-family: var(--font-display);
+      font-size: clamp(48px, 12vw, 72px);
+      line-height: 1;
+      color: var(--cartoon-orange);
+      letter-spacing: 0.02em;
+      text-shadow:
+        4px 4px 0 #FFFFFF,
+        8px 8px 0 rgba(255, 123, 84, 0.3);
+      margin-bottom: 8px;
+    }
+
+    #tutorial .subtitle {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--cartoon-purple);
+      margin-bottom: 20px;
+    }
+
+    #tutorial p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--cartoon-text);
+      margin-bottom: 24px;
+      font-weight: 700;
+    }
+
+    #tutorial p strong {
+      color: var(--cartoon-orange);
+    }
+
+    #tutorial button {
+      min-height: 56px;
+      padding: 14px 40px;
+      border: 4px solid #FFFFFF;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--cartoon-green) 0%, #27AE60 100%);
+      color: #FFFFFF;
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.2s ease-out;
+      box-shadow:
+        0 5px 0 rgba(39, 174, 96, 0.4),
+        0 8px 20px rgba(45, 27, 78, 0.2);
+    }
+
+    #tutorial button:hover {
+      transform: translateY(-5px) scale(1.05);
+      box-shadow:
+        0 10px 0 rgba(39, 174, 96, 0.4),
+        0 16px 32px rgba(45, 27, 78, 0.25);
+    }
+
+    #tutorial button:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    @keyframes tutorialPop {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.7);
       }
-      .font-display {
-        font-family: 'Righteous', cursive;
+      60% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.05);
       }
-      .font-marker {
-        font-family: 'Permanent Marker', cursive;
+      100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
       }
-      
-      /* --- TEXTURES --- */
-      
-      /* Brick Wall Background */
-      .bg-bricks {
-        background-color: #1a1110;
-        background-image: 
-          linear-gradient(335deg, rgba(0,0,0,0.3) 23px, transparent 23px),
-          linear-gradient(155deg, rgba(0,0,0,0.3) 23px, transparent 23px),
-          linear-gradient(335deg, rgba(0,0,0,0.3) 23px, transparent 23px),
-          linear-gradient(155deg, rgba(0,0,0,0.3) 23px, transparent 23px);
-        background-size: 58px 58px;
-        background-position: 0px 2px, 4px 35px, 29px 31px, 34px 6px;
+    }
+
+    /* 🏆 LEVEL COMPLETE - Glassmorphism overlay */
+    #level-complete {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      text-align: center;
+      pointer-events: all;
+      z-index: 100;
+      animation: completeFadeIn 400ms ease-out;
+    }
+
+    #level-complete > * {
+      position: relative;
+      z-index: 1;
+      max-width: min(92vw, 380px);
+    }
+
+    .complete-kicker {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      padding: 6px 16px;
+      margin-bottom: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 215, 0, 0.4);
+      background: rgba(255, 215, 0, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      font-family: var(--font-display);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #FFD700;
+    }
+
+    #level-complete.hidden {
+      display: none;
+    }
+
+    #level-complete h2 {
+      font-family: var(--font-display);
+      font-size: clamp(36px, 10vw, 52px);
+      line-height: 1;
+      color: var(--text-primary);
+      letter-spacing: 0.02em;
+      margin-bottom: 4px;
+    }
+
+    .complete-subtitle {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .complete-message {
+      margin: 0 auto 20px;
+      max-width: 300px;
+      font-size: 15px;
+      line-height: 1.5;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .complete-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 0 auto 20px;
+      max-width: min(92vw, 380px);
+    }
+
+    .complete-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 14px 12px;
+      border-radius: 16px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(30px) saturate(180%);
+      -webkit-backdrop-filter: blur(30px) saturate(180%);
+      box-shadow: var(--glass-shadow);
+    }
+
+    .complete-stat-label {
+      font-family: var(--font-display);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      letter-spacing: 0.1em;
+    }
+
+    .complete-stat-value {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 700;
+      line-height: 1;
+      color: #FFD700;
+    }
+
+    .complete-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .complete-note {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      letter-spacing: 0.05em;
+    }
+
+    #btn-restart {
+      min-height: 56px;
+      width: min(100%, 260px);
+      padding: 14px 28px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+      color: #1a1a2e;
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.2s ease-out,
+                  filter 0.2s ease-out;
+      box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+    }
+
+    #btn-restart:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 8px 30px rgba(255, 215, 0, 0.4);
+      filter: brightness(1.1);
+    }
+
+    #btn-restart:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    @keyframes completeFadeIn {
+      0% {
+        opacity: 0;
+      }
+      100% {
+        opacity: 1;
+      }
+    }
+
+    /* ✨ SPARKLES - Cartoon confetti */
+    @keyframes sparkle {
+      0%, 100% {
+        opacity: 0;
+        transform: translate(0, 0) scale(0) rotate(0deg);
+      }
+      50% {
+        opacity: 1;
+        transform: translate(var(--tx), var(--ty)) scale(1) rotate(180deg);
+      }
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: sparkle 1.4s ease-out forwards;
+      z-index: 101;
+    }
+
+    .tutorial-vinyl {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      border: 4px solid #FFFFFF;
+      box-shadow:
+        0 4px 0 rgba(45, 27, 78, 0.15),
+        0 6px 16px rgba(45, 27, 78, 0.15);
+      animation: float 3s ease-in-out infinite;
+      z-index: 0;
+    }
+
+    .tutorial-vinyl:nth-child(1) {
+      top: 8%;
+      left: 6%;
+      background: linear-gradient(135deg, #FF6B9D 0%, #E91E63 100%);
+    }
+
+    .tutorial-vinyl:nth-child(2) {
+      top: 12%;
+      right: 8%;
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #54A0FF 0%, #2980B9 100%);
+      animation-delay: 0.5s;
+    }
+
+    .tutorial-vinyl:nth-child(3) {
+      bottom: 12%;
+      left: 8%;
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #5FE3A1 0%, #27AE60 100%);
+      animation-delay: 1s;
+    }
+
+    .tutorial-vinyl::before {
+      content: '';
+      position: absolute;
+      inset: 35%;
+      border-radius: 50%;
+      background: #2D1B4E;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-10px) rotate(5deg); }
+    }
+
+    /* ============================================
+       📱 MOBILE RESPONSIVE - Cartoon Style
+       ============================================ */
+
+    @media (max-width: 768px) {
+      #header {
+        top: max(10px, env(safe-area-inset-top));
       }
 
-      /* Wood Grain Texture */
-      .bg-wood {
-        background-color: #5c4033;
-        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.15'/%3E%3C/svg%3E"),
-        repeating-linear-gradient(90deg, transparent 0, transparent 2px, rgba(0,0,0,0.1) 3px, transparent 6px);
-      }
-      
-      .bg-wood-dark {
-        background-color: #3e2723;
-        background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.2'/%3E%3C/svg%3E");
+      #game-title {
+        font-size: 28px;
       }
 
-      .vinyl-grooves {
-        background: repeating-radial-gradient(
-          #111 0, 
-          #111 2px, 
-          #222 3px, 
-          #222 4px
-        );
-      }
-      
-      .vinyl-shine {
-        background: linear-gradient(
-          135deg, 
-          rgba(255,255,255,0) 0%, 
-          rgba(255,255,255,0.05) 30%, 
-          rgba(255,255,255,0.2) 50%, 
-          rgba(255,255,255,0.05) 70%, 
-          rgba(255,255,255,0) 100%
-        );
-      }
-      
-      .bg-noise {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        pointer-events: none;
-        z-index: 50;
-        opacity: 0.04;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+      .game-subtitle {
+        font-size: 12px;
       }
 
-      .vignette {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100vw;
-        height: 100vh;
-        pointer-events: none;
-        z-index: 40;
-        background: radial-gradient(circle, rgba(0,0,0,0) 40%, rgba(0,0,0,0.8) 100%);
+      #info-panels {
+        top: max(64px, calc(env(safe-area-inset-top) + 64px));
+        gap: 8px;
+        padding: 0 6px;
       }
 
-      /* Neon Effects */
-      .text-neon-blue {
-        color: #fff;
-        text-shadow: 0 0 5px #00f, 0 0 10px #00f, 0 0 20px #00f, 0 0 40px #0ff;
+      .info-panel {
+        padding: 8px 10px;
+        border-radius: 10px;
       }
-      .text-neon-pink {
-        color: #fff;
-        text-shadow: 0 0 5px #f0f, 0 0 10px #f0f, 0 0 20px #f0f, 0 0 40px #f0f;
+
+      .info-row {
+        font-size: 10px;
+        min-height: 22px;
       }
-      
-      .no-scrollbar::-webkit-scrollbar { display: none; }
-      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-      
-      @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      .animate-spin-slow { animation: spin 4s linear infinite; }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+
+      .info-label {
+        font-size: 9px;
+      }
+
+      .info-value {
+        font-size: 11px;
+      }
+
+      .info-value.highlight {
+        font-size: 13px;
+      }
+
+      #instruction {
+        font-size: 14px;
+        bottom: 130px;
+      }
+
+      #controls {
+        min-height: 72px;
+        padding: 8px;
+        border-radius: 20px;
+        gap: 8px;
+      }
+
+      .control-btn {
+        min-height: 52px;
+        border-radius: 14px;
+      }
+
+      .control-btn-icon {
+        font-size: 22px;
+      }
+
+      .control-btn-label {
+        font-size: 11px;
+      }
+
+      #tutorial {
+        padding: 28px 20px 20px;
+        border-radius: 28px;
+      }
+
+      #tutorial h2 {
+        font-size: 42px;
+      }
+
+      #tutorial .subtitle {
+        font-size: 14px;
+      }
+
+      #tutorial p {
+        font-size: 14px;
+      }
+
+      #tutorial button {
+        min-height: 50px;
+        font-size: 16px;
+      }
+
+      .tutorial-vinyl {
+        width: 44px;
+        height: 44px;
+      }
+
+      .tutorial-vinyl:nth-child(2) {
+        width: 36px;
+        height: 36px;
+      }
+
+      .tutorial-vinyl:nth-child(3) {
+        width: 40px;
+        height: 40px;
+      }
+    }
+
+    @media (max-width: 430px) {
+      #build-badge {
+        font-size: 10px;
+        padding: 5px 10px;
+        border-radius: 14px;
+      }
+
+      #game-title {
+        font-size: 20px;
+      }
+
+      #game-title .title-main {
+        text-shadow:
+          2px 2px 0 #FFFFFF,
+          4px 4px 0 rgba(255, 123, 84, 0.3);
+      }
+
+      #game-title .title-3d {
+        text-shadow:
+          2px 2px 0 #FFFFFF,
+          4px 4px 0 rgba(95, 227, 161, 0.3);
+      }
+
+      .game-subtitle {
+        font-size: 10px;
+      }
+
+      #info-panels {
+        top: max(56px, calc(env(safe-area-inset-top) + 56px));
+        gap: 8px;
+      }
+
+      .info-panel {
+        padding: 8px 10px;
+        border-radius: 12px;
+        border-width: 2px;
+      }
+
+      .info-row {
+        font-size: 10px;
+        min-height: 22px;
+      }
+
+      .info-label {
+        font-size: 9px;
+      }
+
+      .info-value {
+        font-size: 11px;
+      }
+
+      .info-value.highlight {
+        font-size: 13px;
+      }
+
+      #instruction {
+        font-size: 13px;
+        bottom: 120px;
+      }
+
+      #controls {
+        min-height: 64px;
+        padding: 6px;
+        border-width: 3px;
+        border-radius: 16px;
+        gap: 6px;
+      }
+
+      .control-btn {
+        min-height: 46px;
+        border-width: 2px;
+        border-radius: 12px;
+        gap: 6px;
+      }
+
+      .control-btn-icon {
+        font-size: 20px;
+      }
+
+      .control-btn-label {
+        font-size: 10px;
+      }
+
+      #tutorial {
+        padding: 24px 16px 18px;
+        border-radius: 24px;
+        border-width: 4px;
+      }
+
+      #tutorial h2 {
+        font-size: 36px;
+      }
+
+      #level-complete {
+        width: min(94vw, 380px);
+        padding: 24px 16px 18px;
+        border-radius: 24px;
+        border-width: 4px;
+      }
+
+      #level-complete h2 {
+        font-size: 32px;
+      }
+
+      .complete-message {
+        font-size: 13px;
+        max-width: 260px;
+      }
+
+      .complete-stat-value {
+        font-size: 32px;
+      }
+
+      #btn-restart {
+        min-height: 50px;
+        font-size: 14px;
+      }
+
+      .tutorial-vinyl {
+        display: none;
+      }
+    }
+
+    /* 🎮 LANDSCAPE MOBILE */
+    @media (max-height: 500px) and (orientation: landscape) {
+      #top-bar {
+        min-height: 48px;
+        padding: 6px 12px;
+      }
+
+      #game-title {
+        font-size: 18px;
+      }
+
+      #hud {
+        width: min(280px, 45vw);
+      }
+
+      .stat-card {
+        min-height: 38px;
+      }
+
+      #controls {
+        min-height: 56px;
+        width: min(95vw, 400px);
+      }
+
+      .control-btn {
+        min-height: 42px;
+      }
+
+      #tutorial,
+      #level-complete {
+        width: min(90vw, 380px);
+        padding: 20px 16px 16px;
+      }
+
+      #tutorial h2 {
+        font-size: 32px;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="canvas-container" role="application" aria-label="Area di gioco 3D - Usa touch o mouse per trascinare i vinili"></div>
+
+  <div id="ui-overlay">
+    <div id="build-badge" aria-hidden="true">v7.0</div>
+
+    <div id="tutorial" role="dialog" aria-labelledby="tutorial-title" aria-describedby="tutorial-description">
+      <div class="tutorial-vinyl"></div>
+      <div class="tutorial-vinyl"></div>
+      <div class="tutorial-vinyl"></div>
+      <h2 id="tutorial-title"><span style="color: var(--cartoon-orange);">SLEEVO</span> <span style="color: var(--cartoon-green);">3D</span></h2>
+      <div class="subtitle">Vinyl Shop Manager</div>
+      <p id="tutorial-description">Trascina ogni vinile nella colonna dello <strong>stesso colore</strong>. Riempi tutte le colonne!</p>
+      <button id="btn-start" aria-label="Inizia a giocare">GIOCA!</button>
+    </div>
+
+    <!-- HEADER - Logo "SLEEVO 3D" centered -->
+    <div id="header">
+      <div id="game-title" role="heading" aria-level="1">
+        <span class="title-main">SLEEVO</span><span class="title-3d">3D</span>
+      </div>
+      <div class="game-subtitle">Vinyl Shop Manager</div>
+    </div>
+
+    <!-- INFO PANELS - Two columns like mockup -->
+    <div id="info-panels">
+      <!-- LEFT PANEL: Level info, Sort by, Allow gaps -->
+      <div class="info-panel info-panel-left">
+        <div class="info-row">
+          <span class="info-label">Level</span>
+          <span class="info-value highlight" id="level">1</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Sort By:</span>
+          <span class="info-value" id="sort-by">COLOR</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Allow Gaps:</span>
+          <span class="info-value" id="allow-gaps">FALSE</span>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL: Moves, Score, Nice! -->
+      <div class="info-panel info-panel-right">
+        <div class="info-row">
+          <span class="info-label">Moves:</span>
+          <span class="info-value" id="moves">0</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Score:</span>
+          <span class="info-value highlight" id="score">0</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label" id="combo-label">Combo</span>
+          <span class="info-value" id="combo">--</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="pickup-hint" aria-hidden="true">
+      Prendi un vinile
+    </div>
+
+    <div id="onboarding" aria-hidden="true">
+      <div id="onboarding-step-grab" class="onboarding-step active">
+        <span>Trascina nel riquadro dello stesso colore</span>
+      </div>
+    </div>
+
+    <div id="instruction" role="status" aria-live="polite">
+      Drag the records to the shelf!
+    </div>
+
+    <div id="target-column-arrow" aria-hidden="true">
+      <span class="arrow-icon">↓</span><span id="target-column-arrow-label">Target</span>
+    </div>
+
+    <!-- CONTROLS - RESTART and NEXT buttons -->
+    <div id="controls">
+      <button class="control-btn" id="btn-game-restart" aria-label="Restart game">
+        <span class="control-btn-icon">🔄</span>
+        <span class="control-btn-label">Restart</span>
+      </button>
+      <button class="control-btn" id="btn-game-next" aria-label="Next level">
+        <span class="control-btn-icon">▶</span>
+        <span class="control-btn-label">Next</span>
+      </button>
+    </div>
+
+    <div id="level-complete" class="hidden" role="dialog" aria-labelledby="complete-title">
+      <div class="complete-kicker">Perfetto!</div>
+      <h2 id="complete-title">LEVEL COMPLETE</h2>
+      <div class="complete-subtitle">Archivio ordinato</div>
+      <p class="complete-message">
+        Ottimo lavoro! Hai completato il riordino dei vinili!
+      </p>
+      <div class="complete-stats">
+        <div class="complete-stat">
+          <span class="complete-stat-label">Score</span>
+          <span class="complete-stat-value" id="complete-score">0</span>
+        </div>
+        <div class="complete-stat">
+          <span class="complete-stat-label">Errori</span>
+          <span class="complete-stat-value" id="complete-errors">0</span>
+        </div>
+      </div>
+      <div class="complete-actions">
+        <button id="btn-restart" aria-label="Gioca di nuovo">PROSSIMO</button>
+        <div class="complete-note">Meno errori = piu punti!</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
 </html>
