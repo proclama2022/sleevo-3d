@@ -2160,14 +2160,14 @@ export class GameManager {
     this.enhanceVinylMaterialsOnShelf(vinyl);
 
     const vinylId = vinyl.name.replace('vinyl-', '');
-    this.grid[actualRow][col].vinylId = vinylId;
+    this.grid[row][col].vinylId = vinylId;
     this.moves += 1;
 
     // Handle combo system
     const pointsEarned = this.handleComboOnPlace(vinylId, col);
     this.comboBonusScore += pointsEarned;
 
-    (vinyl.userData as any).shelfRow = actualRow;
+    (vinyl.userData as any).shelfRow = row;
     (vinyl.userData as any).shelfCol = col;
     (vinyl.userData as any).isPlaced = true;
     (vinyl.userData as any).isDragging = false;
