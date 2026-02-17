@@ -1,78 +1,83 @@
 # Technology Stack
 
-**Analysis Date:** 2026-02-11
+**Analysis Date:** 2026-02-10
 
 ## Languages
 
 **Primary:**
-- TypeScript 5.9.3 - Core game logic, types, and rendering pipeline
-- JavaScript (ES2020) - Browser runtime execution
+- TypeScript 5.8.2 - Main application code
+- JavaScript ES2022 - React runtime
 
 **Secondary:**
-- HTML5 - UI structure and game container
-- CSS3 - Styling, animations, responsive design with mobile-first approach
+- Swift (iOS) - Native iOS app wrapper
+- HTML/CSS - Web UI components
 
 ## Runtime
 
 **Environment:**
-- Browser (Chrome, Safari, Firefox) - Client-side execution
-- ES2020 module system - Modern JavaScript features
+- Node.js 18.0+ (minimum required)
+- ES Modules (ESM) - Module system
 
 **Package Manager:**
-- npm 10.x - Dependency management
-- Package-lock.json present - Exact dependency versioning
+- npm - Package dependency management
+- Lockfile: Present (package-lock.json)
 
 ## Frameworks
 
 **Core:**
-- Three.js 0.182.0 - 3D rendering engine for game graphics
-- React Three Fiber 9.5.0 - React renderer for Three.js (declarative 3D)
-- React Three Drei 10.7.7 - Collection of helpers for React Three Fiber
+- React 19.2.4 - UI library
+- React DOM 19.2.4 - DOM rendering
 
-**Build:**
-- Vite 7.3.1 - Build tool and development server
-- TypeScript compiler - Type checking and transpilation
-- ESBuild 0.27.3 - Fast bundler for final builds
+**Testing:**
+- Not detected - No testing framework found
+
+**Build/Dev:**
+- Vite 6.2.0 - Build tool and development server
+- TypeScript Compiler 5.8.2 - Type checking and transpilation
 
 ## Key Dependencies
 
 **Critical:**
-- three@0.182.0 - Core 3D rendering engine
-- @react-three/fiber@9.5.0 - React bindings for Three.js
-- @react-three/drei@10.7.7 - Useful abstractions for React Three Fiber
+- @capacitor/core 8.0.2 - Cross-platform mobile app framework
+- @capacitor/ios 8.0.2 - iOS platform support
+- @capacitor/cli 8.0.2 - Capacitor CLI
+- @capacitor/haptics 8.0.0 - Haptic feedback for mobile
+- @capacitor/status-bar 8.0.0 - Status bar management
+
+**UI:**
+- lucide-react 0.563.0 - Icon library
+- Tailwind CSS 3.4.17 - Utility-first CSS framework
+- PostCSS 8.4.49 - CSS post-processing
+- Autoprefixer 10.4.20 - CSS vendor prefixing
 
 **Infrastructure:**
-- vite@7.3.1 - Build tool and dev server
-- typescript@5.9.3 - Type safety and transpilation
-- @types/three@0.182.0 - TypeScript definitions for Three.js
+- Not detected - No backend dependencies
 
 ## Configuration
 
 **Environment:**
-- Environment variables via .env.local
-- iOS-specific Capacitor configuration
-- Mobile-first responsive design with safe area insets
+- Environment variables loaded from `.env.local`
+- GEMINI_API_KEY required for AI features (currently placeholder)
 
 **Build:**
-- vite.config.ts - Build configuration
-- tsconfig.json - TypeScript compiler configuration
-- Target: ES2020, modules: ESNext
-- Strict mode enabled with unused parameter checks
+- Vite configuration for development and production builds
+- Capacitor configuration for mobile deployment
+- TypeScript configuration with ES2022 target
+- Tailwind CSS with custom animations and fonts
 
 ## Platform Requirements
 
 **Development:**
-- Node.js (npm support)
-- Modern browser with ES2020 support
-- Development server on port 7003
+- Node.js 18.0+
+- npm package manager
+- TypeScript compiler
 
 **Production:**
-- Web browser supporting WebGL and ES2020
-- Mobile deployment via Capacitor (iOS app)
-- Responsive design for all screen sizes
-- Touch and mouse input support
+- Web browsers (modern, ES2022 support)
+- iOS mobile devices (via Capacitor)
+- Cross-platform compatibility
 
 ---
 
-*Stack analysis: 2026-02-11*
+*Stack analysis: 2026-02-10*
 ```

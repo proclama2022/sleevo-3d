@@ -1,178 +1,144 @@
-# v1 Requirements
+# Requirements: Sleevo Vinyl Shop Manager v2.0
 
-**Project:** Sleevo UI/UX Redesign
-**Target:** Warm "Vinyl Store Sunday Morning" aesthetic with WCAG AA contrast
+**Defined:** 2026-02-10
+**Core Value:** Every 30-60 seconds, the player must feel successful and want to play "just one more level"
 
----
+## v1 Requirements
 
-## Design System
+Requirements for v2.0 engagement overhaul. Each maps to roadmap phases.
 
-### DESIGN-01: Color Palette
-User can experience warm vintage vinyl store aesthetic through consistent color palette:
-- **Primary Background:** `#24180f` (warm ink - dark roasted coffee)
-- **Secondary Background:** `#3d2c1f` (soft ink - aged paper shadows)
-- **Primary Accent:** `#ff6c3f` (main accent - sunset orange)
-- **Secondary Accent:** `#2db2d7` (ice accent - vintage teal)
-- **Text Primary:** `#fff8f0` (cream white)
+### Campaign Structure & Star System
 
-### DESIGN-02: Typography Scale
-User can read UI text at comfortable sizes:
-- **Display Font:** 'Bebas Neue', 44-60px (headings, game title)
-- **UI Font:** 'Manrope', 12-16px (labels, buttons, HUD)
-- **Monospace:** 'JetBrains Mono', 10-12px (scores, numbers)
+- [ ] **STAR-01**: User can earn 1-3 stars per level based on performance (1★ = complete, 2★ = good accuracy, 3★ = perfect + combo)
+- [ ] **STAR-02**: User sees star criteria before level starts (what performance earns each star tier)
+- [ ] **STAR-03**: User sees real-time progress toward star goals during gameplay
+- [ ] **STAR-04**: System tracks best star rating achieved per level and displays on level select
+- [ ] **STAR-05**: SaveData schema extended to store star progress for all 60 levels
+- [ ] **STAR-06**: Progression service calculates star ratings based on accuracy, combo, time, and mode-specific criteria
 
-### DESIGN-03: 8px Spacing Grid
-User experiences consistent spacing throughout UI:
-- Base unit: 8px
-- Spacing scale: 4px (0.5x), 8px (1x), 16px (2x), 24px (3x), 32px (4x)
+### Level Content & Design
 
-### DESIGN-04: Responsive Breakpoints
-User can play on any mobile device size:
-- **Compact:** <375px (iPhone SE, small Android)
-- **Medium:** 375-414px (iPhone 14, Pixel)
-- **Large:** >414px (iPhone Pro Max, tablets)
+- [ ] **LEVEL-01**: User plays through 60 hand-crafted campaign levels organized into 6 worlds (10 levels each)
+- [ ] **LEVEL-02**: User encounters Boss levels every 10 levels (10, 20, 30, 40, 50, 60) with unique hand-crafted challenges
+- [ ] **LEVEL-03**: Levels use archetypes for variety (speed-focused, accuracy-focused, memory challenge, combo-focused)
+- [ ] **LEVEL-04**: Level difficulty curve is validated through playtesting (start with 10 levels, iterate, then scale to 60)
+- [ ] **LEVEL-05**: Each world introduces new mechanics progressively (World 1: basics, World 2: mystery/dusty, World 3: specials, etc.)
+- [ ] **LEVEL-06**: Boss levels feature unique mechanics not present in standard levels (e.g., "Only gold vinyls", "Memory challenge", "Speed run")
 
-### DESIGN-05: WCAG AA Dark Theme
-User with visual impairments can read all text:
-- Body text contrast: ≥4.5:1
-- Large text contrast: ≥3:1
-- UI components: ≥3:1
+### Visual Feedback & Effects
 
----
+- [ ] **VFX-01**: User sees escalating combo feedback at 3x/5x/10x tiers (particles, text size, screen shake intensity increase)
+- [ ] **VFX-02**: Screen shakes when combo milestones achieved (subtle at 3x, moderate at 5x, intense at 10x)
+- [ ] **VFX-03**: User sees crate completion celebration with lock animation and confetti when crate filled
+- [ ] **VFX-04**: User sees Perfect Clear bonus animation when achieving 3★ + all secondary objectives
+- [ ] **VFX-05**: VFXManager service orchestrates effect queue to prevent conflicts (e.g., multiple simultaneous screen shakes)
+- [ ] **VFX-06**: Particle system optimized for mobile (Canvas-based, limited to 8 particles on mobile, 16 on desktop)
+- [ ] **VFX-07**: Genre-specific particle effects enhanced (Jazz = stars, Disco = stars, Funk/Punk = squares, others = circles)
+- [ ] **VFX-08**: Slow-motion effect triggers for special moments (e.g., perfect placement on final vinyl)
 
-## UI Components
+### Level Progression UI
 
-### COMP-01: VinylCard Component
-User can see vinyl record with clear visual state feedback:
-- **Idle State:** Scale 1, subtle shadow, z-index 10
-- **Dragging State:** Scale 1.05, deep shadow, z-index 100, slight rotation
-- **Placed State:** Scale 1, flattened shadow, z-index 5, locked
+- [ ] **UI-01**: User navigates level select screen showing all 60 levels organized by worlds
+- [ ] **UI-02**: User sees star visualization for each level (0-3 stars earned, grayed if not yet earned)
+- [ ] **UI-03**: User sees lock/unlock states for levels (complete level N to unlock N+1)
+- [ ] **UI-04**: User sees total star counter showing X/180 total stars earned
+- [ ] **UI-05**: Level select screen uses world themes matching game progression (Basement → Store → Expo aesthetics)
+- [ ] **UI-06**: User can replay any unlocked level to improve star rating
+- [ ] **UI-07**: Level select screen shows which levels have boss mechanics (visual indicator)
 
-### COMP-02: ShelfSlot Component
-User can identify valid drop targets:
-- **Empty State:** Subtle dashed border, darker background
-- **Highlight State:** Bright accent border, glow effect, pulse animation
-- **Filled State:** Border matches vinyl accent, shadow cast
-- **Invalid State:** Red/orange border, shake animation, card rejection
+### Cosmetic Progression & Unlocks
 
-### COMP-03: ProgressBar Component
-User can see level completion progress:
-- Visual fill from 0% to 100%
-- Smooth animation (500-800ms) on progress change
-- Current/total display (e.g., "3/8")
+- [ ] **COSM-01**: User unlocks visual themes (Neon, Retro 80s, Minimalist) based on star milestones
+- [ ] **COSM-02**: Theme unlocks are deterministic (X stars = unlock Y theme, no randomness/loot boxes)
+- [ ] **COSM-03**: User discovers Easter egg collection (real famous albums like "Dark Side of the Moon") as rare special vinyls
+- [ ] **COSM-04**: User unlocks background styles (variants beyond default bricks/wood/concrete)
+- [ ] **COSM-05**: User unlocks vinyl cover customization options (skin variants for vinyl appearance)
+- [ ] **COSM-06**: Unlock modal displays when milestone reached with clear visual celebration
+- [ ] **COSM-07**: Collection screen shows discovered Easter eggs with metadata (artist, album, year)
 
-### COMP-04: HUD Component
-User can see game state at all times:
-- **Level indicator:** Current level number
-- **Score:** Animated increment on points earned
-- **Progress:** Current vinyls placed / total required
-- **Moves:** (optional) Remaining moves indicator
+## v2 Requirements
 
-### COMP-05: Touch Feedback
-User can feel responsive touch interactions:
-- Visual ripple or scale effect on touch (100-150ms)
-- Haptic feedback on successful placement
-- Active/pressed states on all interactive elements
+Deferred to future release after core campaign proven sticky.
 
----
+### Daily Challenges
 
-## Micro-Interactions
+- **DAILY-01**: User receives single daily challenge with 2-5 minute completion time
+- **DAILY-02**: Daily challenge participation is optional (no FOMO pressure, no penalties for missing)
+- **DAILY-03**: Daily challenge rewards bonus cosmetic items not available in campaign
+- **DAILY-04**: Challenge rotation system cycles through different constraint types (speed, accuracy, combo, special discs)
+- **DAILY-05**: User sees challenge history showing past completions and streaks (non-punishing)
 
-### MOTION-01: Card Pickup Animation
-User experiences satisfying card pickup:
-- Duration: 200-250ms
-- Easing: `cubic-bezier(0.34, 1.56, 0.64, 1)` (spring overshoot)
-- Transform: Scale up 1.05, slight rotation
+## Out of Scope
 
-### MOTION-02: Card Drop Animation
-User experiences satisfying card placement:
-- Duration: 150-200ms
-- Easing: `cubic-bezier(0.4, 0, 0.2, 1)` (Material standard)
-- Transform: Scale back to 1, settle into slot
+Explicitly excluded features with reasoning.
 
-### MOTION-03: Shelf Hover State
-User sees clear drop target indication:
-- Duration: 150ms (enter), 200-300ms (exit)
-- Easing: `ease-out` (enter), `ease-in` (exit)
-- Visual: Border highlight, subtle glow
-
-### MOTION-04: Score Increment
-User sees points added with celebration:
-- Duration: 300-400ms
-- Easing: `ease-out`
-- Animation: Number count up, scale pulse
-
-### MOTION-05: Combo Popup
-User receives positive feedback for consecutive correct placements:
-- Total duration: 600-800ms
-- Phase 1: Scale in (200ms, `ease-out`)
-- Phase 2: Hold (200-400ms)
-- Phase 3: Fade out (200ms, `ease-in`)
-
----
-
-## Architecture
-
-### ARCH-01: React UI Layer
-UI is built with React components:
-- styled-components for theming
-- ThemeProvider with design tokens
-- Component-scoped styles
-
-### ARCH-02: Game State Bridge
-UI and game state stay synchronized:
-- Zustand store for game state
-- GameBridge service for Two-way communication
-- UI re-renders on state change
-
-### ARCH-03: Canvas Event Layering
-UI overlay doesn't block game interactions:
-- `pointer-events: none` on overlay container
-- `pointer-events: all` on interactive elements only
-- Three.js canvas at z-index 1, UI at z-index 10+
-
----
-
-## Accessibility
-
-### A11Y-01: Touch Targets
-User can tap controls with thumb:
-- Minimum touch target: 44x44px (iOS) / 48x48px (Android)
-- Invisible padding expands visual button hit areas
-- Text labels alongside icons for discoverability
-
-### A11Y-02: Screen Reader Support
-User with screen reader can navigate:
-- ARIA labels on all interactive elements
-- Live regions for score/progress updates
-- Semantic HTML structure
-
----
-
-## Anti-Patterns (Explicit Exclusions)
-
-These are explicitly NOT in scope:
-
-| Anti-Pattern | Why Excluded |
-|--------------|--------------|
-| Blue/purple AI gradients | User explicitly rejected generic AI style |
-| Generic glassmorphism | User explicitly rejected generic AI style |
-| Uniform border-radius | Contradicts vintage aesthetic |
-| Diffuse shadows | Contradicts vintage aesthetic |
-| Material Design icons | Contradicts vintage aesthetic |
-| Auto-complete animations | Removes player agency |
-| Light theme | User explicitly wants dark theme only |
-
----
+| Feature | Reason |
+|---------|--------|
+| Power-ups or paid boosts | Maintain skill-based gameplay, zero pay-to-win philosophy |
+| Randomized loot boxes for cosmetics | Ethical concern: avoid loot box psychology even in non-paid context |
+| Negative random events (blackout, earthquake) | Research shows frustration kills retention; remove or make bonus-only |
+| Real-time multiplayer | Too complex for hypercasual genre, session flexibility more important |
+| Complex skill trees or permanent upgrades | Breaks skill-based purity; progression should be cosmetic only |
+| Story/narrative elements | Focus on pure gameplay loop, not narrative structure |
+| Multiple daily obligations | Aggressive daily systems cause burnout; single optional challenge only |
+| More than 60 campaign levels | Validate engagement with 60 first before considering expansion |
 
 ## Traceability
 
-| Phase | Requirements |
-|-------|--------------|
-| Phase 1: Foundation | DESIGN-01, DESIGN-02, DESIGN-03, DESIGN-04, DESIGN-05, ARCH-01 |
-| Phase 2: Components | COMP-01, COMP-02, COMP-03, COMP-04, COMP-05, A11Y-01, A11Y-02 |
-| Phase 3: Polish | MOTION-01, MOTION-02, MOTION-03, MOTION-04, MOTION-05, ARCH-02, ARCH-03 |
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| STAR-01 | Phase 1 | Pending |
+| STAR-02 | Phase 1 | Pending |
+| STAR-03 | Phase 1 | Pending |
+| STAR-04 | Phase 1 | Pending |
+| STAR-05 | Phase 1 | Pending |
+| STAR-06 | Phase 1 | Pending |
+| LEVEL-04 | Phase 1 | Pending |
+| LEVEL-01 | Phase 2 | Pending |
+| LEVEL-02 | Phase 2 | Pending |
+| LEVEL-03 | Phase 2 | Pending |
+| LEVEL-05 | Phase 2 | Pending |
+| LEVEL-06 | Phase 2 | Pending |
+| VFX-01 | Phase 3 | Pending |
+| VFX-02 | Phase 3 | Pending |
+| VFX-03 | Phase 3 | Pending |
+| VFX-04 | Phase 3 | Pending |
+| VFX-05 | Phase 3 | Pending |
+| VFX-06 | Phase 3 | Pending |
+| VFX-07 | Phase 3 | Pending |
+| VFX-08 | Phase 3 | Pending |
+| UI-01 | Phase 4 | Pending |
+| UI-02 | Phase 4 | Pending |
+| UI-03 | Phase 4 | Pending |
+| UI-04 | Phase 4 | Pending |
+| UI-05 | Phase 4 | Pending |
+| UI-06 | Phase 4 | Pending |
+| UI-07 | Phase 4 | Pending |
+| COSM-01 | Phase 5 | Pending |
+| COSM-02 | Phase 5 | Pending |
+| COSM-03 | Phase 5 | Pending |
+| COSM-04 | Phase 5 | Pending |
+| COSM-05 | Phase 5 | Pending |
+| COSM-06 | Phase 5 | Pending |
+| COSM-07 | Phase 5 | Pending |
+| DAILY-01 | Phase 6 (v2) | Deferred |
+| DAILY-02 | Phase 6 (v2) | Deferred |
+| DAILY-03 | Phase 6 (v2) | Deferred |
+| DAILY-04 | Phase 6 (v2) | Deferred |
+| DAILY-05 | Phase 6 (v2) | Deferred |
+
+**Coverage:**
+- v1 requirements: 34 total
+- Mapped to phases: 34/34 (100%)
+- Unmapped: 0
+
+**Notes:**
+- LEVEL-04 (initial 10 levels for validation) maps to Phase 1 to enable early testing of star system
+- DAILY-* requirements are v2 scope but included in Phase 6 structure for completeness
+- All 34 v1 requirements have explicit phase mapping with no orphans
 
 ---
-
-*Requirements defined: 2026-02-11*
+*Requirements defined: 2026-02-10*
+*Last updated: 2026-02-10 after roadmap creation*

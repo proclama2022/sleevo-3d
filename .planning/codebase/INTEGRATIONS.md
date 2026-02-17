@@ -1,98 +1,93 @@
 # External Integrations
 
-**Analysis Date:** 2026-02-11
+**Analysis Date:** 2026-02-10
 
 ## APIs & External Services
 
-**None detected**: The game uses procedural generation and runs entirely client-side without external API dependencies.
+**AI/LLM:**
+- Google Gemini AI - AI features integration
+  - SDK: Via direct API calls (not detected in current codebase)
+  - Auth: GEMINI_API_KEY environment variable
 
 ## Data Storage
 
 **Databases:**
-- None - Game data is hardcoded in TypeScript files
-- Level data stored locally in `/src/main.ts`
+- LocalStorage - Client-side data persistence
+  - Connection: Browser API
+  - Client: Native browser API
+- Not detected - No external databases
 
 **File Storage:**
-- Local filesystem only - No external file storage
-- Game assets generated procedurally (no external image/audio files)
+- Local filesystem only - No cloud storage integration
 
 **Caching:**
-- Browser cache for built assets
-- No external caching services
+- LocalStorage - Game state and settings persistence
+- Browser cache - Asset caching
 
 ## Authentication & Identity
 
 **Auth Provider:**
-- None - Single-player game without user accounts
-- No authentication required
+- Custom implementation - No external auth service
+  - Implementation: None detected (game likely runs anonymously)
 
 ## Monitoring & Observability
 
 **Error Tracking:**
-- None detected - No external error tracking service
-- Console logging for debugging
+- Not detected - No error tracking service
 
 **Logs:**
-- Browser console for development
-- No external logging infrastructure
+- Console logging - Browser console for debugging
+- Not detected - No structured logging service
 
 ## CI/CD & Deployment
 
 **Hosting:**
-- Static web hosting (can be deployed to any static site host)
-- iOS mobile deployment via Capacitor
+- Vercel - Web deployment platform
+  - Detected via: manifest.json for Vercel deployment
 
 **CI Pipeline:**
-- None detected - Manual build process
-- Package scripts: dev, build, preview
+- Not detected - No automated CI/CD pipeline found
 
 ## Environment Configuration
 
 **Required env vars:**
-- None detected for runtime
-- Development server configurable via vite.config.ts
+- GEMINI_API_KEY - AI service authentication
 
 **Secrets location:**
-- No external secrets required
-- Game is self-contained
+- .env.local file (should be in .gitignore)
 
 ## Webhooks & Callbacks
 
 **Incoming:**
-- None
+- Not detected - No webhook endpoints
 
 **Outgoing:**
-- None
+- Not detected - No external service callbacks
 
-## Mobile Platform Integration
+## Audio System
 
-**iOS (Capacitor):**
-- Capacitor for iOS app wrapping
-- StatusBar and Haptics plugins configured
-- No external SDK integrations
-
-**Mobile APIs:**
-- Device motion sensors (touch input)
-- Device vibration (haptic feedback)
-- No external mobile SDK dependencies
-
-## Audio & Media
-
-**Audio:**
+**Audio Engine:**
 - Web Audio API - Procedural audio generation
-- No external audio files or streaming
-- No external audio services
+  - Purpose: Background music and sound effects generation
+  - Features: Theme-specific music, SFX library, volume controls
+  - Mobile: iOS-compatible with proper context initialization
 
-**Images:**
-- Procedurally generated vinyl covers
-- No external image hosting or CDN
-- Background image via CSS (Google Fonts CDN)
+**External Audio:**
+- Not detected - All audio procedurally generated
 
-## Social Features
+## Game Services
 
-**None detected** - Single-player experience without social integration
+**Local Storage Services:**
+- services/storage.ts - Save/load game state
+- services/audio.ts - Audio management
+- services/gameLogic.ts - Game mechanics
+- Random events system - Dynamic gameplay modifiers
+
+**Client-Side Only:**
+- No external APIs required for core gameplay
+- All game logic runs in browser
 
 ---
 
-*Integration audit: 2026-02-11*
+*Integration audit: 2026-02-10*
 ```

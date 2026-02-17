@@ -1,89 +1,102 @@
-# Sleevo UI/UX Redesign
+# Sleevo Vinyl Shop Manager - v2.0 Engagement Overhaul
 
 ## What This Is
 
-Complete visual redesign of "Sleevo - Vinyl Shop Manager", a 3D puzzle game where players sort vinyl records on shelves. This redesign transforms the UI from a dark, generic AI-style to a warm, authentic "vinyl store Sunday morning" aesthetic that emphasizes vinyl covers and creates clear visual hierarchy for mobile gaming.
+A vinyl record sorting puzzle game that transforms from a monotonous drag-and-drop experience into an addictive hypercasual game with clear goals, satisfying feedback loops, and meaningful progression. Players organize vinyl records by genre into crates, with increasing complexity through hand-crafted levels and special mechanics.
 
 ## Core Value
 
-**Make vinyl covers the visual star** - Players must instantly recognize vinyl genres and feel the warmth of a real record store. Everything else supports this core experience.
+**Every 30-60 seconds, the player must feel successful and want to play "just one more level".**
+
+If the dopamine loop fails, the game fails. All design decisions prioritize frequent micro-victories and satisfying feedback over complexity.
 
 ## Requirements
 
 ### Validated
 
-- ✓ 3D rendering with Three.js — existing
-- ✓ Drag-drop vinyl sorting mechanics — existing
-- ✓ Single row shelf layout (1×8 columns) — existing
-- ✓ Genre-based puzzle logic — existing
-- ✓ Mobile touch support — existing
-- ✓ Audio system with procedural music/SFX — existing
+- ✓ Core drag-and-drop vinyl sorting mechanic — existing
+- ✓ Multiple game modes (Standard, Timed, Sudden Death, Boss, Endless) — existing
+- ✓ Combo system with multipliers — existing
+- ✓ Special disc types (diamond, wildcard, bomb, chain, time) — existing
+- ✓ Audio system with theme-based music and SFX — existing
+- ✓ Theme progression (Basement → Store → Expo) — existing
+- ✓ Collection and achievement systems — existing
+- ✓ Tutorial system — existing
 
 ### Active
 
-- [ ] **UI-01**: Color palette with "vinyl store Sunday morning" theme (5 specific HEX codes)
-- [ ] **UI-02**: Typography scale (3 fonts with specific pixel sizes)
-- [ ] **UI-03**: 8px spacing grid system
-- [ ] **UI-04**: 3 responsive mobile layouts (compact <375px, medium 375-414px, large >414px)
-- [ ] **UI-05**: VinylCard component with 3 states (idle, dragging, placed)
-- [ ] **UI-06**: ShelfSlot component with visual feedback
-- [ ] **UI-07**: ProgressBar component for level progress
-- [ ] **UI-08**: HUD component (score, moves, level info)
-- [ ] **UI-09**: 5 micro-interactions with exact timing (ms) and easing
-- [ ] **UI-10**: WCAG AA contrast compliance (dark theme)
-- [ ] **UI-11**: Design tokens as JSON
-- [ ] **UI-12**: styled-components CSS-in-JS implementation
+- [ ] **Star system (1-3 stars per level)** with clear criteria visible before/during play
+- [ ] **60 hand-crafted campaign levels** organized into 6 worlds (10 levels each)
+- [ ] **Boss levels every 10 levels** with unique hand-crafted challenges
+- [ ] **Sub-goal system** with visible progress during gameplay (crate completion, combo milestones, special disc activations)
+- [ ] **Enhanced visual feedback** (screen shake, slow-mo, particle effects for perfect plays)
+- [ ] **Perfect Clear Bonus** with celebration animation when achieving 3 stars + all objectives
+- [ ] **Level select screen** showing star progress (X/180 total stars)
+- [ ] **Improved combo feedback** with escalating visual effects at 3x/5x/10x tiers
+- [ ] **Crate completion celebration** with lock animation and confetti
+- [ ] **Cosmetic unlock system** (themes: Neon, Retro 80s, Minimalist; backgrounds; vinyl skins)
+- [ ] **Daily challenge system** with special rewards
+- [ ] **Enhanced collection with Easter eggs** (famous real albums as rare finds)
+- [ ] **Mystery vinyl reveal animation** with suspense and card-flip effect
+- [ ] **Settings to disable random events** (or convert all to bonus-only)
 
 ### Out of Scope
 
-- React migration (current: vanilla TypeScript + Three.js) — stay with current stack
-- Light theme — user explicitly wants dark theme only
-- Desktop-first layouts — focus is mobile-first
-- Multi-row shelves — single row mode only
+- Power-ups or paid boosts — Maintain skill-based gameplay, zero pay-to-win
+- Real-time multiplayer — Too complex for hypercasual genre
+- Story/narrative elements — Focus on pure gameplay loop
+- Negative random events (blackout, earthquake) — Remove frustration sources
+- Complex meta-progression (skill trees, upgrades) — Keep progression lightweight
 
 ## Context
 
-### Current Problems to Solve
+### Current Problem
+Game becomes monotonous immediately because:
+1. No clear objectives beyond "finish level" (no stars, no goals)
+2. Weak dopamine loop (no micro-victories every 2-3 minutes)
+3. Zero gameplay variety (all levels feel the same)
+4. Progression without meaning (leveling up changes nothing visible)
+5. Subtle visual feedback (doesn't celebrate player actions enough)
 
-1. **UI troppo scura e poco contrastata** - Vinyls don't stand out well against dark background
-2. **Mobile layout condensato verso il basso** - Elements too small, compressed toward bottom
-3. **Nessuna gerarchia visiva chiara** - HUD, shelves, and vinyls lack clear visual priority
-4. **Design "generico AI"** - Lacks personality and vinyl/vintage theme
+### Hypercasual Best Practices (2026 Research)
+- **Dopamine hits every 2-3 minutes**: Micro-victories trigger repeat play
+- **Lightweight progression**: Visual unlocks without gameplay complexity
+- **Clear goals**: Players know exactly what success looks like
+- **Satisfying feedback**: Visual/audio celebration for every good action
+- **Hand-crafted + procedural mix**: Campaign for progression, endless for replayability
+- **Frequent low-stakes wins**: Three-tier success system (1★/2★/3★)
 
-### Anti-Patterns to Avoid
+### Reference Games
+- **Fill the Fridge**: Level structure, clear objectives, satisfying placement
+- **Candy Crush**: Star system, world progression, level select
+- **Tetris Effect**: Visual juice, feedback intensity
+- **Bejeweled**: Combo satisfaction, celebration animations
 
-- NO gradienti blu/viola standard AI
-- NO glassmorphism generico
-- NO bordi radius uniformi su tutto
-- NO ombre diffuse
-- NO iconography Material Design
-
-### Target Aesthetic
-
-**"Vinyl Store Sunday Morning"** - Warm, vintage, wood tones. The feeling of walking into a cozy record shop on a quiet morning with sunlight streaming through dusty windows.
-
-### Design Deliverables Required
-
-1. **JSON Design Tokens** - Colors, spacing, typography as structured data
-2. **CSS-in-JS (styled-components)** - For each UI component
-3. **ASCII Wireframes** - For each breakpoint layout
-4. **Prioritized Implementation List** - P0/P1/P2 categories
+### Technical Environment
+- React + TypeScript (Vite)
+- Capacitor for iOS deployment
+- Web Audio API for procedural audio
+- Tailwind CSS for styling
+- Existing codebase: 2225 lines App.tsx, modular services
 
 ## Constraints
 
-- **Tech Stack**: React + Three.js + styled-components (as specified in requirements)
-- **Theme**: Dark theme only, but with WCAG AA contrast
-- **Platform**: Mobile-first responsive design
-- **Performance**: Must maintain 60fps on mobile devices
+- **Skill-based only**: No pay-to-win mechanics, no power-up purchases
+- **Mobile-first**: Must work perfectly on iOS/Android with touch controls
+- **Performance**: Maintain 60fps even with enhanced particle effects
+- **Existing codebase**: Build on current architecture, don't rewrite from scratch
+- **Backward compatibility**: Preserve existing saves/progress where possible
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| styled-components over plain CSS | Component-scoped styles, theming support | — Pending |
-| 8px grid system | Consistent spacing, easier responsive | — Pending |
-| Mobile-first breakpoints | Primary use case is mobile gaming | — Pending |
-| WCAG AA contrast | Accessibility while keeping dark theme | — Pending |
+| 60 hand-crafted levels (not infinite random) | Hand-crafted allows controlled difficulty curve and teaching moments; research shows players need structure for engagement | — Pending |
+| 3-star system with visible criteria | Clear goals = players know if they're succeeding; industry standard (Candy Crush, Angry Birds) | — Pending |
+| Remove negative random events | Research shows frustration kills retention; bonus-only events feel rewarding | — Pending |
+| Cosmetic-only unlocks (no gameplay power-ups) | Maintains skill-based purity; progression visible without breaking balance | — Pending |
+| Separate campaign + endless modes | Campaign = structured progression; Endless = score attack for pros | — Pending |
+| Enhance visual feedback significantly | "Juice" is critical for hypercasual retention; every action must feel powerful | — Pending |
 
 ---
-*Last updated: 2026-02-11 after UI/UX redesign initialization*
+*Last updated: 2026-02-10 after initialization*

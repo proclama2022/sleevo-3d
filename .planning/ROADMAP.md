@@ -1,193 +1,148 @@
-# Sleevo UI/UX Redesign - Roadmap
-
-**Project:** Sleevo Vinyl Shop Manager
-**Created:** 2026-02-11
-**Mode:** Standard (5-8 phases)
-**Status:** Phase 1 Complete ✓
-
----
+# Roadmap: Sleevo Vinyl Shop Manager v2.0
 
 ## Overview
 
-| Metric | Value |
-|--------|-------|
-| Total Phases | 5 |
-| Total Requirements | 16 |
-| Est. Complexity | Medium |
+Transform Sleevo from a proof-of-concept into an addictive hypercasual puzzle game by building progression systems in dependency order. First establish star rating and level infrastructure (Phase 1), validate difficulty curve with hand-crafted campaign levels (Phase 2), amplify satisfaction through enhanced visual feedback (Phase 3), enable visible progress tracking through level select UI (Phase 4), add long-term goals via cosmetic unlocks (Phase 5), and finally introduce retention hooks with daily challenges (Phase 6). Each phase delivers a complete, verifiable capability that makes the game more engaging.
 
----
+## Phases
 
-## Phase 1: Foundation & Design System
+- [x] **Phase 1: Campaign Structure & Star System Foundation** - Clear objectives and progress tracking
+- [ ] **Phase 2: Level Design System & Campaign Expansion** - 60 hand-crafted levels with controlled difficulty
+- [ ] **Phase 3: Enhanced Feedback & Visual Effects** - Amplify satisfaction through "juice"
+- [ ] **Phase 4: Level Progression UI** - World map navigation and star visualization
+- [ ] **Phase 5: Cosmetic Progression & Unlocks** - Long-term goals and rewards
+- [ ] **Phase 6: Daily Challenges & Retention Hooks** - Ongoing engagement mechanisms
 
-**Goal:** Establish design tokens, typography, and theming infrastructure for the "vinyl store Sunday morning" aesthetic.
+## Phase Details
 
-**Requirements:** DESIGN-01, DESIGN-02, DESIGN-03, DESIGN-04, DESIGN-05, ARCH-01
+### Phase 1: Campaign Structure & Star System Foundation
+**Goal**: Players can earn 1-3 stars per level based on performance, with clear criteria visible before and during play
 
-**Deliverables:**
-- JSON design tokens file with color palette (5 HEX codes)
-- Typography scale configuration
-- 8px spacing grid system
-- Responsive breakpoint definitions
-- WCAG AA contrast validation
-- styled-components ThemeProvider setup
+**Depends on**: Nothing (first phase)
 
-**Success Criteria:**
-1. All color combinations pass WCAG AA contrast ratios
-2. Typography renders correctly across all breakpoints
-3. Spacing follows 8px grid consistently
-4. Theme object is type-safe and consumable by components
+**Requirements**: STAR-01, STAR-02, STAR-03, STAR-04, STAR-05, STAR-06, LEVEL-04 (initial 10 levels for validation)
 
-**Priority:** P0 - Must complete before any component work
+**Success Criteria** (what must be TRUE):
+  1. User sees star criteria displayed clearly before starting any level (what performance earns 1/2/3 stars)
+  2. User sees real-time progress toward star goals during gameplay (indicators showing current performance vs thresholds)
+  3. User earns star rating (1-3 stars) at level completion based on accuracy, combo, time, and mode-specific criteria
+  4. User sees star rating celebration animation at victory screen showing stars earned
+  5. System persists best star rating for each level across sessions (SaveData tracks all level progress)
 
-**Plans:** 5 plans (Wave 1: 01, 02a, 03a | Wave 2: 02b, 03b)
+**Plans:** 4 plans
 
-- [x] 01-foundation-design-system-01-PLAN.md — Color and spacing design tokens with WCAG AA validation ✓
-- [x] 01-foundation-design-system-02a-PLAN.md — Typography and breakpoint token JSON files ✓
-- [x] 01-foundation-design-system-02b-PLAN.md — Google Fonts import and TypeScript token exports ✓
-- [x] 01-foundation-design-system-03a-PLAN.md — Install dependencies and create theme structure ✓
-- [x] 01-foundation-design-system-03b-PLAN.md — Complete theme, ThemeProvider, GlobalStyles, App.tsx integration ✓
+Plans:
+- [x] 01-01-PLAN.md — Star calculation service + SaveData extension
+- [x] 01-02-PLAN.md — 10 hand-crafted campaign level configs
+- [x] 01-03-PLAN.md — Star UI components (criteria, progress, celebration)
+- [x] 01-04-PLAN.md — Full integration into game flow + verification
 
----
+### Phase 2: Level Design System & Campaign Expansion
+**Goal**: Players experience 60 hand-crafted campaign levels organized into 6 worlds with progressively introduced mechanics
 
-## Phase 2: Core UI Components
+**Depends on**: Phase 1 (need star system to set difficulty targets)
 
-**Goal:** Build table-stakes UI components with vintage styling and accessibility.
+**Requirements**: LEVEL-01, LEVEL-02, LEVEL-03, LEVEL-05, LEVEL-06 (remaining level design requirements)
 
-**Requirements:** COMP-01, COMP-02, COMP-03, COMP-04, A11Y-01
+**Success Criteria** (what must be TRUE):
+  1. User plays through 60 levels organized into 6 worlds of 10 levels each with visible world progression
+  2. User encounters Boss level every 10 levels (10, 20, 30, 40, 50, 60) with unique hand-crafted challenge mechanics
+  3. User experiences level variety through archetypes (speed-focused, accuracy-focused, memory challenge, combo-focused)
+  4. User learns new mechanics progressively as they advance through worlds (World 1 basics, World 2+ introduces specials/mystery/combos)
+  5. Difficulty curve feels natural with no frustrating spikes (validated through completion rate tracking)
 
-**Deliverables:**
-- VinylCard component (3 states: idle, dragging, placed)
-- ShelfSlot component (4 states: empty, highlight, filled, invalid)
-- ProgressBar component with smooth animation
-- HUD component (level, score, progress)
-- Touch target validation (44x44px minimum)
+**Plans**: TBD
 
-**Success Criteria:**
-1. VinylCard states are visually distinct and clear
-2. ShelfSlot provides clear drop target feedback
-3. ProgressBar animates smoothly (500-800ms)
-4. HUD displays game state correctly
-5. All touch targets meet 44x44px minimum
+Plans:
+- [ ] 02-01: TBD
+- [ ] 02-02: TBD
 
-**Priority:** P0 - Core gameplay UI
+### Phase 3: Enhanced Feedback & Visual Effects
+**Goal**: Every player action feels satisfying through layered visual, audio, and haptic feedback
 
-**Plans:** To be created
+**Depends on**: Phase 2 (need playable levels to test feedback on)
 
----
+**Requirements**: VFX-01, VFX-02, VFX-03, VFX-04, VFX-05, VFX-06, VFX-07, VFX-08
 
-## Phase 3: Micro-Interactions & Animation
+**Success Criteria** (what must be TRUE):
+  1. User sees escalating combo feedback as multiplier increases (3x = small particles, 5x = medium shake + larger particles, 10x = intense shake + slow-mo)
+  2. User sees crate completion celebration with lock animation and confetti particles when filling any crate
+  3. User sees Perfect Clear Bonus animation when achieving 3 stars plus all secondary objectives
+  4. User feels tactile feedback (haptics) at key moments on mobile (vinyl drop, combo milestone, level complete)
+  5. Effects remain performant on mobile (60fps maintained, 8 particles max on mobile, 16 on desktop)
 
-**Goal:** Implement satisfying micro-interactions with exact timing specifications.
+**Plans**: TBD
 
-**Requirements:** MOTION-01, MOTION-02, MOTION-03, MOTION-04, MOTION-05
+Plans:
+- [ ] 03-01: TBD
+- [ ] 03-02: TBD
 
-**Deliverables:**
-- Card pickup animation (200-250ms, spring easing)
-- Card drop animation (150-200ms, Material easing)
-- Shelf hover state animation (150ms in, 200-300ms out)
-- Score increment animation (300-400ms)
-- Combo popup animation (600-800ms total)
+### Phase 4: Level Progression UI
+**Goal**: Players can navigate all 60 levels, see star progress, and replay any unlocked level
 
-**Success Criteria:**
-1. Card pickup feels springy and responsive
-2. Card drop settles satisfyingly into slot
-3. Hover states provide instant feedback
-4. Score increment celebrates points earned
-5. Combo popup rewards consecutive correct placements
+**Depends on**: Phase 1 (need star data to display), Phase 2 (need level content to navigate)
 
-**Priority:** P1 - Polish layer
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07
 
-**Plans:** To be created
+**Success Criteria** (what must be TRUE):
+  1. User navigates level select screen showing all 60 levels organized by worlds with world-themed visuals
+  2. User sees star visualization for each level (0-3 stars earned, grayed stars if not yet earned)
+  3. User sees total star counter displaying X/180 total stars earned across all levels
+  4. User identifies Boss levels via visual indicator on level select screen
+  5. User replays any unlocked level to improve star rating (complete level N unlocks level N+1)
 
----
+**Plans**: TBD
 
-## Phase 4: Architecture Integration
+Plans:
+- [ ] 04-01: TBD
+- [ ] 04-02: TBD
 
-**Goal:** Connect React UI layer to existing Three.js game with state synchronization.
+### Phase 5: Cosmetic Progression & Unlocks
+**Goal**: Players unlock visual themes, backgrounds, and vinyl skins based on star milestones
 
-**Requirements:** ARCH-02, ARCH-03, COMP-05
+**Depends on**: Phase 1 (need star tracking for unlock conditions)
 
-**Deliverables:**
-- Zustand store for game state
-- GameBridge service for UI <-> Game communication
-- Canvas event layering (pointer-events configuration)
-- Touch feedback with haptic support
+**Requirements**: COSM-01, COSM-02, COSM-03, COSM-04, COSM-05, COSM-06, COSM-07
 
-**Success Criteria:**
-1. UI and game state stay synchronized
-2. Game interactions work with UI overlay present
-3. Score/progress updates in real-time
-4. Touch feedback feels responsive
+**Success Criteria** (what must be TRUE):
+  1. User unlocks visual themes (Neon, Retro 80s, Minimalist) at deterministic star milestones (e.g., 30 stars = Neon)
+  2. User discovers Easter egg vinyls (real famous albums like "Dark Side of the Moon") during gameplay as rare special vinyls
+  3. User sees unlock celebration modal when reaching milestone with clear visual feedback of new cosmetic earned
+  4. User accesses collection screen showing all discovered Easter eggs with metadata (artist, album, year)
+  5. User customizes game appearance with unlocked themes, backgrounds, and vinyl skins (applies immediately)
 
-**Priority:** P1 - Required for functional game
+**Plans**: TBD
 
-**Plans:** To be created
+Plans:
+- [ ] 05-01: TBD
+- [ ] 05-02: TBD
 
----
+### Phase 6: Daily Challenges & Retention Hooks
+**Goal**: Players receive optional daily challenge with unique rewards to encourage return visits
 
-## Phase 5: Accessibility & Final Polish
+**Depends on**: Phase 2 (need level generation system), Phase 5 (daily rewards are bonus cosmetics)
 
-**Goal:** Ensure full accessibility compliance and mobile optimization.
+**Requirements**: (v2 requirements - DAILY-01 through DAILY-05 deferred but included for structure)
 
-**Requirements:** A11Y-02, responsive testing, performance validation
+**Success Criteria** (what must be TRUE):
+  1. User sees single daily challenge card in main menu showing challenge constraint and reward
+  2. User completes daily challenge in 2-5 minutes with unique constraint (speed, accuracy, combo, special discs)
+  3. User earns bonus cosmetic item not available in campaign upon daily challenge completion
+  4. User views challenge history showing past completions and current streak (non-punishing visualization)
+  5. Daily challenge rotation cycles deterministically based on date seed (same challenge for all players on same day)
 
-**Deliverables:**
-- Screen reader support (ARIA labels, live regions)
-- Multi-device testing (compact/medium/large)
-- Performance profiling (60fps maintained)
-- Bundle size optimization
+**Plans**: TBD
 
-**Success Criteria:**
-1. Screen reader navigates all UI elements
-2. Game works on all target device sizes
-3. Animations maintain 60fps on mobile
-4. Bundle size increase <50KB
+Plans:
+- [ ] 06-01: TBD
 
-**Priority:** P2 - Quality assurance
+## Progress
 
-**Plans:** To be created
-
----
-
-## Dependency Graph
-
-```
-Phase 1 (Foundation) ————————┐
-    ↓                          │
-Phase 2 (Components) ────────┤
-    ↓                          │
-Phase 3 (Interactions)         │
-    ↓                          ↓
-Phase 4 (Integration) ←────────┘
-    ↓
-Phase 5 (Polish)
-```
-
----
-
-## Risk Mitigation
-
-| Risk | Mitigation | Phase |
-|------|------------|-------|
-| Vintage overload | 80/20 rule, restraint principles | Phase 1 |
-| Contrast failure | WCAG validation in design tokens | Phase 1 |
-| AI gradient hangover | Code review checklist | Phase 2 |
-| Touch targets too small | Automated size testing | Phase 2 |
-| Canvas event blocking | pointer-events configuration | Phase 4 |
-| Performance drops | Lighthouse >90, 60fps requirement | Phase 5 |
-
----
-
-## Next Steps
-
-1. **Now:** Run `/gsd:execute-phase 01-foundation-design-system` to execute Phase 1 plans
-2. **After Phase 1:** Proceed to Phase 2 component development
-3. **Recommended:** Use `/clear` between phases for fresh context
-
----
-
-*Roadmap created: 2026-02-11*
-*Phase 1 planned: 2026-02-11*
-*Phase 1 revised: 2026-02-11 (split into 5 plans with wave structure)*
-*Total requirements mapped: 16*
-*All v1 requirements covered: ✓*
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Campaign Structure & Star System Foundation | 4/4 | ✓ Complete | 2026-02-10 |
+| 2. Level Design System & Campaign Expansion | 0/TBD | Not started | - |
+| 3. Enhanced Feedback & Visual Effects | 0/TBD | Not started | - |
+| 4. Level Progression UI | 0/TBD | Not started | - |
+| 5. Cosmetic Progression & Unlocks | 0/TBD | Not started | - |
+| 6. Daily Challenges & Retention Hooks | 0/TBD | Not started | - |

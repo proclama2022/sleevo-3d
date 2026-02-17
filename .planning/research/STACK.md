@@ -1,346 +1,324 @@
-# Technology Stack
+# Stack Research
 
-**Project:** Sleevo UI/UX Redesign - Mobile Game UI with Design Tokens
-**Researched:** 2026-02-11
-**Confidence:** HIGH
+**Domain:** Hypercasual Mobile Game Development (React/TypeScript)
+**Researched:** 2026-02-10
+**Confidence:** MEDIUM-HIGH
 
 ## Recommended Stack
 
-### Core Framework
+### Core Technologies
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| **styled-components** | ^6.0.0 | CSS-in-JS styling library for React components | Native TypeScript support (v6+), industry standard for React apps, excellent theme prop/context API, zero-runtime CSS injection overhead when using babel plugin, supports CSS nesting and all modern CSS features |
-| **React** | ^18.3.0 | UI library for component rendering | Required for styled-components, current project already uses React Three.js (@react-three/fiber), enables component-based architecture for game UI |
-| **@types/react** | ^18.3.0 | TypeScript type definitions for React | Required for type-safe React development |
+| React | 19.2.4 (current) | UI framework | Already in use. React 19 provides performance improvements for game UIs with automatic batching and concurrent features |
+| TypeScript | 5.8.2 (current) | Type safety | Already in use. Enforces stricter type checks, critical for complex game state management |
+| Vite | 6.2.0 (current) | Build tool | Already in use. 40x faster builds than CRA, optimized tree-shaking, instant HMR. Uses esbuild for dev and Rollup for production |
+| Tailwind CSS | 3.4.17 (current) | Styling | Already in use. Rapid UI development, excellent for game UI components, minimal runtime overhead |
+| Capacitor | 8.0.2 (current) | Native runtime | Already in use. Cross-platform iOS/Android support with native APIs (haptics, status bar) |
 
-### Design Token Management
-
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| **W3C Design Tokens Format** | (spec) | JSON-based token schema for design system values | Industry standard format (2023), platform-agnostic, supported by major tools (Figma, Adobe XD), uses `$value` and `$type` properties for type-safe tokens, supports composite tokens (typography, shadows, gradients) |
-| **style-dictionary** | ^3.0.0 | Build tool to transform design tokens to platform-specific code | Transforms JSON tokens to CSS variables, Sass variables, JS objects, etc., supports multiple output formats, extensible via custom formats, industry standard for token pipeline |
-
-### Build & Development Tools
-
-| Tool | Version | Purpose | Notes |
-|------|---------|---------|-------|
-| **babel-plugin-styled-components** | ^2.0.0 | Transpilation, SSR support, minification, debugging | Adds displayName to components, minifies CSS, enables dead code elimination with `pure: true`, required for production builds |
-| **@swc/plugin-styled-components** | ^1.0.0 | Faster alternative to Babel for SWC users | Drop-in replacement for babel-plugin, significantly faster compilation time, same feature set |
-| **postcss-styled-syntax** | ^1.0.0 | Stylelint support for styled-components CSS | Enables stylelint to parse and validate CSS within template literals, required for CSS linting in styled-components projects |
-| **stylelint** | ^15.0.0 | Modern CSS linter | Use v15+ with `postcss-styled-syntax`, supports latest CSS features, better error reporting |
-
-### Mobile Performance Libraries
+### Game State Management
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| **react-native-web** | ^0.18.0 | Mobile gesture handling and touch events | If adding advanced mobile gestures (swipe, long-press) beyond basic click/touch |
-| **use-gesture** | ^10.3.0 | Advanced mouse/touch gesture hooks | For complex drag-and-drop beyond HTML5 DnD, already used in current project for canvas interactions |
+| Zustand | ^5.0.11 | Global game state | **RECOMMENDED** - Simple, fast (0 dependencies), 3KB bundle. Perfect for level progression, combos, scores. React 18+ required (v5) |
+| Context API + useReducer | (built-in) | Feature-level state | For isolated features like settings modals, theme preferences. Use before adding external state library |
+
+**Rationale:** Start with Context API for simple state. Graduate to Zustand when you need:
+- Complex interdependent state (combo system + level progression + achievements)
+- Performance-critical updates (60fps animations + state changes)
+- Minimal re-renders across many components
+
+**Alternatives Considered:**
+- Redux Toolkit: Overkill for hypercasual games. Too much boilerplate.
+- Jotai: Excellent for atomic state (4KB, TypeScript-first), but Zustand's centralized approach is simpler for game logic
+- Context alone: Will cause re-render issues with frequent game state updates
+
+### Animation & Visual Effects
+
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| GSAP | ^3.14.2 | Core animations | **RECOMMENDED** - Consistent 60fps even with complex sequences. Best for screen shake, slow-mo, combo animations. Zero React lifecycle overhead |
+| Motion (Framer Motion) | Latest | React-specific animations | UI transitions, modal animations, layout animations. Use for declarative animations tied to React state |
+| CSS Transitions | (native) | Simple UI effects | Button hovers, basic fades. Zero JavaScript overhead |
+
+**Rationale:** **Use GSAP as your primary animation engine** for game mechanics. GSAP maintains 60fps with thousands of simultaneous tweens, while Motion drops to ~45fps with multiple animations. Motion is great for UI layers but not core game loops.
+
+**Key Performance Difference:**
+- GSAP: Handles complex animation orchestration without frame loss
+- Motion: Excellent for simple animations, struggles with simultaneous complex sequences due to React lifecycle
+
+### Particle Systems & Effects
+
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| @tsparticles/react | ^3.0.0 | Particle effects | Confetti on level complete, vinyl dust particles, combo explosions |
+| Custom Canvas | (native) | Lightweight effects | Simple particle bursts. Lower overhead than full library |
+
+**Note:** @tsparticles/react v3 was last published 2 years ago. Consider using lightweight custom canvas-based particles for performance-critical mobile scenarios.
+
+### Supporting Libraries
+
+| Library | Version | Purpose | When to Use |
+|---------|---------|---------|-------------|
+| use-sound | ^4.0.3 | SFX management | Alternative to existing Web Audio API. Wraps Howler.js for simple sound effects (~10KB) |
+| screen-shake | ^1.0.0 | Screen shake effects | Customizable screen shake. Alternative: implement with GSAP transforms |
+| @capacitor/haptics | 8.0.0 (installed) | Tactile feedback | Already installed. Use for vinyl drops, combos, level complete |
+
+### Development Tools
+
+| Tool | Purpose | Notes |
+|------|---------|-------|
+| @vitejs/plugin-react | Build plugin | Already using v5. Consider @vitejs/plugin-react-swc for faster compilation with Rust-based SWC |
+| TypeScript ESLint | Linting | Enforce strict types for game state. Prevent runtime errors |
+| Prettier | Formatting | Consistent code style across team |
 
 ## Installation
 
+### State Management
 ```bash
-# Core styling and React
-npm install styled-components@^6.0.0 react@^18.3.0
-npm install -D @types/react@^18.3.0
+npm install zustand
+```
 
-# Design token pipeline
-npm install -D style-dictionary@^3.0.0
+### Animation & Effects
+```bash
+# Primary animation engine
+npm install gsap
 
-# Build tooling (choose Babel or SWC, not both)
-npm install -D babel-plugin-styled-components@^2.0.0
-# OR
-npm install -D @swc/core@^1.10.0 @swc/plugin-styled-components@^1.0.0
+# Optional: UI animations
+npm install motion
 
-# CSS linting (optional but recommended)
-npm install -D stylelint@^15.0.0 stylelint-config-standard postcss-styled-syntax@^1.0.0
+# Optional: Particles
+npm install @tsparticles/react @tsparticles/engine
+```
 
-# If not already installed for Three.js
-npm install react@^18.3.0 react-dom@^18.3.0
+### Audio (Alternative to Web Audio API)
+```bash
+# Optional: If replacing custom Web Audio implementation
+npm install use-sound
+```
+
+### Performance Optimization
+```bash
+# Optional: Faster builds with SWC
+npm install -D @vitejs/plugin-react-swc
 ```
 
 ## Alternatives Considered
 
-| Category | Recommended | Alternative | Why Not |
-|----------|-------------|-------------|---------|
-| **CSS-in-JS** | styled-components | **vanilla-extract** | Too manual for large design systems, no theme prop API built-in, more boilerplate |
-| | | | **emotion** | Simpler API but less mature theme ecosystem, smaller community, fewer resources for game UI patterns |
-| | | | **CSS Modules** | Requires bundler setup, harder to theme dynamically, no runtime theme switching without build step |
-| **Design Token Build** | style-dictionary | **theo** | Abandoned project (last release 2019), not maintained for modern CSS features |
-| | | | **Diez** | Abandoned project (2018), no TypeScript support, doesn't follow W3C spec |
+| Recommended | Alternative | When to Use Alternative |
+|-------------|-------------|-------------------------|
+| Zustand | Jotai | If you need fine-grained reactivity and Suspense integration. Better for rapidly changing localized state |
+| GSAP | Motion only | If animations are purely UI-driven and tied to React state changes. Not suitable for 60fps game mechanics |
+| @tsparticles/react | Custom Canvas | **Use custom canvas** for mobile performance. tsparticles v3 hasn't been updated in 2 years |
+| Zustand | Context API | Keep Context for isolated features. Use Zustand only when Context causes performance issues |
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| **@types/styled-components** | No longer needed (v6+ provides native types) | Remove from package.json, use built-in types |
-| **styled-components/macro** | Removed in v6.1, unnecessary bloat | Use standard `styled-components` imports with babel plugin |
-| **Babel preset-env** for styled-components | Unnecessary in modern setups | Use specific babel plugins or SWC instead |
-| **inline styles** for themed components | Breaks theme prop system, harder to maintain | Use styled-components with ThemeProvider |
-| **CSS-in-JS objects** (e.g., `style={{ color: 'red' }}`) | Harder to theme, no nesting, no pseudo-selectors | Use styled-components for all themed components |
+| Redux Toolkit | Too much boilerplate for hypercasual games. Overkill for simple state | Zustand for global state, Context for features |
+| react-spring | Good for physics-based animations, but GSAP has better performance for complex game sequences | GSAP for game mechanics, Motion for UI |
+| Old animation libs | Libraries like react-motion (archived), Animated (React Native legacy) are deprecated | Motion or GSAP |
+| setState in game loops | Calling setState every frame (60fps) will tank performance | Use refs + requestAnimationFrame for game engine, sync to React state minimally |
+| Particles.js | Deprecated. Replaced by tsparticles v3 | @tsparticles/react or custom canvas |
 
-## Stack Patterns by Variant
+## Stack Patterns by Use Case
 
-**If using Vite:**
-- Use `@vitejs/plugin-react` with Babel for styled-components plugin
-- Configure `styled-components` plugin in vite.config.js
-- Add `@types/styled-components` to `vite.config.ts` types for development (optional)
+**Game Loop & Core Mechanics:**
+```typescript
+// Use refs + requestAnimationFrame, NOT React state
+const gameStateRef = useRef({ position: 0, velocity: 0 });
 
-**If using Webpack:**
-- Use `babel-loader` with `babel-plugin-styled-components`
-- Enable `pure: true` for production builds (dead code elimination)
+useEffect(() => {
+  let frameId: number;
 
-**If using SWC (Next.js, Remix, etc.):**
-- Use `@swc/plugin-styled-components` instead of babel-plugin
-- Significantly faster build times (10x+ faster than Babel)
+  const gameLoop = (timestamp: number) => {
+    // Update game state (refs, not setState)
+    gameStateRef.current.position += gameStateRef.current.velocity;
 
-**If targeting mobile only:**
-- Add `user-scalable=no` to viewport meta tag (already present)
-- Use touch-friendly tap targets (min 44x44px per WCAG)
-- Test on real devices (iOS Safari has different styled-components hydration behavior)
+    // Render with GSAP or canvas
+    gsap.to(element, { x: gameStateRef.current.position });
+
+    frameId = requestAnimationFrame(gameLoop);
+  };
+
+  frameId = requestAnimationFrame(gameLoop);
+  return () => cancelAnimationFrame(frameId);
+}, []);
+```
+
+**State Management:**
+```typescript
+// Zustand store for game state
+import { create } from 'zustand';
+
+interface GameState {
+  level: number;
+  score: number;
+  combo: number;
+  incrementCombo: () => void;
+  resetCombo: () => void;
+}
+
+const useGameStore = create<GameState>((set) => ({
+  level: 1,
+  score: 0,
+  combo: 0,
+  incrementCombo: () => set((state) => ({ combo: state.combo + 1 })),
+  resetCombo: () => set({ combo: 0 }),
+}));
+```
+
+**Animations:**
+```typescript
+// GSAP for game mechanics
+import { gsap } from 'gsap';
+
+// Screen shake on combo
+gsap.to(screenRef.current, {
+  x: '+=10',
+  yoyo: true,
+  repeat: 5,
+  duration: 0.05,
+  ease: 'power2.inOut'
+});
+
+// Slow motion effect
+gsap.globalTimeline.timeScale(0.3); // 30% speed
+setTimeout(() => gsap.globalTimeline.timeScale(1), 500);
+```
+
+**Haptic Feedback:**
+```typescript
+import { Haptics, ImpactStyle } from '@capacitor/haptics';
+
+// On vinyl drop
+await Haptics.impact({ style: ImpactStyle.Medium });
+
+// On combo milestone
+await Haptics.notification({ type: NotificationType.Success });
+```
+
+## Performance Patterns
+
+### Mobile 60fps Requirements
+
+1. **Game Engine Architecture:**
+   - Keep game logic OFF React re-renders
+   - Use refs for per-frame state
+   - Sync to React state only for UI updates (score display, level complete)
+
+2. **Animation Best Practices:**
+   - Avoid animating during React render cycles
+   - Use GSAP's timeline for complex sequences
+   - Leverage CSS transforms (translateX/Y, scale, rotate) - GPU accelerated
+
+3. **State Update Strategy:**
+   ```typescript
+   // BAD: setState every frame
+   const [position, setPosition] = useState(0);
+   useEffect(() => {
+     const gameLoop = () => {
+       setPosition(p => p + 1); // 60 re-renders per second!
+     };
+   });
+
+   // GOOD: Refs for game loop, state for UI
+   const positionRef = useRef(0);
+   const [displayScore, setDisplayScore] = useState(0);
+
+   useEffect(() => {
+     const gameLoop = () => {
+       positionRef.current += 1;
+
+       // Update UI state only on milestones
+       if (positionRef.current % 100 === 0) {
+         setDisplayScore(positionRef.current);
+       }
+     };
+   });
+   ```
+
+4. **Bundle Size Optimization:**
+   - Vite automatically tree-shakes unused code
+   - Use dynamic imports for heavy libraries
+   - Consider replacing @tsparticles (large) with custom canvas for critical mobile performance
+
+5. **Asset Loading:**
+   - Preload critical assets (vinyl covers, UI elements)
+   - Use WebP for images (better compression)
+   - Lazy load non-critical screens (achievements, settings)
 
 ## Version Compatibility
 
-| Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| styled-components@^6.0.0 | React@^16.8.0 | Dropped support for React < 16.8 |
-| styled-components@^6.0.0 | stylis@^4.0.0 | Required upgrade from stylis@^3.0.0 for v6 |
-| babel-plugin-styled-components@^2.0.0 | Babel@^7.0.0 | May work with older babel but not tested |
-| @swc/plugin-styled-components@^1.0.0 | @swc/core@^1.10.0 | Minimum SWC core version |
+| Package | Compatible With | Notes |
+|---------|-----------------|-------|
+| zustand@5.x | react@18+ | Dropped React <18 support, uses native useSyncExternalStore |
+| gsap@3.14.x | All modern frameworks | Framework-agnostic, works with React 19 |
+| @tsparticles/react@3.x | react@18+ | Last published 2 years ago - verify maintenance status |
+| @capacitor/haptics@8.x | @capacitor/core@8.x | Match major versions |
 
-## Integration with Existing Three.js Canvas
+## Mobile-First Considerations
 
-**Pattern: Overlay UI on top of WebGL canvas**
+### iOS Performance
+- Use Capacitor Haptics API (already installed)
+- Initialize audio context on user interaction (iOS requirement)
+- Test on lower-end devices (iPhone SE) for 60fps validation
 
-```typescript
-// src/App.tsx (new file)
-import { ThemeProvider } from 'styled-components';
-import { theme } from './design-tokens/theme';
-import { CanvasOverlay } from './components/CanvasOverlay';
-import { TopBar } from './components/TopBar';
-import { Controls } from './components/Controls';
+### Android Performance
+- Test gesture responsiveness with chrome://inspect
+- Verify haptics work across device manufacturers
+- Consider reduced particle counts on mid-tier devices
 
-const App: React.FC = () => (
-  <ThemeProvider theme={theme}>
-    <CanvasOverlay>
-      {/* Three.js canvas renders here via @react-three/fiber */}
-      <TopBar />
-      <Controls />
-    </CanvasOverlay>
-  </ThemeProvider>
-);
-```
+### Bundle Size Targets
+- **Initial load:** <500KB (gzipped)
+- **Runtime assets:** <2MB total
+- **Per-animation library:** <15KB (Motion ~30KB, GSAP ~50KB, Zustand ~3KB)
 
-**Key Principles:**
-- Three.js canvas (`@react-three/fiber`'s `<Canvas>`) renders in background
-- UI overlay uses `position: fixed` with higher `z-index` (10+)
-- UI overlay has `pointer-events: none` on container, `pointer-events: all` on interactive elements
-- ThemeProvider wraps entire app, but styled-components for UI only (not 3D objects)
-- 3D objects use Three.js materials, not styled-components
-
-**Performance Considerations:**
-- styled-components generates CSS classes at runtime (no style recalc on props change)
-- Use transient props (`$prefix`) for styling props that shouldn't reach DOM
-- Declare styled components outside render (not inline) to avoid recreation
-- Use `css` helper for style composition (prevents unnecessary component creation)
-
-## 8px Grid System Implementation
-
-**Using design tokens for spacing:**
-
-```json
-// design-tokens/spacing.json
-{
-  "spacing": {
-    "$type": "dimension",
-    "base": {
-      "$value": "8px",
-      "$description": "Base spacing unit (8px grid)"
-    },
-    "xs": { "$value": "4px", "$description": "Half base unit" },
-    "sm": { "$value": "8px", "$description": "1x base unit" },
-    "md": { "$value": "16px", "$description": "2x base unit" },
-    "lg": { "$value": "24px", "$description": "3x base unit" },
-    "xl": { "$value": "32px", "$description": "4x base unit" }
-  }
-}
-```
-
-**Transformed to CSS variables by style-dictionary:**
-
-```css
-:root {
-  --spacing-base: 8px;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-xl: 32px;
-}
-```
-
-**Used in styled-components:**
-
-```typescript
-import styled from 'styled-components';
-
-const StatCard = styled.div`
-  padding: var(--spacing-md);
-  gap: var(--spacing-sm);
-  border-radius: calc(var(--spacing-base) * 2);
-`;
-```
-
-## Dark Theme with WCAG AA Contrast
-
-**Design token structure for colors:**
-
-```json
-// design-tokens/color.json
-{
-  "color": {
-    "background": {
-      "primary": {
-        "$value": "#1a1a1a",
-        "$type": "color",
-        "$description": "Primary background (dark gray)",
-        "$extensions": {
-          "wcag-contrast": "Passes AA with white text (14.1:1)"
-        }
-      },
-      "secondary": {
-        "$value": "#2d2d2d",
-        "$type": "color",
-        "$description": "Secondary background (lighter gray)"
-      }
-    },
-    "text": {
-      "primary": {
-        "$value": "#ffffff",
-        "$type": "color",
-        "$description": "Primary text (white)"
-      },
-      "secondary": {
-        "$value": "#b0b0b0",
-        "$type": "color",
-        "$description": "Secondary text (light gray, 12.6:1 on dark bg)"
-      }
-    },
-    "accent": {
-      "primary": {
-        "$value": "#ff6c3f",
-        "$type": "color",
-        "$description": "Primary accent (orange, 4.5:1 on dark)",
-        "$extensions": {
-          "wcag-contrast": "Passes AA on dark backgrounds"
-        }
-      }
-    }
-  }
-}
-```
-
-**Theme consumption in styled-components:**
-
-```typescript
-// src/design-tokens/theme.ts
-import { DefaultTheme } from 'styled-components';
-
-interface Theme {
-  colors: {
-    background: {
-      primary: string;
-      secondary: string;
-    };
-    text: {
-      primary: string;
-      secondary: string;
-    };
-    accent: {
-      primary: string;
-    };
-  };
-  spacing: {
-    base: string;
-    sm: string;
-    md: string;
-    lg: string;
-  };
-}
-
-export const theme: Theme = {
-  colors: {
-    background: {
-      primary: '#1a1a1a',
-      secondary: '#2d2d2d',
-    },
-    text: {
-      primary: '#ffffff',
-      secondary: '#b0b0b0',
-    },
-    accent: {
-      primary: '#ff6c3f',
-    },
-  },
-  spacing: {
-    base: '8px',
-    sm: '8px',
-    md: '16px',
-    lg: '24px',
-  },
-};
-
-// Type assertion for DefaultTheme
-export default theme as DefaultTheme<Theme>;
-```
-
-**Maintaining 60fps on mobile:**
-
-1. **Avoid layout thrashing**
-   - Use `transform` and `opacity` for animations (GPU-accelerated)
-   - Avoid animating `width`, `height`, `top`, `left`
-   - Use `will-change: transform` sparingly (only on animating elements)
-
-2. **Reduce styled-components overhead**
-   - Enable `pure: true` in babel plugin for dead code elimination
-   - Use `css` helper for shared styles (prevents duplicate classes)
-   - Declare styled components outside render functions
-
-3. **Optimize Three.js + UI layering**
-   - UI overlay uses `pointer-events: none` on container
-   - Interactive UI elements use `pointer-events: all`
-   - Three.js canvas sits behind (z-index: 1)
-   - UI overlay sits in front (z-index: 10+)
-
-4. **CSS containment**
-   - Use `isolation: isolate` on UI overlay container
-   - Prevents UI styles from leaking to Three.js canvas
-   - Prevents Three.js styles from affecting UI
-
-```typescript
-const UIOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  isolation: isolate;
-  pointer-events: none;
-
-  > * {
-    pointer-events: all;
-  }
-`;
-```
+### Performance Budget
+- Startup time: <1.5s on mobile
+- Frame rate: Consistent 60fps during gameplay
+- Time to interactive: <2s
+- Largest Contentful Paint: <2.5s
 
 ## Sources
 
-- https://styled-components.com/docs — Main documentation (HIGH confidence)
-- https://styled-components.com/docs/advanced#theming — ThemeProvider and theming API (HIGH confidence)
-- https://styled-components.com/docs/faqs — Migration guides and best practices (HIGH confidence)
-- https://styled-components.com/docs/tooling — Babel/SWC plugin configuration (HIGH confidence)
-- https://design-tokens.github.io/community-group/format/ — W3C Design Tokens specification (HIGH confidence)
-- Current project's package.json and index.html — Existing vanilla CSS/HTML setup (HIGH confidence)
+**State Management:**
+- [State Management in 2025: When to Use Context, Redux, Zustand, or Jotai](https://dev.to/hijazi313/state-management-in-2025-when-to-use-context-redux-zustand-or-jotai-2d2k) - MEDIUM confidence
+- [Announcing Zustand v5](https://pmnd.rs/blog/announcing-zustand-v5) - HIGH confidence (official)
+- [Top 5 React State Management Tools Developers Actually Use in 2026](https://www.syncfusion.com/blogs/post/react-state-management-libraries) - MEDIUM confidence
+
+**Animation Libraries:**
+- [GSAP vs. Framer Motion: A Comprehensive Comparison](https://tharakasachin98.medium.com/gsap-vs-framer-motion-a-comprehensive-comparison-0e4888113825) - MEDIUM confidence
+- [GSAP vs Motion: A detailed comparison](https://motion.dev/docs/gsap-vs-motion) - HIGH confidence (official docs)
+- [Comparing the performance of Framer Motion and GSAP](https://blog.uavdevelopment.io/blogs/comparing-the-performance-of-framer-motion-and-gsap-animations-in-next-js) - MEDIUM confidence
+- [Beyond Eye Candy: Top 7 React Animation Libraries for Real-World Apps in 2026](https://www.syncfusion.com/blogs/post/top-react-animation-libraries) - MEDIUM confidence
+
+**Performance & Best Practices:**
+- [React at 60 FPS - Optimizing performance](https://g3f4.github.io/react-at-60-fps/) - MEDIUM confidence
+- [Using requestAnimationFrame with React Hooks](https://css-tricks.com/using-requestanimationframe-with-react-hooks/) - MEDIUM confidence
+- [React Native Performance Optimization & Best Practices (2025 Guide)](https://baltech.in/blog/react-native-performance-optimization-best-practices/) - MEDIUM confidence
+
+**Build Tools:**
+- [Vite + TypeScript: Fastest Frontend Setup for React in 2026](https://medium.com/@mernstackdevbykevin/vite-typescript-2026-frontend-setup-in-the-fast-lane-822c28a6c3f0) - MEDIUM confidence
+- [How to Set Up a Production-Ready React Project with TypeScript and Vite](https://oneuptime.com/blog/post/2026-01-08-react-typescript-vite-production-setup/view) - MEDIUM confidence
+
+**Particles & Effects:**
+- [tsParticles Official Site](https://particles.js.org/) - HIGH confidence (official)
+- [GitHub - tsparticles/react](https://github.com/tsparticles/react) - HIGH confidence (official)
+
+**Audio:**
+- [use-sound - A React Hook for playing sound effects](https://github.com/joshwcomeau/use-sound) - HIGH confidence (official)
+- [The Only React Hook for Sound Effects You Will Ever Need](https://dev.to/bricourse/the-only-react-hook-for-sound-effects-you-will-ever-need-2g9j) - MEDIUM confidence
+
+**Haptics:**
+- [Haptics Capacitor Plugin API](https://capacitorjs.com/docs/apis/haptics) - HIGH confidence (official)
+
+**Game Development:**
+- [React Native Game Development: A Comprehensive Guide 2026](https://amela.tech/react-native-game-development-made-easy-from-concept-to-launch/) - MEDIUM confidence
+- [Why Use React for Game Development?](https://jslegenddev.substack.com/p/why-use-react-for-game-development) - LOW confidence
 
 ---
-
-*Stack research for: Mobile Game UI with styled-components and Design Tokens*
-*Researched: 2026-02-11*
+*Stack research for: Sleevo Vinyl Shop Manager - Hypercasual Game Enhancement*
+*Researched: 2026-02-10*
+*Researcher: gsd-project-researcher*

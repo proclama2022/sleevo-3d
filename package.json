@@ -1,32 +1,37 @@
 {
-  "name": "sleevo-3d",
-  "version": "1.0.0",
-  "description": "Sleevo 3D - Vinyl Shop Manager Game",
+  "name": "sleevo---vinyl-shop-manager",
+  "private": true,
+  "version": "0.0.0",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
-  },
-  "keywords": [
-    "game",
-    "three.js",
-    "vinyl",
-    "puzzle"
-  ],
-  "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "@types/three": "^0.182.0",
-    "@vitejs/plugin-react": "^5.1.4",
-    "three": "^0.182.0",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1"
+    "preview": "vite preview",
+    "cap:sync": "cap sync",
+    "cap:sync:ios": "cap sync ios",
+    "cap:open:ios": "cap open ios",
+    "ios:build": "npm run build && cap sync ios && cap open ios"
   },
   "dependencies": {
-    "@react-three/drei": "^10.7.7",
-    "@react-three/fiber": "^9.5.0",
-    "esbuild": "^0.27.3",
-    "styled-components": "^6.3.9"
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/haptics": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
+    "lucide-react": "^0.563.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.17",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
   }
 }
