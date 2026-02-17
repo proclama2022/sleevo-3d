@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  base: '/sleevo-3d/',
   server: {
     port: 7003,
     host: '0.0.0.0',
