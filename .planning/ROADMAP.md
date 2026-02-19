@@ -3,7 +3,7 @@
 **Project:** Sleevo Vinyl Shop Manager
 **Created:** 2026-02-11
 **Mode:** Standard (5-8 phases)
-**Status:** Phase 1 Complete ✓
+**Status:** Phase 1 Complete, Phase 2 Planned
 
 ---
 
@@ -41,37 +41,43 @@
 
 **Plans:** 5 plans (Wave 1: 01, 02a, 03a | Wave 2: 02b, 03b)
 
-- [x] 01-foundation-design-system-01-PLAN.md — Color and spacing design tokens with WCAG AA validation ✓
-- [x] 01-foundation-design-system-02a-PLAN.md — Typography and breakpoint token JSON files ✓
-- [x] 01-foundation-design-system-02b-PLAN.md — Google Fonts import and TypeScript token exports ✓
-- [x] 01-foundation-design-system-03a-PLAN.md — Install dependencies and create theme structure ✓
-- [x] 01-foundation-design-system-03b-PLAN.md — Complete theme, ThemeProvider, GlobalStyles, App.tsx integration ✓
+- [x] 01-foundation-design-system-01-PLAN.md — Color and spacing design tokens with WCAG AA validation
+- [x] 01-foundation-design-system-02a-PLAN.md — Typography and breakpoint token JSON files
+- [x] 01-foundation-design-system-02b-PLAN.md — Google Fonts import and TypeScript token exports
+- [x] 01-foundation-design-system-03a-PLAN.md — Install dependencies and create theme structure
+- [x] 01-foundation-design-system-03b-PLAN.md — Complete theme, ThemeProvider, GlobalStyles, App.tsx integration
 
 ---
 
 ## Phase 2: Core UI Components
 
-**Goal:** Build table-stakes UI components with vintage styling and accessibility.
+**Goal:** Update existing components to match locked user decisions: vinyl+sleeve card shape, text overlay on art, recessed shelf slots with sparkle, transparent HUD with centered gauge.
 
 **Requirements:** COMP-01, COMP-02, COMP-03, COMP-04, A11Y-01
 
 **Deliverables:**
-- VinylCard component (3 states: idle, dragging, placed)
-- ShelfSlot component (4 states: empty, highlight, filled, invalid)
-- ProgressBar component with smooth animation
-- HUD component (level, score, progress)
+- VinylCard component with vinyl+sleeve shape, text overlay, 100px size
+- ShelfSlot component with recessed filled state, sparkle effect
+- HUD component with transparent bar, centered gauge, no level name
+- ProgressBar component (circular SVG gauge)
 - Touch target validation (44x44px minimum)
 
 **Success Criteria:**
-1. VinylCard states are visually distinct and clear
-2. ShelfSlot provides clear drop target feedback
-3. ProgressBar animates smoothly (500-800ms)
-4. HUD displays game state correctly
-5. All touch targets meet 44x44px minimum
+1. VinylCard shows vinyl disc offset from sleeve with text overlaid on art
+2. ShelfSlot provides recessed filled state and sparkle on correct placement
+3. HUD displays Score/Timer/Moves with centered gauge, no level name
+4. All touch targets meet 44x44px minimum
+5. All feedback uses shape + color for color blind accessibility
 
 **Priority:** P0 - Core gameplay UI
 
-**Plans:** To be created
+**Plans:** 5 plans (Wave 1: 01, 02, 03 | Wave 2: 04 | Wave 3: 05)
+
+- [ ] 02-01-PLAN.md — Update VinylCard: vinyl+sleeve shape, text overlay, 100px size
+- [ ] 02-02-PLAN.md — Update ShelfSlot: recessed filled state, sparkle effect
+- [ ] 02-03-PLAN.md — Update HUD: transparent bar, centered gauge, remove level name
+- [ ] 02-04-PLAN.md — Accessibility verification: touch targets, shape+color, reduced motion
+- [ ] 02-05-PLAN.md — Human verification checkpoint
 
 ---
 
@@ -180,8 +186,8 @@ Phase 5 (Polish)
 
 ## Next Steps
 
-1. **Now:** Run `/gsd:execute-phase 01-foundation-design-system` to execute Phase 1 plans
-2. **After Phase 1:** Proceed to Phase 2 component development
+1. **Now:** Run `/gsd:execute-phase 02-core-ui-components` to execute Phase 2 plans
+2. **After Phase 2:** Proceed to Phase 3 micro-interactions
 3. **Recommended:** Use `/clear` between phases for fresh context
 
 ---
@@ -189,5 +195,6 @@ Phase 5 (Polish)
 *Roadmap created: 2026-02-11*
 *Phase 1 planned: 2026-02-11*
 *Phase 1 revised: 2026-02-11 (split into 5 plans with wave structure)*
+*Phase 2 planned: 2026-02-19 (5 plans, 3 waves)*
 *Total requirements mapped: 16*
-*All v1 requirements covered: ✓*
+*All v1 requirements covered: Y*
