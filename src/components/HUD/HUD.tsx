@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { ProgressBar } from '../ProgressBar';
-import { animations, TIMING, reducedMotion } from '../../animations';
+import { ProgressBar } from '../ProgressBar/ProgressBar';
+import { TIMING, reducedMotion } from '../../animations';
 
 export interface HUDProps {
-  levelName: string;
   score: number;
   timeRemaining?: number; // in seconds
   moves: number;
@@ -16,52 +15,39 @@ const HUDWrapper = styled.header`
   top: 0;
   left: 0;
   right: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   padding: ${(props) => props.theme.spacing.md} ${(props) => props.theme.spacing.lg};
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.8) 0%,
-    rgba(0, 0, 0, 0.4) 70%,
-    transparent 100%
-  );
+  background: rgba(15, 10, 8, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px); // Safari support
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   z-index: 100;
-  
+
   @media (max-width: ${(props) => props.theme.breakpoints.compact}) {
     padding: ${(props) => props.theme.spacing.sm} ${(props) => props.theme.spacing.md};
   }
 `;
 
-const LevelSection = styled.div`
+// Left section: Score
+const LeftSection = styled.div`
   display: flex;
-  align-items: center;
-  gap: ${(props) => props.theme.spacing.sm};
+  justify-content: flex-start;
 `;
 
-const LevelName = styled.h1`
-  font-family: ${(props) => props.theme.typography.fontFamily.display};
-  font-size: ${(props) => props.theme.typography.fontSize.display.md};
-  font-weight: ${(props) => props.theme.typography.fontWeight.bold};
-  color: ${(props) => props.theme.colors.text.primary};
-  margin: 0;
-  letter-spacing: 1px;
-  
-  @media (max-width: ${(props) => props.theme.breakpoints.compact}) {
-    font-size: ${(props) => props.theme.typography.fontSize.display.sm};
-  }
+// Center section: Progress Gauge
+const CenterSection = styled.div`
+  display: flex;
+  justify-content: center;
 `;
 
-const ProgressSection = styled.div`
+// Right section: Timer + Moves
+const RightSection = styled.div`
   display: flex;
-  align-items: center;
-`;
-
-const StatsSection = styled.div`
-  display: flex;
-  align-items: center;
+  justify-content: flex-end;
   gap: ${(props) => props.theme.spacing.lg};
-  
+
   @media (max-width: ${(props) => props.theme.breakpoints.compact}) {
     gap: ${(props) => props.theme.spacing.md};
   }
@@ -79,7 +65,8 @@ const StatValue = styled.span`
   font-size: ${(props) => props.theme.typography.fontSize.monospace.md};
   font-weight: ${(props) => props.theme.typography.fontWeight.bold};
   color: ${(props) => props.theme.colors.accent.primary};
-  
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+
   @media (max-width: ${(props) => props.theme.breakpoints.compact}) {
     font-size: ${(props) => props.theme.typography.fontSize.monospace.sm};
   }
@@ -89,7 +76,7 @@ const StatLabel = styled.span`
   font-family: ${(props) => props.theme.typography.fontFamily.ui};
   font-size: ${(props) => props.theme.typography.fontSize.ui.xs};
   color: ${(props) => props.theme.colors.text.primary};
-  opacity: 0.6;
+  opacity: 0.5;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 `;
@@ -101,37 +88,37 @@ const AnimatedScore = styled.span<{ $isAnimating: boolean }>`
   color: ${(props) => props.theme.colors.accent.primary};
   display: inline-block;
   transform-origin: center;
-  
+
   ${(props) => props.$isAnimating && `
     animation: scorePop ${TIMING.SCORE_POP.duration}ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   `}
-  
+
   @keyframes scorePop {
     0% { transform: scale(1); color: inherit; }
     50% { transform: scale(1.3); color: #4ade80; }
     100% { transform: scale(1); color: inherit; }
   }
-  
+
   @media (max-width: ${(props) => props.theme.breakpoints.compact}) {
     font-size: ${(props) => props.theme.typography.fontSize.monospace.sm};
   }
-  
+
   ${reducedMotion}
 `;
 
 const TimerValue = styled(StatValue)<{ $lowTime?: boolean }>`
-  color: ${(props) => 
+  color: ${(props) =>
     props.$lowTime ? '#ef4444' : props.theme.colors.accent.primary
   };
-  animation: ${(props) => 
+  animation: ${(props) =>
     props.$lowTime ? 'pulse 1s ease-in-out infinite' : 'none'
   };
-  
+
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
   }
-  
+
   ${reducedMotion}
 `;
 
@@ -142,7 +129,6 @@ const formatTime = (seconds: number): string => {
 };
 
 export const HUD: React.FC<HUDProps> = ({
-  levelName,
   score,
   timeRemaining,
   moves,
@@ -156,40 +142,36 @@ export const HUD: React.FC<HUDProps> = ({
   useEffect(() => {
     if (score !== displayScore) {
       setIsAnimating(true);
-      
+
       const timer = setTimeout(() => {
         setDisplayScore(score);
         setIsAnimating(false);
       }, TIMING.SCORE_POP.duration);
-      
+
       return () => clearTimeout(timer);
     }
   }, [score, displayScore]);
 
   return (
     <HUDWrapper role="banner" aria-label="Game status">
-      <LevelSection>
-        <LevelName>{levelName}</LevelName>
-      </LevelSection>
-
-      <ProgressSection>
-        <ProgressBar
-          progress={progress}
-          size={56}
-          strokeWidth={5}
-          showPercentage={false}
-          label="Level"
-        />
-      </ProgressSection>
-
-      <StatsSection>
+      <LeftSection>
         <StatItem>
           <AnimatedScore $isAnimating={isAnimating}>
             {displayScore.toLocaleString()}
           </AnimatedScore>
           <StatLabel>Score</StatLabel>
         </StatItem>
+      </LeftSection>
 
+      <CenterSection>
+        <ProgressBar
+          progress={progress}
+          size={56}
+          showPercentage={false}
+        />
+      </CenterSection>
+
+      <RightSection>
         {timeRemaining !== undefined && (
           <StatItem>
             <TimerValue $lowTime={isLowTime}>
@@ -203,7 +185,7 @@ export const HUD: React.FC<HUDProps> = ({
           <StatValue>{moves}</StatValue>
           <StatLabel>Moves</StatLabel>
         </StatItem>
-      </StatsSection>
+      </RightSection>
     </HUDWrapper>
   );
 };
