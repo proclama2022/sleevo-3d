@@ -76,7 +76,7 @@
 - [x] 02-01-PLAN.md — Update VinylCard: vinyl+sleeve shape, text overlay, 100px size
 - [x] 02-02-PLAN.md — Update ShelfSlot: recessed filled state, sparkle effect
 - [x] 02-03-PLAN.md — Update HUD: transparent bar, centered gauge, remove level name
-- [ ] 02-04-PLAN.md — Accessibility verification: touch targets, shape+color, reduced motion
+- [x] 02-04-PLAN.md — Accessibility verification: touch targets, shape+color, reduced motion
 - [ ] 02-05-PLAN.md — Human verification checkpoint
 
 ---
