@@ -1,7 +1,7 @@
 # Project State
 
 **Project:** Sleevo UI/UX Redesign
-**Last Updated:** 2026-02-11T18:13:20Z
+**Last Updated:** 2026-02-19T19:00:12Z
 
 ---
 
@@ -28,6 +28,7 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 ### Phase 2: Core UI Components
 - [x] VinylCard component (3 states: idle, dragging, placed)
 - [x] ShelfSlot component (4 states: empty, highlight, filled, invalid)
+- [x] ShelfSlot recessed filled state and sparkle effect (plan 02-02)
 - [x] ProgressBar component (circular SVG gauge)
 - [x] HUD component (level, score, timer, moves)
 
@@ -98,6 +99,9 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | Module augmentation in .d.ts | ✅ | Avoids circular type reference |
 | Avoid DefaultTheme extension in Theme | ✅ | Prevents circular type reference |
 | @vitejs/plugin-react for Vite React support | ✅ | JSX transformation in Vite |
+| Multi-layer inset box-shadow for recessed depth | ✅ | Realistic vinyl "well" effect |
+| 6 sparkle points with staggered delays | ✅ | Natural glimmer effect |
+| useRef for previous state tracking | ✅ | Prevents sparkle on initial mount |
 
 ---
 
@@ -117,6 +121,8 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | 2026-02-11 | Phase 2 context and research captured | Phase 2 |
 | 2026-02-11 | VinylCard, ShelfSlot, ProgressBar, HUD components created | Phase 2 |
 | 2026-02-11 | styled-components.d.ts type augmentation added | Phase 2 |
+| 2026-02-19 | ShelfSlot recessed filled state and sparkle effect added (plan 02-02) | Phase 2 |
+| 2026-02-19 | HUD updated with transparent bar, centered gauge, three-column layout (plan 02-03) | Phase 2 |
 
 ---
 
@@ -139,6 +145,8 @@ Phase 2 complete. Proceed to Phase 3: Micro-Interactions & Animation.
 | 01-foundation-design-system | 03a | 3min | 2 | 4 | 2026-02-11 |
 | 01-foundation-design-system | 02a | 4min | 2 | 2 | 2026-02-11 |
 | 01-foundation-design-system | 01 | 2min | 3 | 3 | 2026-02-11 |
+| 02-core-ui-components | 02-02 | 5min | 3 | 1 | 2026-02-19 |
+| 02-core-ui-components | 02-03 | 14min | 3 | 1 | 2026-02-19 |
 
 ---
 
