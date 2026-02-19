@@ -1,5 +1,5 @@
-import React from 'react';
-import styled, { css } from 'styled-components';
+import React, { useState, useEffect, useRef } from 'react';
+import styled, { css, keyframes } from 'styled-components';
 import { TIMING, reducedMotion } from '../../animations';
 
 export interface ShelfSlotProps {
@@ -168,19 +168,49 @@ const GlowRing = styled.div<{ $active: boolean; $color: string }>`
   border: 2px solid ${(props) => props.$color};
   opacity: ${(props) => props.$active ? 0.8 : 0};
   animation: ${(props) => props.$active ? 'pulse 1.5s ease-in-out infinite' : 'none'};
-  
+
   @keyframes pulse {
-    0%, 100% { 
+    0%, 100% {
       opacity: 0.6;
       transform: scale(1);
     }
-    50% { 
+    50% {
       opacity: 1;
       transform: scale(1.02);
     }
   }
-  
+
   ${reducedMotion}
+`;
+
+// Sparkle animation keyframes
+const sparkleAnim = keyframes`
+  0% { transform: scale(0) rotate(0deg); opacity: 1; }
+  50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+`;
+
+// Individual sparkle point
+const SparklePoint = styled.span<{ $delay: number }>`
+  position: absolute;
+  font-size: 14px;
+  color: #ffd700;
+  text-shadow: 0 0 4px rgba(255, 215, 0, 0.8);
+  animation: ${sparkleAnim} 0.6s ease-out forwards;
+  animation-delay: ${(props) => props.$delay}ms;
+  opacity: 0;
+
+  ${reducedMotion}
+`;
+
+// Sparkle container that appears briefly on correct placement
+const SparkleEffect = styled.div<{ $show: boolean }>`
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: ${(props) => props.$show ? 1 : 0};
+  transition: opacity 0.3s ease;
+  z-index: 10;
 `;
 
 export const ShelfSlot: React.FC<ShelfSlotProps> = ({
@@ -190,6 +220,22 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
   onDragOver,
   onDragLeave,
 }) => {
+  const [showSparkle, setShowSparkle] = useState(false);
+  const prevStateRef = useRef<string>(state);
+
+  // Show sparkle effect when transitioning to filled state
+  useEffect(() => {
+    // Only trigger sparkle on transition TO filled state (correct placement)
+    if (prevStateRef.current !== 'filled' && state === 'filled') {
+      setShowSparkle(true);
+      const timer = setTimeout(() => {
+        setShowSparkle(false);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+    prevStateRef.current = state;
+  }, [state]);
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     onDragOver?.();
@@ -212,6 +258,16 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
     return 'transparent';
   };
 
+  // Sparkle positions around the slot edges (6 points with staggered delays)
+  const sparklePoints = [
+    { top: '8%', left: '12%', delay: 0 },
+    { top: '15%', right: '15%', delay: 100 },
+    { top: '40%', left: '5%', delay: 200 },
+    { top: '50%', right: '8%', delay: 150 },
+    { top: '75%', left: '10%', delay: 250 },
+    { top: '85%', right: '12%', delay: 50 },
+  ];
+
   return (
     <SlotWrapper
       $state={state}
@@ -223,13 +279,13 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
       aria-dropeffect={state === 'empty' || state === 'highlight' ? 'move' : 'none'}
     >
       {state === 'empty' && <ShelfTexture />}
-      
-      <GlowRing 
-        $active={state === 'highlight' || state === 'invalid'} 
+
+      <GlowRing
+        $active={state === 'highlight' || state === 'invalid'}
         $color={getGlowColor()}
         aria-hidden="true"
       />
-      
+
       <SlotContent>
         <SlotLabel $visible={state === 'empty' || state === 'highlight'}>
           {state === 'empty' ? 'Empty Slot' : 'Drop Here'}
@@ -240,6 +296,23 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
       </SlotContent>
 
       <FeedbackIcon $type={getFeedbackType()} />
+
+      {/* Sparkle effect for correct placement */}
+      <SparkleEffect $show={showSparkle} aria-hidden="true">
+        {sparklePoints.map((point, index) => (
+          <SparklePoint
+            key={index}
+            $delay={point.delay}
+            style={{
+              top: point.top,
+              left: point.left,
+              right: point.right,
+            }}
+          >
+            ✦
+          </SparklePoint>
+        ))}
+      </SparkleEffect>
     </SlotWrapper>
   );
 };
