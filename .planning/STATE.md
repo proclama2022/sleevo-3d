@@ -1,7 +1,7 @@
 # Project State
 
 **Project:** Sleevo UI/UX Redesign
-**Last Updated:** 2026-02-19T19:00:12Z
+**Last Updated:** 2026-02-19T19:00:42Z
 
 ---
 
@@ -9,7 +9,7 @@
 
 **Phase 1: Foundation & Design System** — Complete (5/5 plans)
 
-**Phase 2: Core UI Components** — In Progress (4/4 components created)
+**Phase 2: Core UI Components** — In Progress (1/5 plans complete)
 
 ### Goal
 Establish design tokens, typography, and theming infrastructure for the "vinyl store Sunday morning" aesthetic.
@@ -26,8 +26,7 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 - [x] ThemeProvider and token integration (plan 03b)
 
 ### Phase 2: Core UI Components
-- [x] VinylCard component (3 states: idle, dragging, placed)
-- [x] ShelfSlot component (4 states: empty, highlight, filled, invalid)
+- [x] VinylCard vinyl+sleeve shape and text overlay (plan 02-01)
 - [x] ShelfSlot recessed filled state and sparkle effect (plan 02-02)
 - [x] ProgressBar component (circular SVG gauge)
 - [x] HUD component (level, score, timer, moves)
@@ -69,7 +68,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 **Core value:** Make vinyl covers the visual star - Players must instantly recognize vinyl genres and feel the warmth of a real record store.
 
-**Current focus:** Phase 1 - Foundation & Design System
+**Current focus:** Phase 2 - Core UI Components
 
 ---
 
@@ -77,11 +76,11 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 | Phase | Status | Requirements |
 |-------|--------|--------------|
-| Phase 1: Foundation | ✅ Complete (5/5) | DESIGN-01 to DESIGN-05, ARCH-01 |
-| Phase 2: Components | ✅ Complete (4/4) | COMP-01 to COMP-04, A11Y-01 |
-| Phase 3: Interactions | ✅ Complete | MOTION-01 to MOTION-05 |
-| Phase 4: Integration | ✅ Complete | ARCH-02, ARCH-03, COMP-05 |
-| Phase 5: Polish | ✅ Complete | A11Y-02, performance |
+| Phase 1: Foundation | Complete (5/5) | DESIGN-01 to DESIGN-05, ARCH-01 |
+| Phase 2: Components | In Progress (1/5) | COMP-01 to COMP-04, A11Y-01 |
+| Phase 3: Interactions | Complete | MOTION-01 to MOTION-05 |
+| Phase 4: Integration | Complete | ARCH-02, ARCH-03, COMP-05 |
+| Phase 5: Polish | Complete | A11Y-02, performance |
 
 ---
 
@@ -89,19 +88,22 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 
 | Decision | Made | Rationale |
 |----------|------|-----------|
-| Use styled-components | ✅ | Industry standard, theme support |
-| Use Zustand for state | ✅ | Lightweight, TypeScript support |
-| Hybrid mounting pattern | ✅ | Preserve existing Three.js code |
-| Dark theme only | ✅ | User requirement |
-| 8px grid system | ✅ | Consistent spacing, easier responsive |
-| Adjust accent colors for WCAG AA | ✅ | #ff8a61, #5dc5e2 for 3:1 contrast compliance |
-| React 19.2.4 with styled-components | ✅ | Latest React compatible, already installed |
-| Module augmentation in .d.ts | ✅ | Avoids circular type reference |
-| Avoid DefaultTheme extension in Theme | ✅ | Prevents circular type reference |
-| @vitejs/plugin-react for Vite React support | ✅ | JSX transformation in Vite |
-| Multi-layer inset box-shadow for recessed depth | ✅ | Realistic vinyl "well" effect |
-| 6 sparkle points with staggered delays | ✅ | Natural glimmer effect |
-| useRef for previous state tracking | ✅ | Prevents sparkle on initial mount |
+| Use styled-components | Yes | Industry standard, theme support |
+| Use Zustand for state | Yes | Lightweight, TypeScript support |
+| Hybrid mounting pattern | Yes | Preserve existing Three.js code |
+| Dark theme only | Yes | User requirement |
+| 8px grid system | Yes | Consistent spacing, easier responsive |
+| Adjust accent colors for WCAG AA | Yes | #ff8a61, #5dc5e2 for 3:1 contrast compliance |
+| React 19.2.4 with styled-components | Yes | Latest React compatible, already installed |
+| Module augmentation in .d.ts | Yes | Avoids circular type reference |
+| Avoid DefaultTheme extension in Theme | Yes | Prevents circular type reference |
+| @vitejs/plugin-react for Vite React support | Yes | JSX transformation in Vite |
+| Multi-layer inset box-shadow for recessed depth | Yes | Realistic vinyl "well" effect |
+| 6 sparkle points with staggered delays | Yes | Natural glimmer effect |
+| useRef for previous state tracking | Yes | Prevents sparkle on initial mount |
+| Vinyl disc offset at bottom-right corner | Yes | Realistic "peeking from sleeve" effect |
+| Text overlay with gradient for readability | Yes | 85% to 0% opacity from bottom |
+| 2deg rotation on drag | Yes | Tactile, realistic record feel |
 
 ---
 
@@ -121,17 +123,18 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | 2026-02-11 | Phase 2 context and research captured | Phase 2 |
 | 2026-02-11 | VinylCard, ShelfSlot, ProgressBar, HUD components created | Phase 2 |
 | 2026-02-11 | styled-components.d.ts type augmentation added | Phase 2 |
-| 2026-02-19 | ShelfSlot recessed filled state and sparkle effect added (plan 02-02) | Phase 2 |
-| 2026-02-19 | HUD updated with transparent bar, centered gauge, three-column layout (plan 02-03) | Phase 2 |
+| 2026-02-19 | VinylCard vinyl+sleeve shape and text overlay (plan 02-01) | Phase 2 |
+| 2026-02-19 | ShelfSlot recessed filled state and sparkle effect (plan 02-02) | Phase 2 |
 
 ---
 
 ## Next Action
 
-Phase 2 complete. Proceed to Phase 3: Micro-Interactions & Animation.
+Continue Phase 2: Core UI Components.
+Next plan: 02-03-PLAN.md
 
 ```
-/gsd:execute-phase 03-micro-interactions
+/gsd:execute-phase 02-core-ui-components
 ```
 
 ---
@@ -145,8 +148,8 @@ Phase 2 complete. Proceed to Phase 3: Micro-Interactions & Animation.
 | 01-foundation-design-system | 03a | 3min | 2 | 4 | 2026-02-11 |
 | 01-foundation-design-system | 02a | 4min | 2 | 2 | 2026-02-11 |
 | 01-foundation-design-system | 01 | 2min | 3 | 3 | 2026-02-11 |
+| 02-core-ui-components | 02-01 | 21min | 2 | 1 | 2026-02-19 |
 | 02-core-ui-components | 02-02 | 5min | 3 | 1 | 2026-02-19 |
-| 02-core-ui-components | 02-03 | 14min | 3 | 1 | 2026-02-19 |
 
 ---
 
