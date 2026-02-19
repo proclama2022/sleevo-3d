@@ -49,16 +49,34 @@ const SlotWrapper = styled.div<{ $state: ShelfSlotProps['state'] }>`
   `}
 
   ${(props) => props.$state === 'invalid' && css`
+    background: linear-gradient(180deg, rgba(58, 18, 12, 0.9) 0%, rgba(32, 10, 8, 0.95) 100%);
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.3);
-    animation: shake 400ms ease-in-out;
+    animation: shake 400ms ease-in-out, invalidPulse 700ms ease-in-out;
   `}
-  
+
+  ${(props) => props.$state === 'filled' && css`
+    box-shadow:
+      inset 0 4px 12px rgba(0, 0, 0, 0.5),
+      inset 0 2px 4px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    background: linear-gradient(180deg,
+      rgba(30, 20, 15, 0.95) 0%,
+      rgba(20, 12, 8, 1) 100%
+    );
+  `}
+
   ${reducedMotion}
   
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
     10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
     20%, 40%, 60%, 80% { transform: translateX(3px); }
+  }
+
+  @keyframes invalidPulse {
+    0% { box-shadow: 0 0 14px rgba(239, 68, 68, 0.45), 0 0 28px rgba(239, 68, 68, 0.2); }
+    60% { box-shadow: 0 0 26px rgba(239, 68, 68, 0.7), 0 0 52px rgba(239, 68, 68, 0.35); }
+    100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.3); }
   }
 `;
 
