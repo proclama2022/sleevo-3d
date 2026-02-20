@@ -8,6 +8,7 @@ import { Controls } from './Controls';
 import { ComboFloat } from './ComboFloat';
 import { ComboPopup } from './ComboPopup/ComboPopup';
 import { LevelComplete } from './LevelComplete';
+import { ParticleBurst } from './ParticleBurst';
 import { saveProgress } from '../game/storage';
 import { LEVELS } from '../game/levels';
 import { isValidPlacement } from '../game/rules';
@@ -72,6 +73,10 @@ export function GameScreen() {
   // Track last placed slot position for ComboPopup
   const [lastSlotPosition, setLastSlotPosition] = useState<{ x: number; y: number } | null>(null);
 
+  // Track combo milestone bursts (5x, 8x, 10x)
+  const [comboBurst, setComboBurst] = useState<{ x: number; y: number } | null>(null);
+  const previousComboRef = useRef(0);
+
   // Combo decay timer
   useEffect(() => {
     if (state.combo.streak > 0 && state.status === 'playing') {
@@ -87,6 +92,20 @@ export function GameScreen() {
       return () => clearTimeout(timer);
     }
   }, [state.invalidReason]);
+
+  // Trigger combo milestone bursts at 5x, 8x, 10x
+  useEffect(() => {
+    const prevCombo = previousComboRef.current;
+    const currentCombo = state.combo.streak;
+    if (currentCombo >= 5 && prevCombo < 5 && lastSlotPosition) {
+      setComboBurst(lastSlotPosition);
+    } else if (currentCombo >= 8 && prevCombo < 8 && lastSlotPosition) {
+      setComboBurst(lastSlotPosition);
+    } else if (currentCombo >= 10 && prevCombo < 10 && lastSlotPosition) {
+      setComboBurst(lastSlotPosition);
+    }
+    previousComboRef.current = currentCombo;
+  }, [state.combo.streak, lastSlotPosition]);
 
   // Fix 2: countdown visivo del combo — conta da 4 a 0 ogni secondo
   useEffect(() => {
@@ -459,6 +478,18 @@ export function GameScreen() {
             pointsBonus={Math.round(100 * (state.combo.multiplier - 1))}
             position={lastSlotPosition}
             onComplete={() => setLastSlotPosition(null)}
+          />
+        )}
+
+        {/* Combo milestone burst - larger burst at 5x, 8x, 10x */}
+        {comboBurst && (
+          <ParticleBurst
+            x={comboBurst.x}
+            y={comboBurst.y}
+            count={15}
+            distance={{ min: 60, max: 100 }}
+            color="#fbbf24"
+            onComplete={() => setComboBurst(null)}
           />
         )}
 
