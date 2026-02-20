@@ -1,89 +1,63 @@
-# Sleevo UI/UX Redesign
+# Sleevo
 
 ## What This Is
 
-Complete visual redesign of "Sleevo - Vinyl Shop Manager", a 3D puzzle game where players sort vinyl records on shelves. This redesign transforms the UI from a dark, generic AI-style to a warm, authentic "vinyl store Sunday morning" aesthetic that emphasizes vinyl covers and creates clear visual hierarchy for mobile gaming.
+Sleevo è un gioco di sorting di vinili in cui il giocatore trascina dischi da un carosello rotante verso uno scaffale a griglia, piazzandoli nel posto corretto secondo la regola del livello (genere, ordine cronologico, richiesta del cliente, ecc.). Il gioco è costruito in React + Three.js ed è destinato al browser, con una progressione di 20+ livelli che introducono gradualmente le varie modalità.
 
 ## Core Value
 
-**Make vinyl covers the visual star** - Players must instantly recognize vinyl genres and feel the warmth of a real record store. Everything else supports this core experience.
+Il giocatore deve sempre sapere esattamente cosa deve fare, perché ha guadagnato punti, e quanto manca alla fine del livello.
 
 ## Requirements
 
 ### Validated
 
-- ✓ 3D rendering with Three.js — existing
-- ✓ Drag-drop vinyl sorting mechanics — existing
-- ✓ Single row shelf layout (1×8 columns) — existing
-- ✓ Genre-based puzzle logic — existing
-- ✓ Mobile touch support — existing
-- ✓ Audio system with procedural music/SFX — existing
+- ✓ Drag-and-drop di vinili dal carosello allo scaffale — esistente
+- ✓ Validazione piazzamento (genere, colonna esatta) — esistente
+- ✓ Sistema combo con moltiplicatori (1x → 5x) — esistente
+- ✓ Scoring base: placement points - error penalty + combo bonus — esistente
+- ✓ Modalità di gioco definite: free, genre, chronological, customer, blackout, rush, sleeve-match — definite ma non tutte implementate
+- ✓ Feedback visivo errore: shake + bounce-back + flash rosso — esistente
+- ✓ Onboarding a due step per il primo drag — esistente
 
 ### Active
 
-- [ ] **UI-01**: Color palette with "vinyl store Sunday morning" theme (5 specific HEX codes)
-- [ ] **UI-02**: Typography scale (3 fonts with specific pixel sizes)
-- [ ] **UI-03**: 8px spacing grid system
-- [ ] **UI-04**: 3 responsive mobile layouts (compact <375px, medium 375-414px, large >414px)
-- [ ] **UI-05**: VinylCard component with 3 states (idle, dragging, placed)
-- [ ] **UI-06**: ShelfSlot component with visual feedback
-- [ ] **UI-07**: ProgressBar component for level progress
-- [ ] **UI-08**: HUD component (score, moves, level info)
-- [ ] **UI-09**: 5 micro-interactions with exact timing (ms) and easing
-- [ ] **UI-10**: WCAG AA contrast compliance (dark theme)
-- [ ] **UI-11**: Design tokens as JSON
-- [ ] **UI-12**: styled-components CSS-in-JS implementation
+- [ ] Feedback visivo immediato sui punti guadagnati dopo ogni piazzamento (+N punti fluttuanti)
+- [ ] Contatore progresso vinili nell'HUD: "5/8 vinili piazzati"
+- [ ] Regola del livello corrente mostrata chiaramente nell'HUD (es. "Ordina per genere")
+- [ ] Sistema stelle basato su combinazione errori + velocità (3 stelle = perfetto + veloce)
+- [ ] Progressione livelli: servono 2 stelle per sbloccare il livello successivo
+- [ ] 20+ livelli con difficoltà crescente, usando tutte le modalità (genre, chronological, customer, blackout, rush, sleeve-match)
+- [ ] Schermata di fine livello che mostra stelle, punteggio, errori, tempo
+- [ ] Salvataggio progressione livelli (stelle acquisite, livello sbloccato)
+- [ ] Ogni livello mostra chiaramente la sua regola prima di iniziare
 
 ### Out of Scope
 
-- React migration (current: vanilla TypeScript + Three.js) — stay with current stack
-- Light theme — user explicitly wants dark theme only
-- Desktop-first layouts — focus is mobile-first
-- Multi-row shelves — single row mode only
+- Multiplayer — non è nel concept del gioco
+- Acquisti in-app — fuori scope per ora
+- Account utente / sync cloud — complessità eccessiva per v1
+- Editor di livelli — non necessario per v1
 
 ## Context
 
-### Current Problems to Solve
+Il codebase è già funzionante con una base solida: Three.js per il rendering 3D, React per l'UI overlay, Zustand per lo state management. Il problema principale non è la mancanza di funzionalità tecniche, ma la mancanza di comunicazione chiara al giocatore. Molte modalità di gioco sono già definite nei tipi TypeScript (`LevelMode`) ma non hanno ancora livelli associati né sono tutte implementate nella logica di gioco.
 
-1. **UI troppo scura e poco contrastata** - Vinyls don't stand out well against dark background
-2. **Mobile layout condensato verso il basso** - Elements too small, compressed toward bottom
-3. **Nessuna gerarchia visiva chiara** - HUD, shelves, and vinyls lack clear visual priority
-4. **Design "generico AI"** - Lacks personality and vinyl/vintage theme
-
-### Anti-Patterns to Avoid
-
-- NO gradienti blu/viola standard AI
-- NO glassmorphism generico
-- NO bordi radius uniformi su tutto
-- NO ombre diffuse
-- NO iconography Material Design
-
-### Target Aesthetic
-
-**"Vinyl Store Sunday Morning"** - Warm, vintage, wood tones. The feeling of walking into a cozy record shop on a quiet morning with sunlight streaming through dusty windows.
-
-### Design Deliverables Required
-
-1. **JSON Design Tokens** - Colors, spacing, typography as structured data
-2. **CSS-in-JS (styled-components)** - For each UI component
-3. **ASCII Wireframes** - For each breakpoint layout
-4. **Prioritized Implementation List** - P0/P1/P2 categories
+Il GAME-LOGIC.md documenta accuratamente lo stato corrente del sistema.
 
 ## Constraints
 
-- **Tech Stack**: React + Three.js + styled-components (as specified in requirements)
-- **Theme**: Dark theme only, but with WCAG AA contrast
-- **Platform**: Mobile-first responsive design
-- **Performance**: Must maintain 60fps on mobile devices
+- **Tech stack**: React + Three.js + TypeScript + Vite — non cambiare il renderer
+- **Brownfield**: Il codice esistente è funzionante, le modifiche devono essere additive o mirate
+- **Lingua**: UI in italiano (con qualche stringa inglese legacy da normalizzare)
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| styled-components over plain CSS | Component-scoped styles, theming support | — Pending |
-| 8px grid system | Consistent spacing, easier responsive | — Pending |
-| Mobile-first breakpoints | Primary use case is mobile gaming | — Pending |
-| WCAG AA contrast | Accessibility while keeping dark theme | — Pending |
+| Stelle basate su errori + velocità combinati | Riflette entrambe le sfide del gioco: precisione e ritmo | — Pending |
+| 2 stelle minime per sbloccare il livello successivo | Abbastanza permissivo da non frustrare, abbastanza impegnativo da incentivare la qualità | — Pending |
+| Tutte le modalità esistenti vanno sviluppate | La varietà di modalità è il punto di forza del gioco | — Pending |
 
 ---
-*Last updated: 2026-02-11 after UI/UX redesign initialization*
+*Last updated: 2026-02-20 after initialization*
