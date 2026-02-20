@@ -221,12 +221,11 @@
   transition: transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1),
               filter 0.32s ease;
   animation: vinylPlace 0.85s ease-out both; /* Longer duration for physics settle */
-  /* Ombre realistiche — vinile sollevato, non incassato */
+  /* Ombre realistiche — vinile inserito ma visibile */
   filter:
-    drop-shadow(0 4px 8px rgba(0, 0, 0, 0.7))
-    drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))
-    drop-shadow(0 -1px 2px rgba(255, 255, 255, 0.1))
-    brightness(0.95);
+    drop-shadow(2px 3px 6px rgba(0, 0, 0, 0.8))
+    drop-shadow(0 0 1px rgba(255, 255, 255, 0.15))
+    brightness(0.98);
 }
 
 /* ── Ghost / Hint Vinyl ── */
@@ -373,8 +372,8 @@
   /* Copertina prende quasi tutta l'altezza */
   height: 86%;
   border-radius: 1px 2px 2px 1px;
-  /* Base texture cartoncino */
-  background-color: color-mix(in srgb, var(--v-color) 25%, #1a1614);
+  /* Base texture cartoncino — leggermente più chiara per contrasto */
+  background-color: color-mix(in srgb, var(--v-color) 30%, #2a201a);
   background-image: linear-gradient(
     90deg,
     rgba(0,0,0,0.4) 0%,
@@ -386,6 +385,9 @@
   border-left: 4px solid color-mix(in srgb, var(--v-color) 40%, #0a0604);
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
+  /* Outline sottile per far risaltare dal legno scuro */
+  outline: 1px solid rgba(255, 255, 255, 0.08);
+  outline-offset: -1px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.4);
   box-shadow:
     /* Ombra interna spine — effetto di profondità del cartone */

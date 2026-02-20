@@ -119,8 +119,8 @@ export function ShelfSlot({
       ref={ref}
       className={cls}
       style={vinyl ? {
-        // Vinyl appears lifted — subtle elevated shadow on the vinyl, not recessed slot
-        boxShadow: '0 -2px 8px rgba(0,0,0,0.3), 0 2px 4px rgba(0,0,0,0.2)',
+        // Vinyl inserted in slot — subtle depth but not buried
+        boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.4)',
       } : undefined}
     >
       {blocked && !vinyl && (
