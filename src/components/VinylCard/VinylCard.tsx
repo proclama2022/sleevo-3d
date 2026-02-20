@@ -13,6 +13,7 @@ export interface VinylCardProps {
   isValid?: boolean;
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  onDragMove?: (position: { x: number; y: number }) => void; // Report position during drag for hover detection (MOTION-03)
 }
 
 // Outer container ensures 44x44px minimum touch target
@@ -235,6 +236,7 @@ export const VinylCard: React.FC<VinylCardProps> = ({
   isValid = true,
   onDragStart,
   onDragEnd,
+  onDragMove,
 }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -246,6 +248,14 @@ export const VinylCard: React.FC<VinylCardProps> = ({
     }
   }, [state]);
 
+  const handleDrag = (e: React.DragEvent) => {
+    // Report position during drag for collision detection with shelf slots
+    if (onDragMove && state === 'dragging') {
+      const position = { x: e.clientX, y: e.clientY };
+      onDragMove(position);
+    }
+  };
+
   return (
     <CardContainer>
       <SleeveWrapper
@@ -255,6 +265,7 @@ export const VinylCard: React.FC<VinylCardProps> = ({
         draggable
         onDragStart={onDragStart}
         onDragEnd={onDragEnd}
+        onDrag={handleDrag}
         role="button"
         aria-label={`${title} by ${artist}, ${genre}, ${year}`}
         aria-grabbed={state === 'dragging'}
