@@ -29,7 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The HUD shows the active level rule persistently (e.g., "Ordina per: Genere") for the entire level
   4. Completing level N with 2 stars unlocks level N+1 (not level N with 1 star)
   5. The codebase has one canonical state system: `useReducer` in `GameScreen`; the dormant Zustand `gameStore` is removed or explicitly quarantined
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Fix isLevelUnlocked and stub SLOT_TARGETS (FIX-01, FIX-02, FIX-03)
+- [ ] 01-02-PLAN.md — Delete dead Zustand cluster (FIX-04)
+- [ ] 01-03-PLAN.md — Wire ScorePopup, HUD counter, and level rule badge (COMM-01, COMM-02, COMM-03)
 
 ### Phase 2: Star System and Level Complete
 **Goal**: Players receive a clear, meaningful performance rating at the end of every level
@@ -72,7 +77,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Fixes | 0/? | Not started | - |
+| 1. Foundation Fixes | 0/3 | Not started | - |
 | 2. Star System and Level Complete | 0/? | Not started | - |
 | 3. Progression and Navigation | 0/? | Not started | - |
 | 4. Level Content and Mode Validation | 0/? | Not started | - |
