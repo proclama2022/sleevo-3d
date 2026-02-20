@@ -42,12 +42,14 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 ### Phase 3: Micro-Interactions & Animation
 - [x] Combo system refactor: 4+ threshold, forgiving reset, point bonus popup (plan 03-01)
 - [x] Particle burst system: radial particles on correct placement, combo milestone bursts (plan 03-02)
+- [x] Shelf hover state animation: 150ms enter, 250ms exit, glow pulse (plan 03-06)
 - [x] Animation timing constants (src/animations/timing.ts)
 - [x] Keyframe animations (src/animations/keyframes.ts)
 - [x] ScorePopup component with float animation
 - [x] ComboPopup component with appear/hold/disappear phases
 - [x] VinylCard with shake/settle animations
 - [x] ShelfSlot with glow pulse and hover transitions
+- [x] VinylCard with onDragMove position reporting for hover detection
 - [x] HUD with animated score counter
 
 ### Phase 4: Architecture Integration
@@ -154,12 +156,13 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | 2026-02-20 | VinylCard wired into Counter replacing VinylDisc; human checkpoint approved (plan 02-08) | Phase 2 |
 | 2026-02-20 | Particle burst system with radial animation on placement and combo milestones (plan 03-02) | Phase 3 |
 | 2026-02-20 | Combo system refactor: 4+ threshold, forgiving reset, point bonus popup (plan 03-01) | Phase 3 |
+| 2026-02-20 | Shelf hover state animation with glow pulse and drag collision detection (plan 03-06) | Phase 3 |
 
 ---
 
 ## Next Action
 
-Phase 3 is in progress. Continue with plan 03-02.
+Phase 3 is in progress. Continue with remaining plans: 03-03, 03-04, 03-05.
 
 ---
 
@@ -182,6 +185,7 @@ Phase 3 is in progress. Continue with plan 03-02.
 | 02-core-ui-components | 02-08 | 8min | 2 | 2 | 2026-02-20 |
 | 03-micro-interactions-animation | 03-02 | 3min | 5 | 5 | 2026-02-20 |
 | 03-micro-interactions-animation | 03-01 | 3min | 5 | 4 | 2026-02-20 |
+| 03-micro-interactions-animation | 03-06 | 5min | 3 | 3 | 2026-02-20 |
 
 ---
 
