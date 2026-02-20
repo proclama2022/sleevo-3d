@@ -78,7 +78,7 @@
 - [x] 02-03-PLAN.md — Update HUD: transparent bar, centered gauge, remove level name
 - [x] 02-04-PLAN.md — Accessibility verification: touch targets, shape+color, reduced motion
 - [x] 02-05-PLAN.md — Human verification checkpoint
-- [ ] 02-06-PLAN.md — Gap closure: Merge recessed state + sparkle into flat ShelfSlot.tsx (module resolution fix)
+- [x] 02-06-PLAN.md — Gap closure: Merge recessed state + sparkle into flat ShelfSlot.tsx (module resolution fix)
 - [ ] 02-07-PLAN.md — Gap closure: Wire HUD into GameScreen + wire ThemeProvider in App.tsx
 - [ ] 02-08-PLAN.md — Gap closure: Wire VinylCard into Counter + human visual verification
 

@@ -112,6 +112,8 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | Accessibility verification pattern | Yes | All components have touch targets, shape+color, reduced motion |
 | ThemeProvider at App root | Yes | Required for all styled-components to receive theme tokens |
 | HUD padding-top offset 72px | Yes | Prevents fixed HUD bar from covering game content |
+| Merge sparkle into flat ShelfSlot.tsx | Yes | Vite resolves ./ShelfSlot to flat file before directory index; folder version was silently bypassed |
+| Hybrid CSS modules + styled-components in ShelfSlot | Yes | CSS modules for layout, styled-components only for animated SparklePoint; avoids full rewrite |
 
 ---
 
@@ -136,6 +138,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | 2026-02-19 | HUD layout update with progress gauge (plan 02-03) | Phase 2 |
 | 2026-02-19 | Accessibility verification passed (plan 02-04) | Phase 2 |
 | 2026-02-20 | Human verification checkpoint - all components approved (plan 02-05) | Phase 2 |
+| 2026-02-20 | ShelfSlot gap closure: sparkle and recessed state merged into flat file (plan 02-06) | Phase 2 |
 | 2026-02-20 | HUD wired into GameScreen replacing InfoPanel infoRow (plan 02-07) | Phase 2 |
 
 ---
@@ -164,11 +167,10 @@ Phase 2 is complete. Proceed to Phase 3: Micro-Interactions & Animation.
 | 02-core-ui-components | 02-03 | 8min | 2 | 1 | 2026-02-19 |
 | 02-core-ui-components | 02-04 | 2min | 4 | 0 | 2026-02-19 |
 | 02-core-ui-components | 02-05 | 2min | 1 | 0 | 2026-02-20 |
+| 02-core-ui-components | 02-06 | 7min | 1 | 1 | 2026-02-20 |
 | 02-core-ui-components | 02-07 | 5min | 1 | 3 | 2026-02-20 |
 
 ---
 
 *State initialized: 2026-02-11*
-| Phase 02-core-ui-components P02-07 | 5min | 1 tasks | 3 files |
-| Phase 02-core-ui-components P02-06 | 7min | 1 tasks | 1 files |
 
