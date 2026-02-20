@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { css, keyframes } from 'styled-components';
 import { TIMING, reducedMotion } from '../../animations';
+import { ParticleBurst } from '../ParticleBurst';
 
 export interface ShelfSlotProps {
   id: string;
@@ -221,15 +222,30 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
   onDragLeave,
 }) => {
   const [showSparkle, setShowSparkle] = useState(false);
+  const [showParticles, setShowParticles] = useState(false);
+  const [particlePosition, setParticlePosition] = useState<{x: number, y: number} | null>(null);
   const prevStateRef = useRef<string>(state);
+  const slotRef = useRef<HTMLDivElement>(null);
 
   // Show sparkle effect when transitioning to filled state
   useEffect(() => {
     // Only trigger sparkle on transition TO filled state (correct placement)
     if (prevStateRef.current !== 'filled' && state === 'filled') {
       setShowSparkle(true);
+
+      // Trigger particle burst with slot center position
+      if (slotRef.current) {
+        const rect = slotRef.current.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        setParticlePosition({ x: centerX, y: centerY });
+        setShowParticles(true);
+      }
+
       const timer = setTimeout(() => {
         setShowSparkle(false);
+        setShowParticles(false);
+        setParticlePosition(null);
       }, 800);
       return () => clearTimeout(timer);
     }
@@ -269,51 +285,65 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
   ];
 
   return (
-    <SlotWrapper
-      $state={state}
-      onDragOver={handleDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={handleDrop}
-      role="region"
-      aria-label={`Shelf slot${expectedGenre ? ` for ${expectedGenre}` : ''}`}
-      aria-dropeffect={state === 'empty' || state === 'highlight' ? 'move' : 'none'}
-    >
-      {state === 'empty' && <ShelfTexture />}
+    <>
+      <SlotWrapper
+        $state={state}
+        onDragOver={handleDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={handleDrop}
+        role="region"
+        aria-label={`Shelf slot${expectedGenre ? ` for ${expectedGenre}` : ''}`}
+        aria-dropeffect={state === 'empty' || state === 'highlight' ? 'move' : 'none'}
+        ref={slotRef}
+      >
+        {state === 'empty' && <ShelfTexture />}
 
-      <GlowRing
-        $active={state === 'highlight' || state === 'invalid'}
-        $color={getGlowColor()}
-        aria-hidden="true"
-      />
+        <GlowRing
+          $active={state === 'highlight' || state === 'invalid'}
+          $color={getGlowColor()}
+          aria-hidden="true"
+        />
 
-      <SlotContent>
-        <SlotLabel $visible={state === 'empty' || state === 'highlight'}>
-          {state === 'empty' ? 'Empty Slot' : 'Drop Here'}
-        </SlotLabel>
-        {expectedGenre && (state === 'empty' || state === 'highlight') && (
-          <ExpectedGenre>{expectedGenre}</ExpectedGenre>
-        )}
-      </SlotContent>
+        <SlotContent>
+          <SlotLabel $visible={state === 'empty' || state === 'highlight'}>
+            {state === 'empty' ? 'Empty Slot' : 'Drop Here'}
+          </SlotLabel>
+          {expectedGenre && (state === 'empty' || state === 'highlight') && (
+            <ExpectedGenre>{expectedGenre}</ExpectedGenre>
+          )}
+        </SlotContent>
 
-      <FeedbackIcon $type={getFeedbackType()} />
+        <FeedbackIcon $type={getFeedbackType()} />
 
-      {/* Sparkle effect for correct placement */}
-      <SparkleEffect $show={showSparkle} aria-hidden="true">
-        {sparklePoints.map((point, index) => (
-          <SparklePoint
-            key={index}
-            $delay={point.delay}
-            style={{
-              top: point.top,
-              left: point.left,
-              right: point.right,
-            }}
-          >
-            ✦
-          </SparklePoint>
-        ))}
-      </SparkleEffect>
-    </SlotWrapper>
+        {/* Sparkle effect for correct placement */}
+        <SparkleEffect $show={showSparkle} aria-hidden="true">
+          {sparklePoints.map((point, index) => (
+            <SparklePoint
+              key={index}
+              $delay={point.delay}
+              style={{
+                top: point.top,
+                left: point.left,
+                right: point.right,
+              }}
+            >
+              ✦
+            </SparklePoint>
+          ))}
+        </SparkleEffect>
+      </SlotWrapper>
+
+      {/* Particle burst for correct placement */}
+      {showParticles && particlePosition && (
+        <ParticleBurst
+          x={particlePosition.x}
+          y={particlePosition.y}
+          count={10}
+          color="#ffd700"
+          onComplete={() => setShowParticles(false)}
+        />
+      )}
+    </>
   );
 };
 
