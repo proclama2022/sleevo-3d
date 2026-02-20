@@ -353,6 +353,8 @@ export function GameScreen() {
       genre: vinylMap.get(id)?.genre ?? '',
       year: vinylMap.get(id)?.year ?? 0,
       cover: vinylMap.get(id)?.cover,
+      artist: vinylMap.get(id)?.artist,
+      album: vinylMap.get(id)?.album,
     }));
 
   // Tutorial handlers

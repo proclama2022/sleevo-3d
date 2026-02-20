@@ -1,0 +1,256 @@
+.counter {
+  width: 100%;
+  max-width: 520px;
+  margin-top: 10px;
+  z-index: 2;
+  position: relative;
+}
+
+.base {
+  height: 56px;
+  margin: 0 8px;
+  border-radius: 10px 10px 14px 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 220, 160, 0.15), rgba(255, 220, 160, 0) 30%),
+    linear-gradient(180deg, #8a5a38 0%, #7a4a28 40%, #5a3218 100%),
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 38px,
+      rgba(0, 0, 0, 0.04) 38px 42px
+    );
+  box-shadow:
+    0 16px 32px rgba(0, 0, 0, 0.50),
+    0 6px 12px rgba(0, 0, 0, 0.35),
+    inset 0 2px 0 rgba(255, 230, 180, 0.20),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+
+.base::before {
+  content: '';
+  position: absolute;
+  inset: 4px 8px;
+  border-radius: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 36px,
+    rgba(30, 18, 8, 0.08) 36px 40px
+  );
+  pointer-events: none;
+}
+
+.surface {
+  margin-top: -42px;
+  border-radius: 14px;
+  padding: 14px 16px 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.10) 25%, rgba(255, 255, 255, 0.12) 100%),
+    linear-gradient(180deg, rgba(70, 60, 80, 0.50) 0%, rgba(32, 26, 40, 0.60) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.35),
+    0 4px 10px rgba(0, 0, 0, 0.25),
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.20);
+  min-height: 128px;
+  position: relative;
+  overflow: hidden;
+}
+
+.glassShine {
+  position: absolute;
+  inset: 3px;
+  border-radius: 12px;
+  pointer-events: none;
+  background:
+    linear-gradient(125deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.08) 35%, rgba(255, 255, 255, 0) 55%),
+    radial-gradient(ellipse 60% 40% at 30% 20%, rgba(255, 220, 180, 0.08) 0%, transparent 50%);
+  animation: glassShimmer 6s ease-in-out infinite alternate;
+}
+
+@keyframes glassShimmer {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.surface::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 235, 200, 0.6), transparent);
+  pointer-events: none;
+}
+
+.vinyls {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  position: relative;
+  z-index: 1;
+  padding: 6px 4px;
+}
+
+/* Più di 6 vinili: griglia a due righe centrata */
+.vinylsMultiRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  justify-items: center;
+  align-items: center;
+  gap: 6px 2px;
+  overflow-x: visible;
+  overflow-y: visible;
+  padding: 8px 4px;
+  flex-wrap: unset;
+}
+
+.vinyls::-webkit-scrollbar {
+  display: none;
+}
+
+.vinylSpot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  animation: vinylBob 3.2s ease-in-out infinite;
+}
+
+.vinylSpot:nth-child(2) {
+  animation-delay: -0.8s;
+}
+
+.vinylSpot:nth-child(3) {
+  animation-delay: -1.6s;
+}
+
+.vinylSpot:nth-child(4) {
+  animation-delay: -2.4s;
+}
+
+.vinylSpot:nth-child(5) {
+  animation-delay: -0.4s;
+}
+
+.vinylSpot:nth-child(6) {
+  animation-delay: -1.2s;
+}
+
+@keyframes vinylBob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-1px) rotate(0.5deg);
+  }
+  50% {
+    transform: translateY(-2.5px) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-1px) rotate(-0.5deg);
+  }
+}
+
+.shadow {
+  position: absolute;
+  bottom: -6px;
+  width: 56px;
+  height: 14px;
+  background: radial-gradient(ellipse, rgba(12, 8, 5, 0.55) 0%, rgba(18, 12, 8, 0.35) 40%, transparent 72%);
+  border-radius: 50%;
+  animation: shadowPulse 3.2s ease-in-out infinite;
+}
+
+.vinylSpot:nth-child(2) .shadow {
+  animation-delay: -0.8s;
+}
+
+.vinylSpot:nth-child(3) .shadow {
+  animation-delay: -1.6s;
+}
+
+.vinylSpot:nth-child(4) .shadow {
+  animation-delay: -2.4s;
+}
+
+.vinylSpot:nth-child(5) .shadow {
+  animation-delay: -0.4s;
+}
+
+.vinylSpot:nth-child(6) .shadow {
+  animation-delay: -1.2s;
+}
+
+@keyframes shadowPulse {
+  0%,
+  100% {
+    transform: scaleX(1) scaleY(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scaleX(0.82) scaleY(0.9);
+    opacity: 0.60;
+  }
+}
+
+/* Mano rimossa — elemento vuoto per non rompere il JSX */
+.hand {
+  display: none;
+}
+
+/* Superficie più alta quando ci sono due righe di vinili */
+.surface:has(.vinylsMultiRow) {
+  min-height: 180px;
+}
+
+@media (max-width: 450px) {
+  .surface {
+    padding: 10px 10px 10px;
+  }
+  .vinylsMultiRow {
+    grid-template-columns: repeat(auto-fill, minmax(68px, 1fr));
+    gap: 4px 2px;
+  }
+}
+
+@keyframes counterShake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  15% { transform: translateX(-5px) rotate(-2deg); }
+  30% { transform: translateX(5px) rotate(2deg); }
+  45% { transform: translateX(-4px) rotate(-1.5deg); }
+  60% { transform: translateX(4px) rotate(1.5deg); }
+  75% { transform: translateX(-2px) rotate(-1deg); }
+  90% { transform: translateX(2px) rotate(1deg); }
+}
+
+.shaking {
+  animation: counterShake 0.4s ease-in-out !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vinylSpot {
+    animation: none;
+  }
+  .shadow {
+    animation: none;
+  }
+  .shaking {
+    animation: none !important;
+  }
+}
