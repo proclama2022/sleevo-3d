@@ -241,7 +241,7 @@ export const VinylCard: React.FC<VinylCardProps> = ({
   useEffect(() => {
     if (state === 'placed') {
       setIsAnimating(true);
-      const timer = setTimeout(() => setIsAnimating(false), 400);
+      const timer = setTimeout(() => setIsAnimating(false), 150);
       return () => clearTimeout(timer);
     }
   }, [state]);
