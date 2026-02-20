@@ -191,42 +191,44 @@ export const animations = {
   cardPickup: css`
     animation: ${cardPickup} ${TIMING.CARD_PICKUP.duration}ms ${TIMING.CARD_PICKUP.easing} forwards;
   `,
-  
+
   cardDrop: css`
     animation: ${cardDrop} ${TIMING.CARD_DROP.duration}ms ${TIMING.CARD_DROP.easing} forwards;
   `,
-  
+
   cardSettle: css`
     animation: ${cardSettle} ${TIMING.CARD_SETTLE.duration}ms ${TIMING.CARD_SETTLE.easing} forwards;
   `,
-  
+
   scorePop: css`
     animation: ${scorePop} ${TIMING.SCORE_POP.duration}ms ${TIMING.SCORE_POP.easing} forwards;
   `,
-  
+
   scoreFloat: css`
     animation: ${scoreFloat} ${TIMING.SCORE_INCREMENT.duration}ms ${EASING.DECELERATE} forwards;
   `,
-  
+
   comboAppear: css`
     animation: ${comboAppear} ${TIMING.COMBO_POPUP.appear}ms ${EASING.SPRING} forwards;
   `,
-  
+
   comboDisappear: css`
     animation: ${comboDisappear} ${TIMING.COMBO_POPUP.disappear}ms ${EASING.ACCELERATE} forwards;
   `,
-  
+
   checkPop: css`
     animation: ${checkPop} 200ms ${EASING.SPRING} forwards;
   `,
-  
+
   shake: css`
     animation: ${shake} 150ms ${EASING.STANDARD};
   `,
-  
+
   glowPulse: css`
     animation: ${glowPulse} 1.5s ${EASING.STANDARD} infinite;
   `,
+
+  hoverGlow, // Export hoverGlow mixin for shelf slot hover state
 };
 
 /**
