@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled, { css, keyframes } from 'styled-components';
-import { TIMING, reducedMotion } from '../../animations';
+import { TIMING, reducedMotion, hoverGlow } from '../../animations';
 import { ParticleBurst } from '../ParticleBurst';
 
 export interface ShelfSlotProps {
@@ -8,12 +8,13 @@ export interface ShelfSlotProps {
   state: 'empty' | 'highlight' | 'filled' | 'invalid';
   placedVinylId?: string;
   expectedGenre?: string;
+  $isHovered?: boolean; // Hover state for drag collision detection (MOTION-03)
   onDrop?: () => void;
   onDragOver?: () => void;
   onDragLeave?: () => void;
 }
 
-const SlotWrapper = styled.div<{ $state: ShelfSlotProps['state'] }>`
+const SlotWrapper = styled.div<{ $state: ShelfSlotProps['state']; $isHovered?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -39,10 +40,23 @@ const SlotWrapper = styled.div<{ $state: ShelfSlotProps['state'] }>`
   }};
   border-radius: 8px;
   position: relative;
-  transition: 
+  transition:
     border-color ${TIMING.SHELF_HOVER.in}ms ${TIMING.SHELF_HOVER.easing},
     box-shadow ${TIMING.SHELF_HOVER.in}ms ${TIMING.SHELF_HOVER.easing},
     transform ${TIMING.TRANSITION_NORMAL}ms ${TIMING.SHELF_HOVER.easing};
+
+  /* Hover state with $isHovered prop (MOTION-03) */
+  ${(props) => props.$isHovered && props.$state === 'empty' && css`
+    border: 2px solid rgba(74, 222, 128, 0.8);
+    background: linear-gradient(180deg, rgba(74, 222, 128, 0.1) 0%, rgba(74, 222, 128, 0.05) 100%);
+    ${hoverGlow}
+  `}
+
+  ${(props) => !props.$isHovered && props.$state === 'empty' && css`
+    transition: all ${TIMING.SHELF_HOVER.out}ms ease-in;
+    border: 3px solid #3d2817;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.8) 100%);
+  `}
 
   ${(props) => props.$state === 'highlight' && css`
     box-shadow: 0 0 20px rgba(74, 222, 128, 0.6), 0 0 40px rgba(74, 222, 128, 0.3);
@@ -217,6 +231,7 @@ const SparkleEffect = styled.div<{ $show: boolean }>`
 export const ShelfSlot: React.FC<ShelfSlotProps> = ({
   state,
   expectedGenre,
+  $isHovered = false,
   onDrop,
   onDragOver,
   onDragLeave,
@@ -288,6 +303,7 @@ export const ShelfSlot: React.FC<ShelfSlotProps> = ({
     <>
       <SlotWrapper
         $state={state}
+        $isHovered={$isHovered}
         onDragOver={handleDragOver}
         onDragLeave={onDragLeave}
         onDrop={handleDrop}
