@@ -71,13 +71,16 @@
 
 **Priority:** P0 - Core gameplay UI
 
-**Plans:** 5 plans (Wave 1: 01, 02, 03 | Wave 2: 04 | Wave 3: 05)
+**Plans:** 8 plans (Wave 1: 01, 02, 03 | Wave 2: 04 | Wave 3: 05 | Gap closure Wave 1: 06, 07 | Gap closure Wave 2: 08)
 
 - [x] 02-01-PLAN.md — Update VinylCard: vinyl+sleeve shape, text overlay, 100px size
 - [x] 02-02-PLAN.md — Update ShelfSlot: recessed filled state, sparkle effect
 - [x] 02-03-PLAN.md — Update HUD: transparent bar, centered gauge, remove level name
 - [x] 02-04-PLAN.md — Accessibility verification: touch targets, shape+color, reduced motion
 - [x] 02-05-PLAN.md — Human verification checkpoint
+- [ ] 02-06-PLAN.md — Gap closure: Merge recessed state + sparkle into flat ShelfSlot.tsx (module resolution fix)
+- [ ] 02-07-PLAN.md — Gap closure: Wire HUD into GameScreen + wire ThemeProvider in App.tsx
+- [ ] 02-08-PLAN.md — Gap closure: Wire VinylCard into Counter + human visual verification
 
 ---
 
