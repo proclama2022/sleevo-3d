@@ -102,12 +102,13 @@ User sees points added with celebration:
 - Easing: `ease-out`
 - Animation: Number count up, scale pulse
 
-### MOTION-05: Combo Popup
+### MOTION-05: Combo Popup ✅
 User receives positive feedback for consecutive correct placements:
 - Total duration: 600-800ms
 - Phase 1: Scale in (200ms, `ease-out`)
 - Phase 2: Hold (200-400ms)
 - Phase 3: Fade out (200ms, `ease-in`)
+- **Implementation:** 4+ streak threshold, point bonus display, slot-based positioning (plan 03-01)
 
 ---
 
@@ -171,7 +172,7 @@ These are explicitly NOT in scope:
 |-------|--------------|
 | Phase 1: Foundation | DESIGN-01, DESIGN-02, DESIGN-03, DESIGN-04, DESIGN-05, ARCH-01 |
 | Phase 2: Components | COMP-01, COMP-02, COMP-03, COMP-04, COMP-05, A11Y-01, A11Y-02 |
-| Phase 3: Polish | MOTION-01, MOTION-02, MOTION-03, MOTION-04, MOTION-05, ARCH-02, ARCH-03 |
+| Phase 3: Interactions | MOTION-01 ✅, MOTION-02 ✅, MOTION-03 ✅, MOTION-04 ✅, MOTION-05 ✅, ARCH-02 ✅, ARCH-03 ✅ |
 
 ---
 

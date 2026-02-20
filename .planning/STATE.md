@@ -1,7 +1,7 @@
 # Project State
 
 **Project:** Sleevo UI/UX Redesign
-**Last Updated:** 2026-02-20T09:20:00Z
+**Last Updated:** 2026-02-20T11:08:18Z
 
 ---
 
@@ -10,6 +10,8 @@
 **Phase 1: Foundation & Design System** — Complete (5/5 plans)
 
 **Phase 2: Core UI Components** — Complete (8/8 plans complete, incl. 02-06 gap closure, 02-07 HUD wiring, and 02-08 VinylCard wiring)
+
+**Phase 3: Micro-Interactions & Animation** — In Progress (1/6 plans complete, 03-01 combo refactor done)
 
 ### Goal
 Establish design tokens, typography, and theming infrastructure for the "vinyl store Sunday morning" aesthetic.
@@ -38,6 +40,7 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 - [x] VinylCard wired into Counter replacing VinylDisc; human checkpoint approved all gap closure fixes (plan 02-08)
 
 ### Phase 3: Micro-Interactions & Animation
+- [x] Combo system refactor: 4+ threshold, forgiving reset, point bonus popup (plan 03-01)
 - [x] Animation timing constants (src/animations/timing.ts)
 - [x] Keyframe animations (src/animations/keyframes.ts)
 - [x] ScorePopup component with float animation
@@ -117,6 +120,10 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | Hybrid CSS modules + styled-components in ShelfSlot | Yes | CSS modules for layout, styled-components only for animated SparklePoint; avoids full rewrite |
 | onPointerDown wrapper div around VinylCard | Yes | Preserves pointer-based drag system without coupling to HTML5 drag API |
 | CSS class-based shake on Counter wrapper div | Yes | VinylCard has no shaking prop; wrapper div className drives animation |
+| Combo threshold 4+ consecutive placements | Yes | Higher bar makes combo feel earned |
+| Forgiving combo reset (streak - 1) | Yes | Wrong placement reduces streak by 1, not full reset - less punishing |
+| Point bonus display not streak count | Yes | Show "+150" instead of "4x COMBO" - clearer reward |
+| Slot-based popup positioning | Yes | Popup appears near placed vinyl, not screen center - better visual feedback |
 
 ---
 
@@ -144,16 +151,13 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | 2026-02-20 | ShelfSlot gap closure: sparkle and recessed state merged into flat file (plan 02-06) | Phase 2 |
 | 2026-02-20 | HUD wired into GameScreen replacing InfoPanel infoRow (plan 02-07) | Phase 2 |
 | 2026-02-20 | VinylCard wired into Counter replacing VinylDisc; human checkpoint approved (plan 02-08) | Phase 2 |
+| 2026-02-20 | Combo system refactor: 4+ threshold, forgiving reset, point bonus popup (plan 03-01) | Phase 3 |
 
 ---
 
 ## Next Action
 
-Phase 2 is complete. Proceed to Phase 3: Micro-Interactions & Animation.
-
-```
-/gsd:execute-phase 03-micro-interactions-animation
-```
+Phase 3 is in progress. Continue with plan 03-02.
 
 ---
 
@@ -174,6 +178,7 @@ Phase 2 is complete. Proceed to Phase 3: Micro-Interactions & Animation.
 | 02-core-ui-components | 02-06 | 7min | 1 | 1 | 2026-02-20 |
 | 02-core-ui-components | 02-07 | 5min | 1 | 3 | 2026-02-20 |
 | 02-core-ui-components | 02-08 | 8min | 2 | 2 | 2026-02-20 |
+| 03-micro-interactions-animation | 03-01 | 3min | 5 | 4 | 2026-02-20 |
 
 ---
 

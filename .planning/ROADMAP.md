@@ -106,7 +106,14 @@
 
 **Priority:** P1 - Polish layer
 
-**Plans:** To be created
+**Plans:** 6 plans
+
+- [ ] 03-01-PLAN.md — Refactor combo system (4+ threshold, point bonus, reduce by 1, position near slot)
+- [ ] 03-02-PLAN.md — Create particle burst system for correct placement
+- [ ] 03-03-PLAN.md — Speed up shake animation (150ms, 2-3 oscillations)
+- [ ] 03-04-PLAN.md — Polish card pickup animation (1.08 scale for energetic feel)
+- [ ] 03-05-PLAN.md — Human verification checkpoint for all MOTION requirements
+- [ ] 03-06-PLAN.md — Implement shelf hover state (150ms in, 200-300ms out, glow pulse)
 
 ---
 
