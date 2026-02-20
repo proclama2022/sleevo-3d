@@ -1,0 +1,517 @@
+.viewport {
+  min-height: 100dvh;
+  width: 100%;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background:
+    radial-gradient(circle at 50% 8%, rgba(245, 176, 65, 0.22) 0%, rgba(245, 176, 65, 0) 36%),
+    radial-gradient(circle at 50% 110%, rgba(26, 21, 18, 0.98) 0%, #1a1512 56%, #141110 100%),
+    linear-gradient(180deg, #1f1915 0%, #15120e 100%);
+}
+
+.screen {
+  position: relative;
+  width: min(100%, 462px);
+  height: min(95dvh, 918px);
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 72px 15px 12px;
+  isolation: isolate;
+  background:
+    linear-gradient(180deg, rgba(255, 235, 200, 0.15), rgba(255, 235, 200, 0) 18%),
+    linear-gradient(180deg, #5a3a28 0%, #4a2e1c 18%, #3a2416 52%, #2a1a10 100%);
+  border: 1px solid rgba(255, 200, 120, 0.28);
+  box-shadow:
+    0 44px 72px rgba(0, 0, 0, 0.55),
+    0 14px 28px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 240, 210, 0.22),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.dragging .shopBackdrop {
+  opacity: 0.6;
+}
+
+.dragging .bokeh {
+  opacity: 0.28;
+}
+
+.dragging .bgGlow {
+  opacity: 0.55;
+}
+
+.dragging .particles {
+  opacity: 0.35;
+}
+
+.dragging::before {
+  opacity: 0.4;
+}
+
+.dragging .backShelfTop,
+.dragging .backShelfMid,
+.dragging .backShelfBottom {
+  filter: blur(3px);
+  opacity: 0.35;
+}
+
+.dragging .backCrate {
+  filter: blur(2.5px);
+  opacity: 0.35;
+}
+
+.dragging .backSpeaker,
+.dragging .backPoster {
+  filter: blur(2px);
+  opacity: 0.3;
+}
+
+.shopBackdrop {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+  opacity: 0.85;
+}
+
+.shopBackdrop::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% -16%, rgba(255, 226, 173, 0.34) 0%, rgba(255, 226, 173, 0) 40%),
+    linear-gradient(180deg, rgba(15, 9, 7, 0.1) 0%, rgba(9, 7, 5, 0.24) 38%, rgba(7, 5, 4, 0.4) 100%);
+}
+
+.shopBackdrop::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0 28px,
+    rgba(0, 0, 0, 0.035) 28px 32px
+  );
+  mix-blend-mode: overlay;
+  opacity: 0.5;
+}
+
+.lampLeft,
+.lampRight {
+  position: absolute;
+  top: -30px;
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 44%, rgba(255, 200, 100, 0.72) 0%, rgba(255, 200, 100, 0.10) 38%, rgba(255, 200, 100, 0) 64%),
+    radial-gradient(circle at 50% 50%, rgba(58, 42, 28, 0.78) 0%, rgba(30, 22, 16, 0.88) 62%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 150, 0.35),
+    0 12px 28px rgba(0, 0, 0, 0.40);
+  opacity: 0.88;
+}
+
+.lampLeft {
+  left: 44px;
+}
+
+.lampRight {
+  right: 44px;
+}
+
+.lampLeft::before,
+.lampRight::before {
+  content: '';
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  width: 2px;
+  height: 34px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(89, 83, 78, 0.06), rgba(89, 83, 78, 0.68));
+}
+
+.lightConeLeft,
+.lightConeRight {
+  position: absolute;
+  top: 28px;
+  width: 260px;
+  height: 400px;
+  pointer-events: none;
+  filter: blur(2.5px);
+  mix-blend-mode: screen;
+}
+
+.lightConeLeft {
+  left: -50px;
+  background: 
+    radial-gradient(ellipse 62% 88% at 50% 0%, rgba(255, 200, 100, 0.65) 0%, rgba(255, 190, 80, 0.35) 30%, rgba(255, 180, 60, 0.15) 55%, rgba(255, 170, 50, 0) 100%),
+    linear-gradient(180deg, rgba(255, 210, 130, 0.12) 0%, transparent 60%);
+  transform: rotate(10deg);
+  animation: lightFlicker 8s ease-in-out infinite alternate;
+}
+
+.lightConeRight {
+  right: -50px;
+  background: 
+    radial-gradient(ellipse 62% 88% at 50% 0%, rgba(255, 200, 100, 0.65) 0%, rgba(255, 190, 80, 0.35) 30%, rgba(255, 180, 60, 0.15) 55%, rgba(255, 170, 50, 0) 100%),
+    linear-gradient(180deg, rgba(255, 210, 130, 0.12) 0%, transparent 60%);
+  transform: rotate(-10deg);
+  animation: lightFlicker 8s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes lightFlicker {
+  0%, 100% {
+    opacity: 1;
+    filter: blur(2.5px);
+  }
+  50% {
+    opacity: 0.92;
+    filter: blur(3px);
+  }
+}
+
+.backShelfTop,
+.backShelfMid,
+.backShelfBottom {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  height: 9px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(138, 91, 52, 0.62), rgba(71, 45, 27, 0.78));
+  box-shadow:
+    0 10px 14px rgba(0, 0, 0, 0.28),
+    inset 0 1px 0 rgba(255, 213, 154, 0.2);
+  filter: blur(0.4px);
+  opacity: 0.56;
+}
+
+.backShelfTop {
+  top: 156px;
+}
+
+.backShelfMid {
+  top: 248px;
+  left: 8%;
+  right: 8%;
+}
+
+.backShelfBottom {
+  top: 340px;
+}
+
+.backCrate {
+  position: absolute;
+  width: 70px;
+  height: 56px;
+  border-radius: 6px;
+  background:
+    linear-gradient(180deg, rgba(110, 74, 46, 0.54), rgba(63, 39, 24, 0.78));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 221, 174, 0.14),
+    0 5px 10px rgba(0, 0, 0, 0.26);
+  opacity: 0.58;
+  filter: blur(0.35px);
+}
+
+.backCrateA {
+  top: 166px;
+  left: 22%;
+}
+
+.backCrateB {
+  top: 166px;
+  right: 18%;
+}
+
+.backCrateC {
+  top: 258px;
+  left: 18%;
+}
+
+.backCrateD {
+  top: 258px;
+  right: 24%;
+}
+
+.backSpeaker {
+  position: absolute;
+  left: 38px;
+  top: 276px;
+  width: 64px;
+  height: 84px;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 50% 70%, rgba(28, 20, 16, 0.85) 0 18px, rgba(98, 74, 52, 0.46) 19px 22px, rgba(50, 34, 24, 0.78) 23px 100%),
+    linear-gradient(180deg, rgba(83, 59, 39, 0.7), rgba(33, 22, 14, 0.86));
+  opacity: 0.54;
+  filter: blur(0.3px);
+}
+
+.backPoster {
+  position: absolute;
+  right: 28px;
+  top: 118px;
+  width: 94px;
+  height: 122px;
+  border-radius: 8px;
+  background:
+    linear-gradient(180deg, rgba(222, 139, 86, 0.2), rgba(83, 49, 30, 0.38)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0));
+  border: 1px solid rgba(232, 179, 124, 0.12);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24);
+  opacity: 0.5;
+}
+
+.bokeh {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(12px);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+}
+
+.bokehA {
+  width: 92px;
+  height: 92px;
+  left: 18px;
+  top: 102px;
+  background: radial-gradient(circle, rgba(255, 190, 110, 0.85) 0%, rgba(255, 180, 90, 0.4) 50%, transparent 75%);
+  animation: bokehDrift 12s ease-in-out infinite alternate;
+}
+
+.bokehB {
+  width: 78px;
+  height: 78px;
+  right: 24px;
+  top: 248px;
+  background: radial-gradient(circle, rgba(255, 140, 90, 0.80) 0%, rgba(255, 120, 70, 0.35) 50%, transparent 75%);
+  animation: bokehDrift 14s ease-in-out infinite alternate-reverse;
+}
+
+.bokehC {
+  width: 70px;
+  height: 70px;
+  left: 68px;
+  top: 290px;
+  background: radial-gradient(circle, rgba(140, 195, 240, 0.75) 0%, rgba(120, 175, 220, 0.3) 50%, transparent 75%);
+  animation: bokehDrift 10s ease-in-out infinite alternate;
+}
+
+.bokehD {
+  width: 68px;
+  height: 68px;
+  right: 92px;
+  top: 128px;
+  background: radial-gradient(circle, rgba(180, 245, 220, 0.72) 0%, rgba(160, 225, 200, 0.28) 50%, transparent 75%);
+  animation: bokehDrift 16s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes bokehDrift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(8px, -6px) scale(1.08);
+  }
+}
+
+.screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 15%, rgba(255, 209, 132, 0.3) 0%, rgba(255, 209, 132, 0) 35%),
+    radial-gradient(circle at 17% 38%, rgba(0, 0, 0, 0.36) 0 11%, rgba(0, 0, 0, 0) 28%),
+    radial-gradient(circle at 19% 37%, rgba(255, 197, 126, 0.14) 0 6%, rgba(255, 197, 126, 0) 24%),
+    linear-gradient(
+      180deg,
+      rgba(103, 71, 46, 0.3) 14%,
+      rgba(103, 71, 46, 0.3) 16.4%,
+      rgba(50, 35, 25, 0) 16.5%,
+      rgba(50, 35, 25, 0) 29%,
+      rgba(103, 71, 46, 0.23) 29.2%,
+      rgba(103, 71, 46, 0.23) 31.3%,
+      rgba(50, 35, 25, 0) 31.4%,
+      rgba(50, 35, 25, 0) 44%,
+      rgba(97, 67, 43, 0.17) 44.1%,
+      rgba(97, 67, 43, 0.17) 46.2%,
+      rgba(50, 35, 25, 0) 46.3%
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(48, 28, 16, 0.22) 0 36px,
+      rgba(22, 14, 8, 0.30) 36px 44px,
+      rgba(42, 26, 14, 0.18) 44px 52px,
+      rgba(18, 12, 6, 0.26) 52px 58px
+    );
+  filter: blur(0.6px) saturate(1.1);
+  opacity: 0.58;
+}
+
+.screen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 72% 42% at 50% 24%, rgba(255, 201, 128, 0.14), rgba(255, 201, 128, 0)),
+    radial-gradient(ellipse 130% 94% at 50% 76%, rgba(15, 10, 7, 0), rgba(2, 2, 2, 0.62) 74%),
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0) 70%);
+}
+
+.bgGlow {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 64% 36% at 50% 20%, rgba(255, 200, 100, 0.52), rgba(255, 200, 100, 0)),
+    radial-gradient(ellipse 42% 28% at 50% 50%, rgba(255, 180, 80, 0.14), rgba(255, 180, 80, 0)),
+    radial-gradient(ellipse 100% 70% at 50% 65%, rgba(28, 20, 14, 0.16) 0%, rgba(18, 14, 10, 0.48) 100%);
+  animation: glowPulse 6s ease-in-out infinite alternate;
+  opacity: 0.90;
+}
+
+.bgGlow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 82% 78% at 50% 50%, rgba(0, 0, 0, 0) 38%, rgba(0, 0, 0, 0.72) 100%);
+}
+
+@keyframes glowPulse {
+  0% {
+    opacity: 0.86;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.bgShelfLeft,
+.bgShelfRight {
+  position: absolute;
+  width: 132px;
+  height: 348px;
+  border-radius: 10px;
+  opacity: 0.28;
+  filter: blur(8px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.bgShelfLeft {
+  left: -52px;
+  top: 17%;
+  background: linear-gradient(180deg, #5a3d2a 0%, #1b110b 100%);
+  transform: perspective(330px) rotateY(10deg);
+}
+
+.bgShelfRight {
+  right: -48px;
+  top: 16%;
+  background: linear-gradient(180deg, #523827 0%, #160f09 100%);
+  transform: perspective(330px) rotateY(-10deg);
+}
+
+.sceneFog {
+  position: absolute;
+  inset: 45% 0 0;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(18, 13, 10, 0) 0%, rgba(11, 8, 6, 0.12) 48%, rgba(8, 6, 4, 0.3) 100%);
+}
+
+.particles {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.85;
+}
+
+.particle {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 220, 140, 0.9) 0%, rgba(255, 200, 100, 0.4) 40%, transparent 70%);
+  box-shadow: 0 0 3px rgba(255, 210, 130, 0.5);
+  animation: dustFloat linear infinite;
+}
+
+@keyframes dustFloat {
+  0% {
+    transform: translateY(100%) translateX(0) scale(0.8);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.65;
+  }
+  92% {
+    opacity: 0.45;
+  }
+  100% {
+    transform: translateY(-20px) translateX(52px) scale(1.1);
+    opacity: 0;
+  }
+}
+
+.infoRow {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 16px;
+  z-index: 2;
+}
+
+.shelfStage {
+  width: 100%;
+  max-width: 432px;
+  height: 10px;
+  margin-top: 0;
+  border-radius: 0 0 6px 6px;
+  background: linear-gradient(180deg, #6d4429 0%, #4b2d1a 100%);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 219, 167, 0.16);
+  position: relative;
+  z-index: 2;
+}
+
+
+
+
+
+@media (max-width: 520px) {
+  .viewport {
+    padding: 0;
+    background: #0a0908;
+  }
+
+  .screen {
+    width: 100%;
+    height: 100dvh;
+    border-radius: 0;
+    border: none;
+    box-shadow: none;
+    padding-top: max(72px, calc(env(safe-area-inset-top) + 60px));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+}
