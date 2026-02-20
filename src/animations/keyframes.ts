@@ -152,16 +152,16 @@ export const checkPop = keyframes`
 
 /**
  * Shake Animation
- * Invalid placement feedback
+ * Invalid placement feedback - 2-3 oscillations for snappier feel
  */
 export const shake = keyframes`
   0%, 100% {
     transform: translateX(0);
   }
-  10%, 30%, 50%, 70%, 90% {
+  20%, 60% {
     transform: translateX(-4px);
   }
-  20%, 40%, 60%, 80% {
+  40%, 80% {
     transform: translateX(4px);
   }
 `;
@@ -203,7 +203,7 @@ export const animations = {
   `,
   
   shake: css`
-    animation: ${shake} 400ms ${EASING.STANDARD};
+    animation: ${shake} 150ms ${EASING.STANDARD};
   `,
   
   glowPulse: css`
