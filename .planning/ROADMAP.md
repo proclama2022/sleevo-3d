@@ -1,210 +1,78 @@
-# Sleevo UI/UX Redesign - Roadmap
-
-**Project:** Sleevo Vinyl Shop Manager
-**Created:** 2026-02-11
-**Mode:** Standard (5-8 phases)
-**Status:** Phase 1 Complete, Phase 2 Complete, Phase 3 In Progress
-
----
+# Roadmap: Sleevo
 
 ## Overview
 
-| Metric | Value |
-|--------|-------|
-| Total Phases | 5 |
-| Total Requirements | 16 |
-| Est. Complexity | Medium |
+This milestone transforms Sleevo's working gameplay foundation into a complete, communicative game experience. The codebase already has drag-drop, combo mechanics, and 3D rendering; what's missing is the layer that tells players what happened, how well they did, and where they stand. Four phases deliver this: first fix the structural bugs that would corrupt everything else, then build the star rating system, then wire up level select and progression navigation, then author the full 20+ level catalog with all game modes validated.
 
----
+## Phases
 
-## Phase 1: Foundation & Design System
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-**Goal:** Establish design tokens, typography, and theming infrastructure for the "vinyl store Sunday morning" aesthetic.
+Decimal phases appear between their surrounding integers in numeric order.
 
-**Requirements:** DESIGN-01, DESIGN-02, DESIGN-03, DESIGN-04, DESIGN-05, ARCH-01
+- [ ] **Phase 1: Foundation Fixes** - Fix structural bugs and wire existing score feedback components
+- [ ] **Phase 2: Star System and Level Complete** - Implement star rating formula and complete the end-of-level ceremony
+- [ ] **Phase 3: Progression and Navigation** - Level select screen, unlock gating, and HUD rule display
+- [ ] **Phase 4: Level Content and Mode Validation** - Author 20+ levels and validate all game modes end-to-end
 
-**Deliverables:**
-- JSON design tokens file with color palette (5 HEX codes)
-- Typography scale configuration
-- 8px spacing grid system
-- Responsive breakpoint definitions
-- WCAG AA contrast validation
-- styled-components ThemeProvider setup
+## Phase Details
 
-**Success Criteria:**
-1. All color combinations pass WCAG AA contrast ratios
-2. Typography renders correctly across all breakpoints
-3. Spacing follows 8px grid consistently
-4. Theme object is type-safe and consumable by components
+### Phase 1: Foundation Fixes
+**Goal**: The game engine is structurally sound and players see floating score feedback on every correct placement
+**Depends on**: Nothing (first phase)
+**Requirements**: FIX-01, FIX-02, FIX-03, FIX-04, COMM-01, COMM-02, COMM-03
+**Success Criteria** (what must be TRUE):
+  1. A floating "+N" label appears near the shelf slot within 200ms of every correct vinyl placement
+  2. The HUD shows a live "X / Y piazzati" counter that increments with each valid drop
+  3. The HUD shows the active level rule persistently (e.g., "Ordina per: Genere") for the entire level
+  4. Completing level N with 2 stars unlocks level N+1 (not level N with 1 star)
+  5. The codebase has one canonical state system: `useReducer` in `GameScreen`; the dormant Zustand `gameStore` is removed or explicitly quarantined
+**Plans**: TBD
 
-**Priority:** P0 - Must complete before any component work
+### Phase 2: Star System and Level Complete
+**Goal**: Players receive a clear, meaningful performance rating at the end of every level
+**Depends on**: Phase 1
+**Requirements**: STAR-01, STAR-02, STAR-03, COMM-04
+**Success Criteria** (what must be TRUE):
+  1. The end-of-level screen shows 1, 2, or 3 stars with an animated reveal
+  2. The end-of-level screen shows the final score, error count, and time elapsed
+  3. A rush/blackout level with 2 mistakes and under par time yields a different star count than a genre level with the same stats (mode-differentiated thresholds)
+  4. Star ratings and level completion state persist across browser sessions (reload does not reset progress)
+**Plans**: TBD
 
-**Plans:** 5 plans (Wave 1: 01, 02a, 03a | Wave 2: 02b, 03b)
+### Phase 3: Progression and Navigation
+**Goal**: Players can navigate between levels, see their history, and the game resumes at the right level on load
+**Depends on**: Phase 2
+**Requirements**: PROG-01, PROG-02, PROG-03
+**Success Criteria** (what must be TRUE):
+  1. A level select screen shows all levels as a grid with locked/unlocked state and best star count visible
+  2. Locked levels cannot be started; the player must earn 2 stars on the previous level to unlock the next
+  3. On app load, the game opens at the player's most recently unlocked level (not always level 1)
+  4. Best star count for a completed level is preserved and displayed after the player replays and does worse
+**Plans**: TBD
 
-- [x] 01-foundation-design-system-01-PLAN.md — Color and spacing design tokens with WCAG AA validation
-- [x] 01-foundation-design-system-02a-PLAN.md — Typography and breakpoint token JSON files
-- [x] 01-foundation-design-system-02b-PLAN.md — Google Fonts import and TypeScript token exports
-- [x] 01-foundation-design-system-03a-PLAN.md — Install dependencies and create theme structure
-- [x] 01-foundation-design-system-03b-PLAN.md — Complete theme, ThemeProvider, GlobalStyles, App.tsx integration
+### Phase 4: Level Content and Mode Validation
+**Goal**: The game has 20+ levels covering all modes with a smooth difficulty curve and reliable mode behavior
+**Depends on**: Phase 3
+**Requirements**: LVLS-01, LVLS-02, LVLS-03, LVLS-04, MODE-01, MODE-02, MODE-03, MODE-04
+**Success Criteria** (what must be TRUE):
+  1. There are at least 21 playable levels, each with a visible hint explaining the rule before play starts
+  2. All 7 level modes (free, genre, chronological, customer, blackout, rush, sleeve-match) appear in at least one level
+  3. Rush mode shows a countdown timer in the HUD and shows a defined "time's up" result when it expires
+  4. Blackout mode reliably hides column labels without flicker; the hide logic lives in the engine, not a useEffect
+  5. Customer mode shows the active customer request clearly during play; the request resets correctly on LOAD_LEVEL
+**Plans**: TBD
 
----
+## Progress
 
-## Phase 2: Core UI Components
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4
 
-**Goal:** Update existing components to match locked user decisions: vinyl+sleeve card shape, text overlay on art, recessed shelf slots with sparkle, transparent HUD with centered gauge.
-
-**Requirements:** COMP-01, COMP-02, COMP-03, COMP-04, A11Y-01
-
-**Deliverables:**
-- VinylCard component with vinyl+sleeve shape, text overlay, 100px size
-- ShelfSlot component with recessed filled state, sparkle effect
-- HUD component with transparent bar, centered gauge, no level name
-- ProgressBar component (circular SVG gauge)
-- Touch target validation (44x44px minimum)
-
-**Success Criteria:**
-1. VinylCard shows vinyl disc offset from sleeve with text overlaid on art
-2. ShelfSlot provides recessed filled state and sparkle on correct placement
-3. HUD displays Score/Timer/Moves with centered gauge, no level name
-4. All touch targets meet 44x44px minimum
-5. All feedback uses shape + color for color blind accessibility
-
-**Priority:** P0 - Core gameplay UI
-
-**Plans:** 8 plans (Wave 1: 01, 02, 03 | Wave 2: 04 | Wave 3: 05 | Gap closure Wave 1: 06, 07 | Gap closure Wave 2: 08)
-
-- [x] 02-01-PLAN.md — Update VinylCard: vinyl+sleeve shape, text overlay, 100px size
-- [x] 02-02-PLAN.md — Update ShelfSlot: recessed filled state, sparkle effect
-- [x] 02-03-PLAN.md — Update HUD: transparent bar, centered gauge, remove level name
-- [x] 02-04-PLAN.md — Accessibility verification: touch targets, shape+color, reduced motion
-- [x] 02-05-PLAN.md — Human verification checkpoint
-- [x] 02-06-PLAN.md — Gap closure: Merge recessed state + sparkle into flat ShelfSlot.tsx (module resolution fix)
-- [x] 02-07-PLAN.md — Gap closure: Wire HUD into GameScreen + wire ThemeProvider in App.tsx
-- [x] 02-08-PLAN.md — Gap closure: Wire VinylCard into Counter + human visual verification
-
----
-
-## Phase 3: Micro-Interactions & Animation
-
-**Goal:** Implement satisfying micro-interactions with exact timing specifications.
-
-**Requirements:** MOTION-01, MOTION-02, MOTION-03, MOTION-04, MOTION-05
-
-**Deliverables:**
-- Card pickup animation (200-250ms, spring easing)
-- Card drop animation (150-200ms, Material easing)
-- Shelf hover state animation (150ms in, 200-300ms out)
-- Score increment animation (300-400ms)
-- Combo popup animation (600-800ms total)
-
-**Success Criteria:**
-1. Card pickup feels springy and responsive
-2. Card drop settles satisfyingly into slot
-3. Hover states provide instant feedback
-4. Score increment celebrates points earned
-5. Combo popup rewards consecutive correct placements
-
-**Priority:** P1 - Polish layer
-
-**Plans:** 6 plans
-
-- [x] 03-01-PLAN.md — Refactor combo system (4+ threshold, point bonus, reduce by 1, position near slot)
-- [x] 03-02-PLAN.md — Create particle burst system for correct placement
-- [ ] 03-03-PLAN.md — Speed up shake animation (150ms, 2-3 oscillations)
-- [ ] 03-04-PLAN.md — Polish card pickup animation (1.08 scale for energetic feel)
-- [ ] 03-05-PLAN.md — Human verification checkpoint for all MOTION requirements
-- [x] 03-06-PLAN.md — Implement shelf hover state (150ms in, 200-300ms out, glow pulse)
-
----
-
-## Phase 4: Architecture Integration
-
-**Goal:** Connect React UI layer to existing Three.js game with state synchronization.
-
-**Requirements:** ARCH-02, ARCH-03, COMP-05
-
-**Deliverables:**
-- Zustand store for game state
-- GameBridge service for UI <-> Game communication
-- Canvas event layering (pointer-events configuration)
-- Touch feedback with haptic support
-
-**Success Criteria:**
-1. UI and game state stay synchronized
-2. Game interactions work with UI overlay present
-3. Score/progress updates in real-time
-4. Touch feedback feels responsive
-
-**Priority:** P1 - Required for functional game
-
-**Plans:** To be created
-
----
-
-## Phase 5: Accessibility & Final Polish
-
-**Goal:** Ensure full accessibility compliance and mobile optimization.
-
-**Requirements:** A11Y-02, responsive testing, performance validation
-
-**Deliverables:**
-- Screen reader support (ARIA labels, live regions)
-- Multi-device testing (compact/medium/large)
-- Performance profiling (60fps maintained)
-- Bundle size optimization
-
-**Success Criteria:**
-1. Screen reader navigates all UI elements
-2. Game works on all target device sizes
-3. Animations maintain 60fps on mobile
-4. Bundle size increase <50KB
-
-**Priority:** P2 - Quality assurance
-
-**Plans:** To be created
-
----
-
-## Dependency Graph
-
-```
-Phase 1 (Foundation) ————————┐
-    ↓                          │
-Phase 2 (Components) ────────┤
-    ↓                          │
-Phase 3 (Interactions)         │
-    ↓                          ↓
-Phase 4 (Integration) ←────────┘
-    ↓
-Phase 5 (Polish)
-```
-
----
-
-## Risk Mitigation
-
-| Risk | Mitigation | Phase |
-|------|------------|-------|
-| Vintage overload | 80/20 rule, restraint principles | Phase 1 |
-| Contrast failure | WCAG validation in design tokens | Phase 1 |
-| AI gradient hangover | Code review checklist | Phase 2 |
-| Touch targets too small | Automated size testing | Phase 2 |
-| Canvas event blocking | pointer-events configuration | Phase 4 |
-| Performance drops | Lighthouse >90, 60fps requirement | Phase 5 |
-
----
-
-## Next Steps
-
-1. **Now:** Run `/gsd:execute-phase 02-core-ui-components` to execute Phase 2 plans
-2. **After Phase 2:** Proceed to Phase 3 micro-interactions
-3. **Recommended:** Use `/clear` between phases for fresh context
-
----
-
-*Roadmap created: 2026-02-11*
-*Phase 1 planned: 2026-02-11*
-*Phase 1 revised: 2026-02-11 (split into 5 plans with wave structure)*
-*Phase 2 planned: 2026-02-19 (5 plans, 3 waves)*
-*Total requirements mapped: 16*
-*All v1 requirements covered: Y*
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. Foundation Fixes | 0/? | Not started | - |
+| 2. Star System and Level Complete | 0/? | Not started | - |
+| 3. Progression and Navigation | 0/? | Not started | - |
+| 4. Level Content and Mode Validation | 0/? | Not started | - |
