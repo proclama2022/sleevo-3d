@@ -1,7 +1,7 @@
 # Project State
 
 **Project:** Sleevo UI/UX Redesign
-**Last Updated:** 2026-02-20T00:05:00Z
+**Last Updated:** 2026-02-20T09:01:30Z
 
 ---
 
@@ -9,7 +9,7 @@
 
 **Phase 1: Foundation & Design System** — Complete (5/5 plans)
 
-**Phase 2: Core UI Components** — Complete (5/5 plans complete)
+**Phase 2: Core UI Components** — Complete (7/7 plans complete, incl. 02-06 gap closure and 02-07 HUD wiring)
 
 ### Goal
 Establish design tokens, typography, and theming infrastructure for the "vinyl store Sunday morning" aesthetic.
@@ -33,6 +33,8 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 - [x] ProgressBar component (circular SVG gauge)
 - [x] HUD component (level, score, timer, moves)
 - [x] Human verification checkpoint - all components approved (plan 02-05)
+- [x] ShelfSlot gap closure: sparkle + recessed state merged into flat file (plan 02-06)
+- [x] HUD wired into GameScreen, replacing InfoPanel infoRow (plan 02-07)
 
 ### Phase 3: Micro-Interactions & Animation
 - [x] Animation timing constants (src/animations/timing.ts)
@@ -108,6 +110,8 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | Text overlay with gradient for readability | Yes | 85% to 0% opacity from bottom |
 | 2deg rotation on drag | Yes | Tactile, realistic record feel |
 | Accessibility verification pattern | Yes | All components have touch targets, shape+color, reduced motion |
+| ThemeProvider at App root | Yes | Required for all styled-components to receive theme tokens |
+| HUD padding-top offset 72px | Yes | Prevents fixed HUD bar from covering game content |
 
 ---
 
@@ -132,6 +136,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | 2026-02-19 | HUD layout update with progress gauge (plan 02-03) | Phase 2 |
 | 2026-02-19 | Accessibility verification passed (plan 02-04) | Phase 2 |
 | 2026-02-20 | Human verification checkpoint - all components approved (plan 02-05) | Phase 2 |
+| 2026-02-20 | HUD wired into GameScreen replacing InfoPanel infoRow (plan 02-07) | Phase 2 |
 
 ---
 
@@ -159,7 +164,11 @@ Phase 2 is complete. Proceed to Phase 3: Micro-Interactions & Animation.
 | 02-core-ui-components | 02-03 | 8min | 2 | 1 | 2026-02-19 |
 | 02-core-ui-components | 02-04 | 2min | 4 | 0 | 2026-02-19 |
 | 02-core-ui-components | 02-05 | 2min | 1 | 0 | 2026-02-20 |
+| 02-core-ui-components | 02-07 | 5min | 1 | 3 | 2026-02-20 |
 
 ---
 
 *State initialized: 2026-02-11*
+| Phase 02-core-ui-components P02-07 | 5min | 1 tasks | 3 files |
+| Phase 02-core-ui-components P02-06 | 7min | 1 tasks | 1 files |
+
