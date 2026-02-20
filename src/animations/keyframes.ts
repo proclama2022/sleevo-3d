@@ -123,14 +123,32 @@ export const comboDisappear = keyframes`
 
 /**
  * Glow Pulse
- * Subtle pulsing glow effect
+ * Subtle pulsing glow effect for shelf slot hover (MOTION-03)
+ * Uses specific green color per user decision from 03-CONTEXT.md
  */
 export const glowPulse = keyframes`
   0%, 100% {
-    box-shadow: 0 0 10px currentColor;
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.4),
+                0 0 24px rgba(74, 222, 128, 0.2);
   }
   50% {
-    box-shadow: 0 0 20px currentColor, 0 0 30px currentColor;
+    box-shadow: 0 0 20px rgba(74, 222, 128, 0.6),
+                0 0 40px rgba(74, 222, 128, 0.3);
+  }
+`;
+
+/**
+ * Hover Glow - for shelf slot hover state
+ * Fast enter (150ms ease-out), subtle pulse animation
+ * Per requirement MOTION-03: 150ms enter, 200-300ms exit
+ */
+export const hoverGlow = css`
+  transition: all ${TIMING.SHELF_HOVER.in}ms ease-out;
+  animation: ${glowPulse} 2s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    animation: none;
   }
 `;
 
