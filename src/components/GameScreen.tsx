@@ -6,6 +6,7 @@ import { Counter } from './Counter';
 import { InstructionPill } from './InstructionPill';
 import { Controls } from './Controls';
 import { ComboFloat } from './ComboFloat';
+import { ComboPopup } from './ComboPopup/ComboPopup';
 import { LevelComplete } from './LevelComplete';
 import { saveProgress } from '../game/storage';
 import { LEVELS } from '../game/levels';
@@ -67,6 +68,9 @@ export function GameScreen() {
 
   // Combo countdown (Fix 2) — conta i secondi rimanenti prima del decay
   const [comboSecondsLeft, setComboSecondsLeft] = useState<number | null>(null);
+
+  // Track last placed slot position for ComboPopup
+  const [lastSlotPosition, setLastSlotPosition] = useState<{ x: number; y: number } | null>(null);
 
   // Combo decay timer
   useEffect(() => {
@@ -305,6 +309,13 @@ export function GameScreen() {
     const currentSlot = hoverSlotRef.current;
     if (currentSlot) {
       if (state.grid[currentSlot.row][currentSlot.col].vinylId === null) {
+        // Capture slot position before dispatching
+        const slotElement = hoverElementRef.current;
+        if (slotElement) {
+          const rect = slotElement.getBoundingClientRect();
+          setLastSlotPosition({ x: rect.left + rect.width / 2, y: rect.top });
+        }
+
         dispatch({ type: 'PLACE_VINYL', vinylId: drag.vinylId, row: currentSlot.row, col: currentSlot.col });
         if (navigator.vibrate) navigator.vibrate(50);
       } else {
@@ -438,6 +449,16 @@ export function GameScreen() {
             label={state.combo.label}
             multiplier={`x${state.combo.multiplier}`}
             timeLeft={comboSecondsLeft}
+          />
+        )}
+
+        {/* Combo popup - appears after 4+ streak, positioned near placed slot */}
+        {state.combo.streak >= 4 && lastSlotPosition && (
+          <ComboPopup
+            key={state.combo.lastPlacementTime}
+            pointsBonus={Math.round(100 * (state.combo.multiplier - 1))}
+            position={lastSlotPosition}
+            onComplete={() => setLastSlotPosition(null)}
           />
         )}
 
