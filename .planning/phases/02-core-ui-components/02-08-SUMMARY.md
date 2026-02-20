@@ -113,3 +113,9 @@ None - no external service configuration required.
 ---
 *Phase: 02-core-ui-components*
 *Completed: 2026-02-20*
+
+## Self-Check: PASSED
+
+- FOUND: `.planning/phases/02-core-ui-components/02-08-SUMMARY.md`
+- FOUND: commit `d0827dd` (feat: replace VinylDisc with VinylCard in Counter)
+- FOUND: commit `7ed0679` (docs: complete Wire VinylCard into Counter plan)

@@ -1,7 +1,7 @@
 # Project State
 
 **Project:** Sleevo UI/UX Redesign
-**Last Updated:** 2026-02-20T09:01:30Z
+**Last Updated:** 2026-02-20T09:20:00Z
 
 ---
 
@@ -9,7 +9,7 @@
 
 **Phase 1: Foundation & Design System** — Complete (5/5 plans)
 
-**Phase 2: Core UI Components** — Complete (7/7 plans complete, incl. 02-06 gap closure and 02-07 HUD wiring)
+**Phase 2: Core UI Components** — Complete (8/8 plans complete, incl. 02-06 gap closure, 02-07 HUD wiring, and 02-08 VinylCard wiring)
 
 ### Goal
 Establish design tokens, typography, and theming infrastructure for the "vinyl store Sunday morning" aesthetic.
@@ -35,6 +35,7 @@ Establish design tokens, typography, and theming infrastructure for the "vinyl s
 - [x] Human verification checkpoint - all components approved (plan 02-05)
 - [x] ShelfSlot gap closure: sparkle + recessed state merged into flat file (plan 02-06)
 - [x] HUD wired into GameScreen, replacing InfoPanel infoRow (plan 02-07)
+- [x] VinylCard wired into Counter replacing VinylDisc; human checkpoint approved all gap closure fixes (plan 02-08)
 
 ### Phase 3: Micro-Interactions & Animation
 - [x] Animation timing constants (src/animations/timing.ts)
@@ -114,6 +115,8 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | HUD padding-top offset 72px | Yes | Prevents fixed HUD bar from covering game content |
 | Merge sparkle into flat ShelfSlot.tsx | Yes | Vite resolves ./ShelfSlot to flat file before directory index; folder version was silently bypassed |
 | Hybrid CSS modules + styled-components in ShelfSlot | Yes | CSS modules for layout, styled-components only for animated SparklePoint; avoids full rewrite |
+| onPointerDown wrapper div around VinylCard | Yes | Preserves pointer-based drag system without coupling to HTML5 drag API |
+| CSS class-based shake on Counter wrapper div | Yes | VinylCard has no shaking prop; wrapper div className drives animation |
 
 ---
 
@@ -140,6 +143,7 @@ See: .planning/PROJECT.md (updated 2026-02-11)
 | 2026-02-20 | Human verification checkpoint - all components approved (plan 02-05) | Phase 2 |
 | 2026-02-20 | ShelfSlot gap closure: sparkle and recessed state merged into flat file (plan 02-06) | Phase 2 |
 | 2026-02-20 | HUD wired into GameScreen replacing InfoPanel infoRow (plan 02-07) | Phase 2 |
+| 2026-02-20 | VinylCard wired into Counter replacing VinylDisc; human checkpoint approved (plan 02-08) | Phase 2 |
 
 ---
 
@@ -169,6 +173,7 @@ Phase 2 is complete. Proceed to Phase 3: Micro-Interactions & Animation.
 | 02-core-ui-components | 02-05 | 2min | 1 | 0 | 2026-02-20 |
 | 02-core-ui-components | 02-06 | 7min | 1 | 1 | 2026-02-20 |
 | 02-core-ui-components | 02-07 | 5min | 1 | 3 | 2026-02-20 |
+| 02-core-ui-components | 02-08 | 8min | 2 | 2 | 2026-02-20 |
 
 ---
 
