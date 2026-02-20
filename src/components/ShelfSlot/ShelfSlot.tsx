@@ -66,7 +66,7 @@ const SlotWrapper = styled.div<{ $state: ShelfSlotProps['state']; $isHovered?: b
   ${(props) => props.$state === 'invalid' && css`
     background: linear-gradient(180deg, rgba(58, 18, 12, 0.9) 0%, rgba(32, 10, 8, 0.95) 100%);
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.6), 0 0 40px rgba(239, 68, 68, 0.3);
-    animation: shake 400ms ease-in-out, invalidPulse 700ms ease-in-out;
+    animation: shake 150ms ease-in-out, invalidPulse 700ms ease-in-out;
   `}
 
   ${(props) => props.$state === 'filled' && css`
@@ -84,8 +84,8 @@ const SlotWrapper = styled.div<{ $state: ShelfSlotProps['state']; $isHovered?: b
   
   @keyframes shake {
     0%, 100% { transform: translateX(0); }
-    10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
-    20%, 40%, 60%, 80% { transform: translateX(3px); }
+    20%, 60% { transform: translateX(-3px); }
+    40%, 80% { transform: translateX(3px); }
   }
 
   @keyframes invalidPulse {
