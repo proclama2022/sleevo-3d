@@ -1,219 +1,232 @@
 # Project Research Summary
 
-**Project:** Sleevo UI/UX Redesign - Mobile Game UI with Design Tokens
-**Domain:** Mobile 3D Puzzle Game UI Components
-**Researched:** 2026-02-11
+**Project:** Sleevo — Level Progression & Score Feedback Milestone
+**Domain:** Browser-based casual puzzle/sorting game (vinyl records)
+**Researched:** 2026-02-20
 **Confidence:** HIGH
 
 ## Executive Summary
 
-Sleevo is a mobile 3D puzzle game built with vanilla Three.js and TypeScript. The current game has functional gameplay (vinyl record placement on shelves) but uses a generic dark UI overlay built with vanilla HTML/CSS. Research indicates that experts build modern game UIs with React-based component systems, styled-components for theming, and centralized design tokens for consistency. The recommended approach involves overlaying a React UI layer on top of the existing Three.js canvas, using a GameBridge pattern with Zustand for state management, and migrating from generic dark styling to a warm vintage vinyl aesthetic with WCAG AA contrast compliance.
+Sleevo's core gameplay loop — drag-drop, combo system, invalid placement feedback, 3D vinyl rendering — is already complete and differentiated. The milestone is not about new mechanics; it is about communication and progression infrastructure. Players currently cannot see what they earned (no score popup firing), do not know how far they are (no persistent progress counter), have no sense of how well they performed (star rating not displayed), and cannot navigate the game's 21 levels (no level select screen). The research confirms all capabilities needed to fix this are already installed in the codebase: `ScorePopup`, `storage.ts`, `LevelComplete.tsx` with star display, `ProgressBar.tsx`, and the `LEVELS` array. The work is integration, not invention, and no new packages are required.
 
-The primary technical risk is performance - styled-components can introduce runtime overhead that degrades game frame rates. This is mitigated by keeping the Three.js game layer unchanged, using vanilla CSS for game-critical UI, and applying styled-components selectively to the UI overlay. The primary UX risk is "vintage overload" - applying warm textures and ornate details too uniformly, which creates visual noise and cognitive overload. This is mitigated by following the 80/20 rule (80% clean/functional, 20% vintage/accent) and reserving ornate details for headers and special moments, not every UI element.
+The recommended approach is to work within the existing `useReducer` + `GameScreen` architecture without touching the dormant Zustand `gameStore`. A thin new `progression.ts` module wraps `storage.ts` to provide level-select data and unlock logic, a new `LevelSelectScreen` component provides navigation, and a `RulePill` component surfaces the active rule in the HUD. The star formula needs one unambiguous decision (does time factor in?) before implementation, and the localStorage unlock logic needs a one-line fix (threshold `>= 1` to `>= 2`). Neither is blocked.
+
+The critical risks are architectural: the dormant Zustand store must not be mixed into the reducer-driven game session, the unlock key naming is a latent off-by-one trap that must be refactored before 20+ levels land, and the star thresholds must be designed per-mode from the start — retrofitting them after levels are authored invalidates player saves. Addressing these three items before expanding the level array avoids the most expensive possible rework.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
+No new packages are required. The existing stack (React 19, TypeScript, Zustand ^4, CSS Modules/keyframes, `localStorage`) covers every feature in scope. The research found that each proposed feature maps directly to an already-installed capability: CSS `scoreFloat` keyframe for score popups, `storage.ts` for persistence, `LevelComplete.tsx` for star display, `ProgressBar.tsx` for the vinyl counter. Attempts to introduce framer-motion, React Router, `canvas-confetti`, IndexedDB, or Zustand `persist` middleware would each contradict a working system already in place.
+
+The only new structural code is a `progressionStore` Zustand slice (thin reactive wrapper over `storage.ts`) and a `progression.ts` pure-function module. Both follow established patterns already present in the codebase.
+
 **Core technologies:**
-- **styled-components ^6.0.0** — CSS-in-JS library with native TypeScript support, theme prop API, and zero-runtime CSS injection overhead when using babel plugin
-- **React ^18.3.0** — Required for styled-components; enables component-based architecture for game UI
-- **Zustand** — Lightweight state management for bridging game state between vanilla TypeScript (Three.js) and React UI
-- **W3C Design Tokens Format + style-dictionary ^3.0.0** — Platform-agnostic token schema and build tool for transforming JSON tokens to CSS variables
-
-**Build tools:**
-- **babel-plugin-styled-components ^2.0.0** or **@swc/plugin-styled-components ^1.0.0** — Required for production builds (displayName, minification, dead code elimination)
-
-**Integration pattern:** Hybrid mounting - React root alongside existing Three.js canvas. React manages UI overlay with `pointer-events: none` on container, Three.js manages game layer.
+- **Zustand (existing) ^4:** Cross-session progression state — follows pattern of `useGameStore`; new `progressionStore` slice keeps persistence concerns separate from game session
+- **`useReducer` / `gameReducer` (existing):** All per-level game logic — pure reducer handles stars, mistakes, combo; do not migrate to Zustand
+- **`localStorage` via `storage.ts` (existing):** Progress persistence — 21 levels × ~20 bytes = ~420 bytes total; synchronous, already working, no migration needed
+- **CSS keyframe animations (existing):** Score floats, star reveals, combo popups — `scoreFloat`, `checkPop`, `glowPulse` all defined in `src/animations/keyframes.ts`
+- **React CSS Modules (existing):** All new UI components — consistent with `ShelfSlot.module.css`, `LevelComplete.module.css` patterns
 
 ### Expected Features
 
-**Must have (table stakes):**
-- VinylCard Visual States (idle/dragging/placed) — users need clear feedback on draggable objects
-- ShelfSlot Drop Feedback — drag-and-drop requires clear valid targets
-- HUD (Heads-Up Display) — standard mobile game expectation for score/moves/level
-- Touch Feedback — mobile users expect haptic/visual response
-- WCAG AA Dark Theme — 4.5:1 contrast required for body text
-- Undo/Redo — mobile users make accidental touches
-- Responsive Layout — works across phone/tablet sizes
+The feature research confirms this is a genre-conventional casual puzzle game. Players trained by Candy Crush, Sort It 3D, and Two Dots will arrive with precise expectations about what a level-completion ceremony looks like, how unlock gates feel, and why star ratings exist. Failing to meet these expectations reads as "broken," not "intentionally minimal."
 
-**Should have (competitive):**
-- Vinyl Cover Art Showcase — highlights vinyl aesthetic theme
-- Physics-based Card Movement — cards tilt based on drag velocity
-- Combo Counter with Visual Flair — dopamine hit for skilled play
-- Level Theme Transitions — smooth visual transitions between Basement/Store/Expo
-- Animated Vinyl Texture — subtle grooves rotation, light reflection changes
-- Progressive Hint System — helps without feeling hand-held
+**Must have (table stakes):**
+- Floating score feedback ("+10", "+35 GREAT!") after each valid placement — cause→effect clarity; `ScorePopup` exists but is not wired to the drop handler
+- Vinyl progress counter in HUD ("5 / 8") — players must know when the level ends; already in `ProgressBar.tsx` but confirm wiring
+- Level rule persistent display in HUD ("Ordina per: Genere") — players who don't know the rule guess randomly; `RulePill` component needed
+- 1–3 star rating on level complete — primary unit of "how well did I do?"; stars already computed in engine, displayed in `LevelComplete.tsx`, but star formula must be finalized
+- End-of-level screen with stars + score + errors + time — the ceremony moment; `LevelComplete.tsx` exists but currently missing stars + time display
+- Level unlock gating (2 stars to advance) — creates meaningful progression; threshold fix is a one-liner in `storage.ts`
+- Save progress across sessions — `storage.ts` already fully implements this; needs wiring to level select
+- Level select screen showing star ratings and lock state — without it, the replay incentive loop has no entry point; `LevelSelectScreen` is new work
+
+**Should have (differentiators):**
+- Multiple game modes (genre, chronological, customer, blackout, rush, sleeve-match) — Sleevo's primary differentiator; types and engine logic exist, need level data and mode-specific star tuning
+- Customer Request mode — narrative framing makes the game feel like running a real shop; partial implementation exists
+- Rush and Blackout modes — transform the base mechanic into a different cognitive challenge; low code cost, need 15+ base levels first
+- Per-level difficulty curves within modes — e.g. Genre mode with 4 genres → 6 genres → duplicate columns
+- End-of-level replay incentive ("Best: 3 stars" on select screen) — requires save system + level select (both in scope)
 
 **Defer (v2+):**
-- Complex particle systems — can add later, not core to puzzle
-- Multiplayer — adds significant complexity, not MVP
-- Level editor — cool feature but not essential
-- Leaderboards — requires backend, can be v2
+- Sleeve-match mode — requires album cover art data and a new matching algorithm; high content cost
+- Leaderboards and social features — infrastructure complexity without payoff at current player count
+- Full account/cloud sync — localStorage is sufficient; engineering cost not justified for v1
+- Animated cutscenes between levels — high production cost, blocks experienced players
 
 ### Architecture Approach
 
-**System:** Two-layer architecture with React UI overlay on top of vanilla TypeScript Three.js game. Communication flows through GameBridge service with Zustand store as single source of truth.
+The architecture is a single-orchestrator pattern: `GameScreen.tsx` owns the `useReducer` session and passes all data down as props. This must remain the canonical model. The dormant Zustand `gameStore` (in `src/store/gameStore.ts`) uses a different `GameState` shape and is effectively dead code — it should be deleted or left dormant. The new `progressionStore` (cross-session, persistent) and `progression.ts` (pure functions) sit alongside the reducer without mixing into it. New display components (`RulePill`, `LevelSelectScreen`) receive data as props; they do not read from `localStorage` directly.
 
 **Major components:**
-1. **UI Layer (React)** — TopBar/HUD, Controls, Tutorial/Modals built with styled-components
-2. **GameBridge (Zustand)** — State synchronization layer connecting vanilla GameManager to React components
-3. **Three.js Game Layer** — Existing GameManager, InputController, SceneRenderer remain unchanged
-4. **Design Token Pipeline** — JSON tokens transformed to CSS variables via style-dictionary
-
-**Key patterns:**
-- Hybrid mounting: React root and Three.js canvas initialized in parallel in `main.ts`
-- State bridge: GameManager emits events → GameBridge callbacks → Zustand store → React re-render
-- Theme provider: styled-components ThemeProvider wraps entire UI overlay with warm vintage colors
+1. **`GameScreen.tsx` (orchestrator)** — owns `useReducer`, handles drag lifecycle, fires `saveProgress` in `useEffect`, resolves level index for `dispatch`
+2. **`src/game/engine.ts` (gameReducer)** — pure state machine; all gameplay events including star calculation; no side effects, no localStorage access
+3. **`src/game/progression.ts` (new)** — pure functions: `calculateStars()`, `canAdvanceToLevel()`, `getLevelSelectData()`; wraps `storage.ts`; consumed by `GameScreen` and `LevelSelectScreen`
+4. **`src/game/storage.ts` (persistence)** — raw localStorage I/O; fix unlock threshold from `>= 1` to `>= 2`
+5. **`LevelSelectScreen.tsx` (new)** — level grid with locked/unlocked/star state; reads from `progression.ts`; navigates to `GameScreen` with `initialLevelIndex`
+6. **`RulePill.tsx` (new)** — HUD sub-component showing active mode rule; receives `state.level.mode` and `state.level.hint` as props
+7. **`ScorePopup.tsx` (existing, needs wiring)** — floating "+N" after each placement; receives points delta and slot coordinates from `GameScreen`
 
 ### Critical Pitfalls
 
-**Top 5 from PITFALLS.md:**
+1. **Flat star thresholds punish hard modes** — the current `engine.ts` formula (`mistakes === 0` = 3 stars) is applied identically to `rush`, `blackout`, and `genre` modes. Hard modes need more forgiving thresholds. Define per-mode or per-level `starThresholds` in the `Level` type before authoring more than 4 levels. Retrofitting is painful after player saves exist.
 
-1. **"Everything Vintage" Overload** — Apply vintage treatments selectively (80% clean/functional, 20% vintage/accent), reserve ornate details for headers and special moments
-2. **Dark Theme Contrast Collapse** — Test ALL text combinations against WCAG AA (4.5:1 for normal text), add 0.5 contrast ratio cushion above minimum, test in direct sunlight
-3. **The "AI Gradient" Hangover** — Ban gradient blurs entirely, use vintage-specific techniques (duotone, halftone, paper textures), limit gradients to 2 colors max with 0% blur
-4. **Mobile Touch Target Erosion** — Minimum 44x44px (iOS) / 48x48px (Android), add invisible padding around visual buttons, test with real thumbs
-5. **Performance Death by Styled Components** — Keep vanilla CSS for game UI, use styled-components selectively for overlay, test on low-end devices, monitor bundle size
+2. **Unlock key naming is an off-by-one trap** — `isLevelUnlocked(levelIndex)` constructs the key as `level-${levelIndex}` but level IDs are 1-based. This works today by coincidence. Refactor to look up the previous level's ID directly from the `LEVELS` array (`LEVELS[levelIndex - 1].id`) before adding 20+ levels. One inserted level scrambles all unlock state.
 
-**Technical debt patterns to avoid:**
-- Hardcoded colors in CSS instead of design tokens
-- `!important` wars (only acceptable for utility classes)
-- Backdrop-filter blur on everything (performance tank)
-- Importing full icon libraries (use tree-shakeable only)
+3. **Dual state systems must not mix** — `useGameStore` (Zustand, dormant) and `useReducer` (active) have incompatible `GameState` shapes. Calling both in the same component creates two sources of truth. Decision: keep System A (reducer) as canonical; delete or ignore `src/store/gameStore.ts`.
+
+4. **Time-elapsed is unresolved in the star spec** — PROJECT.md says stars reflect "errori + velocità" but `timeElapsed` is never consulted by `engine.ts`. Decide whether time factors into stars before implementing. If yes, wire it into the engine at implementation time. If no, remove it from the spec language. Retrofitting time into star calculations after levels ship invalidates all saves.
+
+5. **localStorage schema has no version guard** — renaming level IDs or changing the `LevelProgress` shape silently orphans or misreads player saves. Add a `version` field and migration check before first public release.
+
+---
 
 ## Implications for Roadmap
 
-Based on combined research, recommended 3-phase structure:
+Based on the combined research, this milestone decomposes into four sequential phases. Each phase is independently shippable and unblocks the next.
 
-### Phase 1: Foundation & Design System
+### Phase 1: Foundation Fixes and Wiring
 
-**Rationale:** Design tokens must come first to avoid hardcoded colors and establish WCAG AA contrast from day one. Pitfall research emphasizes that vintage aesthetics require upfront restraint principles to prevent over-decoration.
-
-**Delivers:**
-- Design token structure (colors, spacing, typography) following W3C format
-- Warm vintage color palette with WCAG AA contrast compliance
-- style-dictionary build pipeline
-- styled-components theme configuration
-- 8px grid system implementation
-- Aesthetic decision framework (when to be vintage vs. modern)
-
-**Addresses:**
-- Features: Dark Theme Contrast, Responsive Layout
-- Pitfalls: Dark Theme Contrast Collapse, Professional/Vintage Confusion, Hardcoded Colors
-
-**Uses:** styled-components, W3C Design Tokens Format, style-dictionary
-
-### Phase 2: UI Component Library
-
-**Rationale:** After tokens are established, build reusable components implementing table stakes features. This phase requires touch target validation and gradient avoidance code review checkpoints.
+**Rationale:** Three pre-existing issues create integration risk for everything that follows. Fix them first so that Phase 2+ builds on solid ground. All three are small, low-risk, and have clear correct answers from the research.
 
 **Delivers:**
-- VinylCard component with 3 states (idle/dragging/placed)
-- ShelfSlot component with drop feedback
-- TopBar/HUD component (score, level, progress)
-- Controls component (restart, undo, settings buttons)
-- Common UI primitives (Button, Card, Modal)
-- Touch feedback animations
-- Micro-interaction timing implementation
+- `storage.ts` unlock threshold changed from `>= 1` to `>= 2`
+- `isLevelUnlocked` refactored to derive previous level ID from `LEVELS` array (not string construction)
+- Dormant `src/store/gameStore.ts` deleted or explicitly quarantined with a comment
+- `ScorePopup` wired to `GameScreen` drop handler (uses existing `lastSlotPosition` ref and placement timestamp as `key`)
+- `mistakes` / `invalidDrops` dual-counter resolved to a single authoritative counter
 
-**Addresses:**
-- Features: VinylCard Visual States, ShelfSlot Drop Feedback, HUD, Touch Feedback
-- Pitfalls: Touch Target Erosion, AI Gradient Hangover, Mobile Touch Target Erosion
+**Addresses:** Table-stakes feature: floating score feedback. Pitfalls 2, 3, 10.
 
-**Uses:** React, styled-components, design tokens
+**Avoids:** Unlock off-by-one breaks at level expansion; mixed state systems causing debugging hell.
 
-**Avoids:** Gradient backgrounds, insufficient touch targets, over-decoration
+**Research flag:** Standard patterns — skip phase-level research. All implementation paths are fully documented in ARCHITECTURE.md with line-level specifics.
 
-### Phase 3: Integration & Polish
+---
 
-**Rationale:** Connect UI to game state through GameBridge and add polish features. This is where performance monitoring is critical to avoid styled-components overhead.
+### Phase 2: Star System and Level Complete Ceremony
+
+**Rationale:** Stars are the central unit of player progress. The unlock gate, level select display, and replay incentive all depend on stars being correct and meaningful. Must be implemented before the level select screen, not after.
 
 **Delivers:**
-- GameBridge service with Zustand store
-- Two-way data flow (React ↔ Three.js)
-- Tutorial modal
-- Settings modal with audio controls
-- Level complete screen with celebrations
-- Combo counter with visual flair
-- Performance optimization (60fps animations)
-- Multi-device testing (notched phones, tablets, sunlight)
+- Explicit decision on whether `timeElapsed` factors into stars (recommend: yes, as "par time" baseline per level)
+- `calculateStars()` extracted to a pure function in `rules.ts` with per-mode thresholds
+- `Level` type extended with optional `starThresholds` and `parTime` fields
+- `LevelComplete.tsx` updated to display stars + time + score + errors with staggered star reveal animation (`checkPop` keyframe, 200ms delay per star)
+- `saveProgress` call verified in `GameScreen` `useEffect [state.status]`
+- `localStorage` schema versioned with `version: 1` guard
 
-**Addresses:**
-- Features: Undo/Redo, ProgressBar, Physics-based Card Movement, Combo Counter, Level Completion Celebration
-- Pitfalls: Performance Death by Styled Components, Canvas Event Blocking, Font Loading FOUT
+**Addresses:** Table-stakes feature: end-of-level ceremony. Table-stakes: save progress. Pitfalls 1, 7, 8.
 
-**Uses:** Zustand, GameBridge pattern, hybrid mounting
+**Research flag:** Needs one design decision (time in stars or not) before coding starts — but this is a 5-minute team call, not a research phase. No external research needed.
+
+---
+
+### Phase 3: Level Select Screen and Progression Navigation
+
+**Rationale:** Stars have no replay value without a level select screen to surface them. The progression store and `progression.ts` module also unblock the HUD rule display and the "last unlocked level on app start" behaviour. Build after stars are reliable.
+
+**Delivers:**
+- `src/game/progression.ts` module with `canAdvanceToLevel()`, `getLevelSelectData()`, `getBestStats()`
+- `progressionStore` Zustand slice providing reactive access to `loadAllProgress()` for `LevelSelectScreen`
+- `LevelSelectScreen.tsx` — scrollable grid of level cards showing lock state, best star count, level number and mode icon
+- `App.tsx` screen routing via `screen: 'game' | 'level-select'` local state (no router library)
+- `GameScreen` on-mount reads `getLastPlayableIndex()` to resume at the player's current level
+- `GameScreen` "Next Level" button gates on `canAdvanceToLevel(nextIndex)`
+- `RulePill.tsx` sub-component in HUD showing active mode rule ("Ordina per: Genere")
+
+**Addresses:** Table-stakes: level select, unlock gating, progress counter in HUD. Pitfall 11 (no replay incentive).
+
+**Research flag:** Standard patterns — full implementation blueprint in ARCHITECTURE.md including data flow diagrams, component boundaries, and integration points. Skip research phase.
+
+---
+
+### Phase 4: Level Authoring (20+ Levels) and Mode Validation
+
+**Rationale:** Level content expansion is only safe after the progression and star infrastructure is correct. Adding 20 levels on top of a broken unlock chain or flat star formula requires rewriting level data. The mode audit (Pitfall 3) must gate this phase.
+
+**Delivers:**
+- Audit of all 7 `LevelMode` implementations end-to-end (blackout timer moved to engine `TICK` action; customer double-bonus fixed; `blockedSlots` level validator added)
+- Level data in `levels.ts` expanded from 2 to 21+ levels covering all modes
+- Difficulty curve scored and plotted (vinyl count + active constraints) to ensure monotonic ramp with relief levels
+- `comboDecayMs` made per-level configurable (longer for `blackout`/`chronological`, tighter for `rush`)
+- Mode-by-mode "contract" documentation for `blackout`, `customer`, `rush`, `sleeve-match` before levels using each mode are authored
+- `blackout` mode: pre-timer memorization overlay added; optional hint strip added (1-star penalty)
+- `customer` mode: scoring path audited for double-bonus; `customerServed` reset on `LOAD_LEVEL`
+
+**Addresses:** Differentiator features: all mode variants. Pitfalls 3, 4, 5, 6, 9, 12.
+
+**Research flag:** Mode implementations (blackout timer in engine, rush progression) may benefit from a focused research-phase before tasking. The mode-contract approach (one-page spec per mode before level authoring) is the key mitigation.
+
+---
 
 ### Phase Ordering Rationale
 
-1. **Why Design System first:** Without established tokens, components will use hardcoded values that become expensive to refactor. Contrast and accessibility must be built in from day one to avoid expensive rework.
-
-2. **Why Components before Integration:** Building components in isolation ensures they work correctly before connecting to game state. This allows focused testing of touch targets, animations, and visual states.
-
-3. **Why Integration last:** GameBridge and state synchronization are the riskiest technical piece. Defer until components are proven and stable. Performance monitoring happens here when full UI layer is in place.
-
-4. **How this avoids pitfalls:**
-   - Phase 1 prevents contrast collapse and vintage overload by establishing constraints upfront
-   - Phase 2 prevents gradient hangover and touch erosion with code review checkpoints
-   - Phase 3 prevents performance death with profiling and low-end device testing
+- Phase 1 before Phase 2: the dual-counter and unlock key bugs will corrupt star and progression data if not fixed first.
+- Phase 2 before Phase 3: the level select screen renders stars; if the star formula changes after the level select ships, it creates a confusing player experience.
+- Phase 3 before Phase 4: unlocking 20 levels without a level select screen means players have no way to replay them, defeating the purpose of authoring them.
+- Phase 4 last: mode content expansion is safe only once the infrastructure beneath it is validated.
 
 ### Research Flags
 
-**Phases needing deeper research during planning:**
+Phases likely needing deeper research during planning:
+- **Phase 4 (Mode Validation):** The `blackout` and `rush` timer architectures have component-level `useEffect` timeouts that need to move into the engine. The correct `TICK` action pattern is documented at a high level but the detailed refactor path warrants a focused investigation of the current `GameScreen` timer setup before tasking.
 
-- **Phase 2:** Physics-based Card Movement — High complexity, requires careful tuning. Consider `/gsd:research-phase` for this feature to explore Three.js physics integration patterns.
+Phases with standard patterns (skip research phase):
+- **Phase 1 (Foundation Fixes):** All changes are one-line or already have exact code samples in ARCHITECTURE.md.
+- **Phase 2 (Stars):** Implementation blueprint is complete. Decision about time-in-stars is a design call, not a research question.
+- **Phase 3 (Level Select):** Full architecture documented including component tree, data flow, and integration points.
 
-- **Phase 3:** GameBridge Integration — Medium complexity. Research patterns for Zustand + vanilla TypeScript bridging, event callback best practices.
-
-**Phases with standard patterns (skip research-phase):**
-
-- **Phase 1:** Design tokens and styled-components are well-documented with established patterns. Official documentation is sufficient.
-
-- **Phase 2:** Basic UI components (HUD, buttons, cards) follow standard React/styled-components patterns. No special research needed.
-
-- **Phase 3:** Tutorial modals, level complete screens, and combo counters are standard game UI patterns. Web game design resources are sufficient.
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Based on official styled-components docs, W3C Design Tokens spec, and established React patterns |
-| Features | HIGH | Based on standard mobile game UX patterns, WCAG 2.1 AA requirements, and puzzle game best practices |
-| Architecture | HIGH | Hybrid mounting and GameBridge patterns are established for React + Three.js integration. Existing codebase analysis confirms feasibility |
-| Pitfalls | MEDIUM | Based on established mobile game UX patterns and CSS-in-JS performance implications. Specific vintage aesthetic pitfalls are well-founded but rely on general design principles rather than vinyl-specific case studies |
+| Stack | HIGH | Direct codebase audit confirmed all existing capabilities; no new packages needed; all package.json dependencies verified |
+| Features | MEDIUM | Genre conventions drawn from training-data knowledge of comparable games (Candy Crush, Sort It 3D, Two Dots); no live web search. Core table-stakes claims (star ratings, level select, score feedback) are HIGH — universal genre conventions. Mode ordering and gating choices are MEDIUM. |
+| Architecture | HIGH | Based on direct analysis of engine.ts, storage.ts, GameScreen.tsx, rules.ts, types.ts. Component boundaries, data flow diagrams, and integration points are grounded in actual code, not inference. |
+| Pitfalls | HIGH | All 12 pitfalls cite specific file paths and line-level evidence from the codebase. No speculative pitfalls. |
 
 **Overall confidence:** HIGH
 
-Research is grounded in official documentation (styled-components, W3C, WCAG), established mobile game UX patterns, and existing codebase analysis. The only area with MEDIUM confidence is pitfalls specific to vintage vinyl aesthetics, as this combines general mobile game UX principles with domain-specific design challenges that may need real-world validation.
-
 ### Gaps to Address
 
-- **Vintage vinyl aesthetic examples:** Research identified general principles for vintage UI design (restraint, 80/20 rule, selective ornamentation) but few specific examples of vinyl/audio apps doing this well. Recommendation: Create mood board with vintage vinyl reissue labels and boutique audio equipment brands during Phase 1 design system work.
+- **Time-in-stars decision:** PROJECT.md says "errori + velocità" but the engine ignores speed. This is a product design decision that must be made before Phase 2 starts. Recommendation: use a per-level `parTime` field (default `totalVinyls * 8` seconds); 3 stars requires under 1.5x par time with 0 mistakes. Exact thresholds need playtesting.
 
-- **Physics-based card movement:** Listed as should-have feature but marked high complexity. If this feature is prioritized for Phase 2 or 3, conduct deeper research on Three.js physics integration patterns specific to card dragging with tilt/weight effects.
+- **Sleeve-match mode readiness:** `rules.ts` acknowledges sleeve-match validation is handled elsewhere. Before any sleeve-match level is authored (deferred to v2+), a complete audit of the validation path is needed.
 
-- **Real user testing on mobile devices:** Pitfall research emphasizes sunlight testing and thumb testing. While research identifies what to test for, actual validation requires hands-on device testing during Phase 3 integration. Plan usability testing sessions with iPhone SE (small screen), iPhone 14 Pro (notched), and Android mid-range device.
+- **Rush mode completion condition:** The current engine returns `status: 'completed'` with `stars: 1` when `rushTimeLeft` reaches 0. Whether partially-completed rush levels should show a distinct "time's up" screen vs. the standard `LevelComplete` overlay is an unresolved UX question. Address during Phase 4 mode audit.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- styled-components official documentation (https://styled-components.com/docs) — Theming API, migration guides, best practices
-- W3C Design Tokens Format specification (https://design-tokens.github.io/community-group/format/) — Token schema, `$value` and `$type` properties
-- WCAG 2.1 AA requirements (via MDN) — Contrast ratios: 4.5:1 normal text, 3:1 large text, 3:1 UI components
-- Zustand documentation (https://github.com/pmndrs/zustand) — State patterns, TypeScript support
-- React Three Fiber documentation (https://pmnd.rs/react-three-fiber) — Hybrid mounting patterns
-- Existing codebase analysis — GameManager.ts (1763 lines), InputController.ts (873 lines), index.html structure
+- `src/game/engine.ts` — gameReducer, star calculation, PLACE_VINYL action
+- `src/game/storage.ts` — persistence implementation, unlock logic
+- `src/game/levels.ts` — LEVELS array (21 levels confirmed)
+- `src/game/types.ts` — GameState, LevelMode, ComboState type definitions
+- `src/game/rules.ts` — isValidPlacement, COMBO_TIERS
+- `src/components/GameScreen.tsx` — orchestrator, drag lifecycle, timer, ScorePopup integration gap
+- `src/components/LevelComplete.tsx` — end-of-level screen, star display, confetti
+- `src/components/HUD/HUD.tsx` — live stats display
+- `src/components/ScorePopup/ScorePopup.tsx` — floating score delta (implemented, not wired)
+- `src/animations/keyframes.ts` — scoreFloat, checkPop, glowPulse, cardPickup
+- `.planning/PROJECT.md` — stated requirements and design decisions
+- `GAME-LOGIC.md` — authoritative mechanics description
+- `package.json` — installed dependencies (no router, no animation library)
 
 ### Secondary (MEDIUM confidence)
-- Material Design Motion Guidelines — Easing functions and duration benchmarks (couldn't fully load but Material Design is industry standard)
-- CSS-Tricks — CSS transitions, requestAnimationFrame best practices
-- iOS Human Interface Guidelines — 44pt minimum touch target
-- Material Design guidelines — 48dp minimum touch target
+- Genre knowledge: Candy Crush Saga, Monument Valley, Sort It 3D, Ball Sort Puzzle, Threes!, Two Dots, 1010! (training data, August 2025 cutoff) — feature conventions, anti-features, mode introduction ordering
 
 ### Tertiary (LOW confidence)
-- Specific 2026 mobile game UI trends — Couldn't verify due to WebSearch access limitations; findings based on established 2024-2025 patterns
+- Star threshold exact values (0 mistakes = 3 stars, parTime multipliers) — derived from PROJECT.md + genre conventions; requires playtesting to validate
 
 ---
-*Research completed: 2026-02-11*
+
+*Research completed: 2026-02-20*
 *Ready for roadmap: yes*

@@ -1,328 +1,368 @@
-# Pitfalls Research
+# Domain Pitfalls
 
-**Domain:** Mobile Game UI Redesign (Dark to Vintage Vinyl Aesthetic)
-**Researched:** February 11, 2026
-**Confidence:** MEDIUM
+**Domain:** Casual browser game — level progression, star ratings, multiple game modes
+**Project:** Sleevo (React + Three.js vinyl sorting game)
+**Researched:** 2026-02-20
+**Confidence:** HIGH (based on direct codebase analysis + domain knowledge)
+
+---
 
 ## Critical Pitfalls
 
-### Pitfall 1: The "Everything Vintage" Overload
-
-**What goes wrong:**
-Applying vintage aesthetics uniformly across all UI elements creates visual noise, cognitive overload, and a cluttered interface that feels like a Victorian flea market rather than a polished game. Users can't distinguish interactive elements from decorative ones.
-
-**Why it happens:**
-Designers equate "vintage" with "more textures, more decorations, more ornate details." The fear of being too minimal leads to over-compensation. Every button gets a wood texture, every border gets ornate flourishes, every background gets aged paper effects.
-
-**How to avoid:**
-- Apply vintage treatments selectively: backgrounds get warmth, but interactive elements stay clean
-- Use the 80/20 rule: 80% clean/functional, 20% vintage/accent
-- Reserve ornate details for headers and special moments, not every UI element
-- Test with users: if they can't find buttons within 2 seconds, it's over-decorated
-
-**Warning signs:**
-- More than 3 different textures visible at once
-- Buttons require "hunting" to locate
-- Text legibility suffers due to background patterns
-- Playtesters say "it looks cool but I don't know what to do"
-
-**Phase to address:**
-Phase 1 (Foundation & Design System) - Establish restraint principles upfront
+Mistakes that cause rewrites, broken progression, or significant player frustration.
 
 ---
 
-### Pitfall 2: Dark Theme Contrast Collapse
+### Pitfall 1: Star Thresholds That Don't Account for Mode Difficulty
 
-**What goes wrong:**
-Moving from generic dark to warm vintage sounds like adding contrast, but many implementations accidentally reduce contrast by muting colors to create "aged" effects. Text on warm backgrounds becomes unreadable, especially in direct sunlight (mobile use case).
+**What goes wrong:** The current star formula in `engine.ts` is flat:
+- 0 mistakes + 0 hints used = 3 stars
+- <= 2 mistakes OR <= 1 hint = 2 stars
+- Anything else = 1 star
 
-**Why it happens:**
-- Desaturating colors to create "vintage" look pushes them below WCAG thresholds
-- Warm beige/cream backgrounds feel lighter than dark gray, but actually provide worse contrast with dark text
-- Aging effects (sepia, noise, vignette) reduce perceived contrast
-- Designing in dark office environments, not testing in real-world mobile conditions
+This formula is applied identically across all modes. A `rush` level where time expires
+also silently returns 1 star (`rushTimeLeft: 0, status: 'completed', stars: 1`) regardless
+of how many vinyls were placed correctly before time ran out. A `blackout` level with
+hidden labels is objectively harder than a `free` mode level — the same mistake count
+yields the same stars in both, punishing players disproportionately on harder modes.
 
-**How to avoid:**
-- Test ALL text combinations against WCAG AA (4.5:1 for normal text, 3:1 for large)
-- Use contrast checker tools during design phase, not just at the end
-- Add a "high contrast mode" for accessibility
-- Test in direct sunlight - warm backgrounds often wash out
-- Create color combinations with at least 0.5 contrast ratio cushion above minimum
+**Why it happens:** The star formula was designed once for the simple base mode and never
+differentiated as new modes were added.
 
-**Warning signs:**
-- Squinting to read UI text
-- Playtesters leaning in to see labels
-- Colors look great on monitor but fail on phone in daylight
-- Needing to add drop shadows to text to make it readable (crutch)
+**Consequences:**
+- Players stuck on 1 star on hard modes even with strong performance
+- 3-star threshold on `rush` and `blackout` modes feels impossible
+- Discourages replaying to improve rather than just pushing forward
 
-**Phase to address:**
-Phase 1 (Foundation & Design System) - Build accessibility into design tokens from day one
+**Prevention:**
+- Define per-mode star thresholds in the `Level` data structure (e.g. `starThresholds?: { three: number; two: number }` where the number is max allowed mistakes)
+- `rush` and `blackout` modes should allow 1-2 more mistakes for 3-star than `genre` mode
+- For `rush` mode specifically: award stars based on percentage of vinyls placed before time runs out (e.g. 100% = 3 stars, >=75% = 2 stars, any completion = 1 star)
 
----
+**Detection:** Playtest every mode — if 3 stars on `blackout` level 5 requires multiple retries even with good play, the threshold is too tight.
 
-### Pitfall 3: The "AI Gradient" Hangover
-
-**What goes wrong:**
-Despite explicitly wanting to avoid blue/purple AI gradients, designers unconsciously recreate them with vintage colors. The "vintage gradient trap" uses orange-to-brown or teal-to-cream in the same diffuse, blurry way - same anti-pattern, different palette.
-
-**Why it happens:**
-Muscle memory from AI design trends. Designers swap hex codes but keep the same gradient techniques: diffuse edges, multiple color stops, heavy blur, 50% opacity overlays. It's not the colors that make it "AI-style" - it's the treatment.
-
-**How to avoid:**
-- Ban gradient blurs entirely - use hard edges or subtle linear gradients max
-- Replace gradient overlays with solid colors, textures, or border treatments
-- Use vintage-specific techniques: duotone printing effects, halftone patterns, paper textures
-- When using gradients, limit to 2 colors max, 0% blur
-- Audit any design with "backdrop-filter: blur()" - question if it's necessary
-
-**Warning signs:**
-- UI elements have gradient backgrounds
-- "glow" effects on text or borders
-- Backdrop blur used for glassmorphism
-- Multiple gradients layered on each other
-- Design looks like it was made with an AI image generator
-
-**Phase to address:**
-Phase 2 (UI Components) - Code review checkpoint for gradient usage
+**Phase:** Address when implementing the star system. Do not let the flat formula persist into levels beyond the first 3-4.
 
 ---
 
-### Pitfall 4: Mobile Touch Target Erosion
+### Pitfall 2: Level Unlock Key Naming Is a Latent Off-by-One Trap
 
-**What goes wrong:**
-Vintage aesthetics often shrink buttons to look "delicate" or use ornate shapes that reduce effective touch area. What looks clickable on desktop becomes impossible to hit with thumbs on mobile. Users accidentally tap wrong controls and rage-quit.
+**What goes wrong:** `isLevelUnlocked(levelIndex)` in `storage.ts` constructs the unlock
+check key as `level-${levelIndex}`, not `level-${levelIndex + 1}`. This works today by
+coincidence: level at index 1 has id `level-2`, but the unlock check looks for `level-1`
+(the id of the level at index 0). The pattern holds only because level IDs use 1-based
+numbering while indices are 0-based and the subtraction happens implicitly.
 
-**Why it happens:**
-- Vintage fonts are more condensed, making buttons narrower
-- Ornate button shapes have irregular hit areas
-- Aesthetic padding sacrificed for visual density
-- Designing on desktop/laptop, testing with mouse not thumb
-- Hamburger menus, icon-only buttons save space but hurt discoverability
+If any level is ever inserted, removed, or given a non-sequential ID, the unlock chain
+will silently break — players will be blocked from levels they have already unlocked, or
+levels will unlock prematurely.
 
-**How to avoid:**
-- Minimum touch target: 44x44px (iOS) / 48x48px (Android)
-- Add invisible padding around visual buttons to expand hit areas
-- Test with real thumbs, not mouse cursors
-- Use text labels alongside icons, not icon-only buttons
-- Icon-only buttons acceptable only for: mute, close, menu (standard patterns)
-- Check touch targets in mobile browser dev tools
+**Why it happens:** The function was written to check "has the previous level been
+completed" but conflated the numeric index with the level ID suffix.
 
-**Warning signs:**
-- Needing to zoom in to tap accurately
-- Accidental taps on adjacent controls
-- Thumb covers other UI elements when tapping
-- "Frustration taps" - repeated failed attempts to hit button
+**Consequences:**
+- Adding a level between existing levels scrambles all unlock state
+- Players who replay older levels may lose progress on newer ones
+- Defect is invisible until level count changes
 
-**Phase to address:**
-Phase 2 (UI Components) - Automated testing for touch target sizes
+**Prevention:**
+- Refactor `isLevelUnlocked` to look up the previous level's ID from the levels array
+  directly, rather than constructing a string from the index
+- Store progress keyed by a stable level ID, and resolve "previous level ID" from the
+  ordered levels array: `levels[levelIndex - 1].id`
+- Add a unit test that verifies unlock logic for level at index 2+ after completing only
+  the immediately preceding level
 
----
+**Detection:** Insert a test level between level-1 and level-2 and verify level-2 still
+unlocks correctly.
 
-### Pitfall 5: Performance Death by Styled Components
-
-**What goes wrong:**
-React games with styled-components often develop performance issues due to:
-- Inline styles recalculated on every render
-- Theme object recreations causing cascade updates
-- CSS-in-JS runtime overhead during critical animations
-- Large style payloads blocking main thread
-
-Existing codebase uses vanilla CSS in index.html (good for performance), but any React component migration could introduce this pitfall.
-
-**How to avoid:**
-- Keep vanilla CSS for game UI (current approach is optimal)
-- If adding React components, use CSS Modules or plain CSS imports
-- Avoid styled-components entirely for game UI
-- Theme object should be created once, not on every render
-- Test performance on low-end devices (iPhone SE, Android mid-range)
-- Monitor bundle size: CSS-in-JS adds 30-50KB overhead minimum
-
-**Warning signs:**
-- Janky animations during gameplay
-- Input lag between tap and visual feedback
-- Frame drops when UI elements appear/disappear
-- Bundle size increases significantly after UI changes
-- Lighthouse performance score drops below 80
-
-**Phase to address:**
-Phase 3 (Integration & Polish) - Performance profiling after each UI integration
+**Phase:** Fix before adding 20+ levels. At 3 levels the bug is dormant; at 20+ it is
+likely to be triggered.
 
 ---
 
-### Pitfall 6: The "Professional Vintage" Oxymoron
+### Pitfall 3: Scope Creep from Partially-Implemented Modes
 
-**What goes wrong:**
-Attempting to combine "professional" and "vintage" often results in confused messaging. The UI feels like it can't decide if it's a serious business app or a nostalgic throwback. Trust erodes when polish and retro clash inconsistently.
+**What goes wrong:** The codebase defines 7 `LevelMode` values (`free`, `genre`,
+`chronological`, `customer`, `blackout`, `rush`, `sleeve-match`) with full type
+definitions and partially-wired engine logic. However:
 
-**Why it happens:**
-- Corporate requirements (clean, professional) conflict with aesthetic goals (warm, aged)
-- Different stakeholders pulling in different directions
-- Fear of looking "unpolished" leads to mixing modern and vintage inconsistently
-- No clear design principles about when to be modern vs. when to be vintage
+- `blackout` mode's label-hiding mechanic is triggered by a component-level `useEffect`
+  with a `setTimeout(3000)` — not driven by the engine. If the component remounts or the
+  effect fires twice, labels hide immediately or not at all.
+- `sleeve-match` validation is acknowledged in `rules.ts` to be handled elsewhere
+  (`// Sleeve-match mode: la validazione specifica è gestita in engine.ts`) — a split
+  that makes the validation path non-obvious and easy to break.
+- `customer` mode has two separate +500 bonus paths: one dispatched inline during
+  `PLACE_VINYL` and one computed at completion (`customerBonus`). These can stack.
 
-**How to avoid:**
-- Establish clear hierarchy: game UI = vintage warm, game menus = modern clean
-- Choose one primary aesthetic direction, not a mix
-- Professional ≠ sterile; warm vintage can feel premium with proper execution
-- Define "vintage professional" explicitly: warm colors, clean geometry, restrained ornamentation
-- Reference brands that do this well: luxury vinyl reissue labels, boutique audio equipment
+Each mode that is "partially there" becomes a trap when new levels are added that use it,
+because the author assumes it is finished.
 
-**Warning signs:**
-- Some UI elements look like 2024, others like 1974
-- Playtesters confused about app's "vibe"
-- Design feels like two different designers worked on it
-- Inconsistent use of shadows, borders, or textures
+**Why it happens:** Types were defined speculatively, then modes were partially wired
+without a completion checklist.
 
-**Phase to address:**
-Phase 1 (Foundation & Design System) - Create aesthetic decision framework
+**Consequences:**
+- Regressions when adding new levels that use a mode assumed to work
+- Bugs that are hard to reproduce because they depend on component lifecycle
+- Inconsistent scoring across modes
 
----
+**Prevention:**
+- Create a one-page "mode contract" for each mode before adding levels that use it:
+  what triggers start, what counts as success, how stars are calculated, what resets on
+  failure
+- Move all timer-based mechanics (`blackout` 3-second trigger, `rush` countdown) into
+  the engine via a `TICK` action dispatched from a single stable timer in the game loop
+  — never from ad-hoc `useEffect` timeouts scattered across components
+- Write one integration test per mode that exercises the full success and failure paths
 
-## Technical Debt Patterns
+**Detection:** Run through each mode manually after adding any new level that uses it.
+Check: does it complete correctly? Do stars reflect performance? Is the score correct?
 
-Shortcuts that seem reasonable but create long-term problems.
-
-| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
-|----------|-------------------|----------------|-----------------|
-| Hardcoded colors in CSS instead of design tokens | Faster initial implementation | Impossible to theme, dark mode breaks, inconsistent colors | Never - use CSS variables from start |
-| Inline styles in HTML/JS files | Quick prototyping | Unmaintainable, impossible to override, cache issues | Only for temporary prototypes |
-| Skipping responsive breakpoints | Design once, deploy everywhere | Broken on tablets, portrait mode issues, accessibility failures | Never - mobile-first is mandatory |
-| Using `!important` to override specificity | Fix urgent style conflicts | Specificity wars, impossible to override later | Only for utility classes (e.g., `.hidden`) |
-| Importing full icon libraries | Access to any icon needed | 200KB+ overhead, unused icons, slow loads | Tree-shakeable libraries only (e.g., Lucide, Phosphor) |
-| Reusing Material Design icons | Familiar patterns, free | Contradicts vintage aesthetic, feels generic | Custom SVG icons or icon font with vintage treatment |
-| Backdrop-filter blur on everything | Quick "modern" feel | Performance tank, feels generic AI-style | Use sparingly, not on animated game UI |
+**Phase:** Before authoring levels 5-20, audit every mode end-to-end.
 
 ---
 
-## Integration Gotchas
+### Pitfall 4: Player Frustration from Invisible Rules in Harder Modes
 
-Common mistakes when connecting UI to game systems.
+**What goes wrong:** `blackout` mode hides labels after 3 seconds and requires
+chronological sorting from memory. `customer` mode requires identifying one specific
+vinyl by genre and era from a mixed carousel. Neither mode gives the player a way to
+recover understanding of the rule mid-level. If a player forgets the order or misidentifies
+the customer's target, they have no recourse except random guessing (accumulating
+mistakes) or restarting.
 
-| Integration | Common Mistake | Correct Approach |
-|-------------|----------------|------------------|
-| UI overlay on Three.js canvas | UI blocks canvas events, game becomes unresponsive | `pointer-events: none` on overlay, `pointer-events: all` only on interactive elements |
-| Touch/mouse event handlers | Assuming mouse exists (desktop testing) breaks touch | Support both `mousedown`/`touchstart`, `mousemove`/`touchmove` |
-| Viewport sizing (safe-area-inset) | Fixed padding covers UI with notches/home indicators | Use `env(safe-area-inset-*)` for all edge spacing |
-| Font loading | FOUT (Flash of Unstyled Text) or layout shifts | Preload fonts, use font-display: swap, measure fallback metrics |
-| Contrast on varied backgrounds | Designing on solid color, breaking on game visuals | Test UI overlay on all game scenes, add backdrop when needed |
-| Animation frame drops | UI animations stutter game rendering | Use CSS transforms only, avoid layout thrashing, separate UI loop from game loop |
-| State sync between UI and game | UI shows stale data, game state desyncs | Single source of truth, UI re-renders on state change, reactive patterns |
+The project's own core value statement says: "Il giocatore deve sempre sapere esattamente
+cosa deve fare." Modes that intentionally obscure the rule need a fallback that preserves
+this promise — otherwise the mode design contradicts the core value.
 
----
+**Why it happens:** Mode difficulty is designed by removing information, but the player
+communication layer is not updated to account for how much information has been removed.
 
-## Performance Traps
+**Consequences:**
+- Players perceive the game as unfair rather than challenging
+- `blackout` and `customer` levels generate disproportionate quit events
+- 1-star completions on these modes as players give up and rush to finish
 
-Patterns that work at small scale but fail as usage grows.
+**Prevention:**
+- `blackout`: Show a brief recap overlay ("Hai 3 secondi — memorizza l'ordine!") before
+  the timer starts, not just the hint text. After labels disappear, show a subtle
+  "Sequenza: Blues < Rock < Pop < Disco..." strip at the bottom as an optional hint
+  that costs 1 star penalty.
+- `customer`: Show the customer request persistently (CustomerPanel already exists),
+  and ensure the matching vinyl is visually distinguishable in the carousel (e.g. a
+  brief glow on load).
+- Rule: every mode should have a "you can always see this" element that tells the player
+  what rule is active, even if other information is hidden.
 
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Too many box-shadows | Scrolling jank, compositor overload | Use one shadow per layer, fake with opacity layers | 10+ shadowed elements visible |
-| Gradient backgrounds everywhere | Painting performance drops | Solid colors with texture overlays | Large areas with gradients |
-| Border-radius + overflow:hidden | Clipping artifacts, GPU thrashing | Use sparingly on animated elements | Rounded containers with moving children |
-| Excessive backdrop-filter | Blurring costs scale with area | Blur only small areas, use solid overlays | Large panel backgrounds |
-| Custom fonts not subsetted | 200KB+ font downloads | Subset to glyphs actually used | Adding non-English support |
-| Animation on every frame | Battery drain, mobile throttling | Use CSS transitions for simple animations | Continuous particle effects |
-| Deep nesting of positioned elements | Layout recalculations cascade | Flatten hierarchy, use flex/grid | 5+ levels of absolute positioning |
+**Detection:** Give the game to a new player with no prior explanation. If they spend
+>10 seconds on a `blackout` level guessing randomly, the rule communication has failed.
 
----
-
-## UX Pitfalls
-
-Common user experience mistakes in game UI redesigns.
-
-| Pitfall | User Impact | Better Approach |
-|---------|-------------|-----------------|
-| Tutorial on every launch | Annoyance, skip becomes muscle memory | Show once, store completion in localStorage |
-| No way to restart level | Stuck in unwinnable state, rage-quit | Visible restart button, confirm if progress lost |
-| Hidden controls (slide-out menus) | Discoverability fails, features unused | Always-visible critical controls, slide for secondary |
-| Tiny close buttons | Accidental dismisses, can't exit modal | Minimum 44x44px tap targets, padding around visible element |
-- Generic "AI-style" glassmorphism | Can't distinguish layers, feels low-effort | Solid backgrounds with borders, clear z-index hierarchy |
-| No visual feedback on actions | "Did I tap it?" uncertainty, repeated taps | Active/pressed states, instant visual confirmation |
-| Inconsistent terminology | "Cancel" vs "Close" vs "Back" confusion | Use same term for same action everywhere |
-| No progress indication | "Is this loading or broken?" anxiety | Loading spinners, progress bars, status text |
+**Phase:** Address mode-by-mode when implementing the levels that introduce each mode.
 
 ---
 
-## Mobile-Specific Anti-Patterns
-
-| Anti-Pattern | Why It Fails on Mobile | Vintage-Friendly Alternative |
-|--------------|----------------------|------------------------------|
-| Hover-dependent interactions | No hover on touch, features inaccessible | Tap to reveal, explicit "info" buttons |
-| Right-click context menus | Non-existent on mobile | Long-press OR visible action buttons |
-| Keyboard shortcuts | No physical keyboard on phones | On-screen buttons, gesture alternatives |
-| Dense information displays | Text illegible at mobile sizes | Progressive disclosure, show/hide details |
-| Multi-column layouts | Requires zooming, horizontal scroll | Single column, horizontal scroll containers |
-| Drag-to-scroll on canvas | Conflicts with game drag controls | Two-finger pan for camera, one-finger for game |
+## Moderate Pitfalls
 
 ---
 
-## "Looks Done But Isn't" Checklist
+### Pitfall 5: Customer Mode Double-Bonus Scoring
 
-Things that appear complete but are missing critical pieces.
+**What goes wrong:** In `engine.ts`, `customer` mode awards +500 when the correct vinyl
+is placed via `SERVE_CUSTOMER` dispatch, AND checks `justServedCustomer` at completion
+to add another `customerBonus`. If the customer was served mid-level, both bonuses fire.
+If `customerServed` state is not properly reset between levels, a player completing the
+next non-customer level may receive a phantom +500.
 
-- [ ] **Touch targets**: Visuals look complete, but tap areas too small — verify with dev tools overlay
-- [ ] **Contrast in sunlight**: Looks good on monitor — test on phone in direct daylight
-- [ ] **Font loading**: Works locally — test with cleared cache on slow 3G
-- [ ] **Notch/home indicator**: Fine on phone with thin bezels — test on iPhone X+ with safe areas
-- [ ] **Landscape/portrait**: Designed for portrait — test landscape on iPad
-- [ ] **Small phones**: Perfect on iPhone 14 Pro — test on iPhone SE (older, smaller)
-- [ ] **Android**: Tested on iOS — verify on Android (different safe areas, back button behavior)
-- [ ] **Accessibility**: Contrast passes automated check — test with VoiceOver/TalkBack enabled
-- [ ] **Performance**: Smooth on development machine — test on 3-year-old mid-range phone
-- [ ] **Bundle size**: Development build is small — check production build size
-- [ ] **State persistence**: Works in session — test reload after closing app, localStorage cleared
+**Prevention:**
+- Audit the customer scoring path to ensure the bonus is applied exactly once, at a
+  single defined point (prefer: at level completion, based on state, not as two separate
+  additions)
+- Ensure `customerServed` and `customerLeft` reset fully on `LOAD_LEVEL`
 
----
-
-## Recovery Strategies
-
-When pitfalls occur despite prevention, how to recover.
-
-| Pitfall | Recovery Cost | Recovery Steps |
-|---------|---------------|----------------|
-| Over-decorated vintage UI | HIGH | Audit all decorative elements, remove 60%, keep only accents, re-test |
-| Contrast failures | MEDIUM | Run contrast audit, create color palette spreadsheet, batch replace hex codes |
-| Gradient hangover | MEDIUM | Find all gradient CSS, replace with solid/texture, test each replacement |
-| Touch targets too small | LOW | Add padding to all buttons, expand invisible hit areas, verify with overlay tool |
-| Performance death by styled-components | HIGH | Extract to CSS modules, remove styled-components dependency, refactor incremental |
-| Mixed modern/vintage messaging | HIGH | Choose one direction, document decision, audit all components against it |
+**Phase:** Fix before any customer mode level ships to playtesters.
 
 ---
 
-## Pitfall-to-Phase Mapping
+### Pitfall 6: Difficulty Curve Collapse When Modes Are Interleaved
 
-How roadmap phases should address these pitfalls.
+**What goes wrong:** With 20 levels across 7 modes, the natural temptation is to cycle
+through modes (level 1: free, level 2: genre, level 3: chronological, level 4: customer,
+etc.) without regard for cumulative difficulty. A player hitting `rush + blockedSlots`
+at level 15 after a gentle level 14 experiences a cliff, not a curve.
 
-| Pitfall | Prevention Phase | Verification |
-|---------|------------------|--------------|
-| Everything vintage overload | Phase 1 - Design System | 2-second button find test with 5 users |
-| Dark theme contrast collapse | Phase 1 - Design Tokens | Automated contrast checker + sunlight test |
-| AI gradient hangover | Phase 2 - Component Build | Code review checklist: no gradient backgrounds |
-| Touch target erosion | Phase 2 - Component Build | Touch target overlay tool, thumb testing |
-| Styled-components performance | Phase 3 - Integration | Lighthouse performance score >90, 60fps animations |
-| Professional/vintage confusion | Phase 1 - Brand Guidelines | Aesthetic consistency audit, external review |
-| Hardcoded colors | Phase 1 - Design System | CSS variables usage, grep for hardcoded hex |
-| Canvas event blocking | Phase 3 - Integration | Test all game interactions with UI visible |
-| Mobile viewport issues | Phase 3 - Polish | Multi-device testing: notched phones, tablets |
-| Font loading FOUT | Phase 3 - Polish | Network throttling test, cache-clear test |
-| Accessibility failures | Phase 3 - Polish | Screen reader test, keyboard navigation test |
+The current level data already shows this pattern: level 16 is "CLIENTE DIFFICILE" with
+the shortest customer timer (20 seconds), level 17 is "il grande rush finale" with 75
+seconds and 12 vinyls, level 18 is "sleeve-match con timer." Three hard-mode levels in
+a row, all at the end, is a wall not a ramp.
+
+**Prevention:**
+- Map difficulty as a numeric score (vinyl count + active constraints) before assigning
+  mode sequences
+- Ensure each new mode is introduced first in a simple/forgiving form, then revisited in
+  a harder form 2-3 levels later
+- Interleave "relief" levels (free or genre mode with few vinyls) between demanding
+  levels to give players a win before the next challenge
+
+**Detection:** Score each level on a simple rubric (1 pt per vinyl, 1 pt per active
+constraint, +2 for timer) and plot the scores — the curve should be roughly monotonic
+with occasional dips, not flat then spiking.
+
+**Phase:** Plan difficulty curve before finalizing level order.
+
+---
+
+### Pitfall 7: localStorage Progress Schema Has No Version Guard
+
+**What goes wrong:** The progress object stored at `sleevo_progress` is an unversioned
+`Record<string, LevelProgress>`. If the data shape changes (e.g. adding a `mode` or
+`completionDate` field), old saves will deserialize without error but with missing fields
+that code may not guard against.
+
+More critically: if level IDs are ever renamed or renumbered, saved progress keys become
+orphaned. A player who completed `level-5` under the old naming will find level 5 locked
+after a rename.
+
+**Prevention:**
+- Add a `version: number` field to the persisted object
+- On load, check version and migrate or clear if stale
+- Document that level IDs must never be renamed after shipping
+
+**Phase:** Implement before first public release. Low cost now, high cost after users have saves.
+
+---
+
+### Pitfall 8: Time-Elapsed Scoring Not Wired to Star Formula
+
+**What goes wrong:** `timeElapsed` is tracked in `GameScreen.tsx` via a local
+`useState` and passed to `LevelComplete` for display, but it is NOT passed to the engine
+and NOT factored into the star calculation. The PROJECT.md specification says stars
+should be based on "combinazione errori + velocità." The current engine ignores speed
+entirely.
+
+The `bestTime` field in `LevelProgress` persists time, but the star formula
+(`mistakes === 0` etc.) never consults time. Players can complete a level in 10 minutes
+with zero mistakes and still get 3 stars.
+
+**Prevention:**
+- Decide before implementing the star system whether time is a star factor or only a
+  "personal best" leaderboard metric. If it is a star factor, wire `timeElapsed` into
+  the engine's completion logic and define per-level time thresholds.
+- If time is only cosmetic (personal best display), remove it from the spec language to
+  avoid future confusion.
+
+**Detection:** The discrepancy is already present in the codebase — check engine.ts line
+~157 and confirm `timeElapsed` is not consulted.
+
+**Phase:** Resolve the ambiguity during the star system implementation phase. Do not ship
+20 levels and then retroactively add time to star calculations — it invalidates all
+existing player saves.
+
+---
+
+### Pitfall 9: `blockedSlots` Not Enforced at Engine Level
+
+**What goes wrong:** `blockedSlots` are checked in `rules.ts` (placement validation)
+and rendered in `Shelf.tsx`/`ShelfSlot.tsx`. However, there is no check in the engine's
+completion condition that blocked slots are excluded from the "all vinyls placed"
+calculation. If a level has 6 vinyls and 2 blocked slots on a 2x4 grid, the completion
+check is `placedCount >= totalVinyls` (6 >= 6) which works correctly — but only because
+`totalVinyls` counts vinyls, not slots. This remains correct as long as the invariant
+`vinyls.length <= available_slots` is maintained in every level definition. Violating
+this invariant (e.g. 8 vinyls, 2 blocked slots on a 2x4 grid = 6 available slots)
+produces an uncompletable level with no error message.
+
+**Prevention:**
+- Add a level validation utility that asserts `vinyls.length <= (rows * cols) - blockedSlots.length`
+- Run this validation at level-load time in development and log a clear error
+
+**Phase:** Implement before authoring levels 6+ which use `blockedSlots`.
+
+---
+
+## Minor Pitfalls
+
+---
+
+### Pitfall 10: `mistakes` and `invalidDrops` Track the Same Events Inconsistently
+
+**What goes wrong:** `mistakes` is incremented on: invalid placement (line 120),
+customer timer expiry (line 252). `invalidDrops` is incremented only on invalid placement
+(line 198). The star formula uses `mistakes`, not `invalidDrops`. The LevelComplete
+screen also displays `mistakes`, not `invalidDrops`. But the old scoring formula
+(`score = placedCount * 10 - invalidDrops * 2`) uses `invalidDrops`. Two parallel
+counters tracking similar but not identical events creates confusion about which is
+authoritative.
+
+**Prevention:**
+- Consolidate to one counter: `mistakes` (which is broader and covers all failure states)
+- Update the score formula to use `mistakes` for consistency, or rename `invalidDrops`
+  to `placementErrors` and keep it as a sub-category of `mistakes`
+- Remove whichever counter is not needed
+
+**Phase:** Resolve during the scoring / star system phase.
+
+---
+
+### Pitfall 11: No Level Selection UI Means No Replay Incentive
+
+**What goes wrong:** The current flow is strictly sequential: complete a level, advance
+to the next. There is no way for a player to return to level 3 to improve their 2-star
+score to 3 stars. The `bestTime` and star progress saved in localStorage have nowhere
+to surface. This means the "improve your performance" loop — a core motivation for star
+systems — has no entry point.
+
+**Prevention:**
+- Plan a level select screen as part of the progression milestone, even if it is minimal
+  (a scrollable list of levels showing earned stars and locked state)
+- The level select screen also becomes the natural entry point for the game after the
+  first session
+
+**Phase:** Include in the level progression milestone. Do not treat it as optional polish.
+
+---
+
+### Pitfall 12: Combo Decay Makes Later Levels Feel Punishing
+
+**What goes wrong:** The combo timer (4000ms between placements before streak resets)
+was calibrated for a fast carousel with 8 vinyls. On larger levels (12+ vinyls, the
+`rush` finale has many items) or on `blackout` mode where players must think before
+placing, the 4-second window forces players to rush rather than reason, undermining the
+skill being tested by those modes.
+
+**Prevention:**
+- Make `comboDecayMs` a per-level or per-mode configurable value rather than a global
+  constant
+- `blackout` and `chronological` modes should use a longer window (6-8 seconds);
+  `rush` mode should keep or tighten the current window
+
+**Phase:** Note when designing levels that use combo-sensitive modes (chronological,
+blackout).
+
+---
+
+## Phase-Specific Warnings
+
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|----------------|------------|
+| Star system implementation | Flat thresholds punish hard modes (Pitfall 1) | Define per-mode or per-level thresholds upfront |
+| Star system implementation | Time-elapsed not in star formula despite spec (Pitfall 8) | Resolve ambiguity before coding |
+| Level unlock logic | Off-by-one in storage key construction (Pitfall 2) | Refactor to derive previous level ID from array |
+| Adding levels 5-20 | Partially-implemented modes cause silent bugs (Pitfall 3) | Audit each mode end-to-end before using in new levels |
+| Customer mode levels | Double-bonus scoring (Pitfall 5) | Audit scoring path, single bonus point of dispatch |
+| Blackout / customer UX | Mode rules obscured without recovery (Pitfall 4) | Add persistent rule reminder per mode |
+| Difficulty ordering | Mode interleaving creates walls not curves (Pitfall 6) | Score and plot difficulty before finalizing level order |
+| First public release | Unversioned localStorage schema (Pitfall 7) | Add version field and migration before shipping |
+| Blocked-slot levels | Uncompletable level possible (Pitfall 9) | Add level validation assertion at load time |
+| Level progression overall | No level select = no replay incentive (Pitfall 11) | Include level select in progression milestone scope |
 
 ---
 
 ## Sources
 
-- Training data knowledge of mobile game UI design patterns
-- WCAG 2.1 AA contrast requirements (4.5:1 normal text, 3:1 large)
-- iOS Human Interface Guidelines (44pt minimum touch target)
-- Material Design guidelines (48dp minimum touch target)
-- Web Performance optimization patterns
-- Mobile game UX best practices (2024-2025)
-- CSS-in-JS performance implications (styled-components, emotion)
-
-**Confidence Note:**
-This research is based on established mobile game UI patterns and best practices. Specific 2026 trends couldn't be verified due to WebSearch access limitations. Findings should be validated against current user testing during Phase 1.
-
----
-
-*Pitfalls research for: Sleevo UI/UX Redesign*
-*Researched: February 11, 2026*
+- Direct codebase analysis: `src/game/engine.ts`, `src/game/storage.ts`, `src/game/levels.ts`, `src/game/rules.ts`, `src/game/types.ts`
+- `src/components/GameScreen.tsx` (timer wiring, blackout trigger, customer timer)
+- `src/components/LevelComplete.tsx` (displayed stats vs. star-driving stats)
+- `.planning/PROJECT.md` (stated requirements and design decisions)
+- `GAME-LOGIC.md` (authoritative description of current game mechanics)
+- Confidence: HIGH — all pitfalls grounded in direct code evidence, not assumption

@@ -1,253 +1,134 @@
 # Feature Landscape
 
-**Domain:** Mobile 3D Puzzle Game UI Components
-**Researched:** February 11, 2026
+**Domain:** Browser-based casual puzzle / sorting game (vinyl records)
+**Project:** Sleevo
+**Researched:** 2026-02-20
+**Confidence:** MEDIUM — Based on training-data knowledge of Candy Crush, Monument Valley, Sort It 3D, Ball Sort Puzzle, 1010!, Threes!, Two Dots, and related genre. Web search unavailable; claims sourced from well-documented, widely-analyzed games. Marked where confidence is lower.
+
+---
 
 ## Table Stakes
 
-Features users expect. Missing = product feels incomplete.
+Features users expect. Missing = product feels incomplete or broken.
 
 | Feature | Why Expected | Complexity | Notes |
-|---------|--------------|--------------|-------|
-| **VinylCard Visual States** | Users need clear feedback on draggable objects | Low-Medium | 3 states required: idle, dragging, placed. Each state needs distinct visual cues (scale, shadow, z-index) |
-| **ShelfSlot Drop Feedback** | Drag-and-drop requires clear valid targets | Low | Visual cue when hovering over valid drop zone (highlight, glow, or border change) |
-| **ProgressBar** | Users need to know level completion status | Low | Shows progress toward goal. Must be readable at quick glance during gameplay |
-| **HUD (Heads-Up Display)** | Standard mobile game expectation | Low | Score, moves remaining, level indicator - always visible but non-intrusive |
-| **Touch Feedback** | Mobile users expect haptic/visual response | Low | Visual ripple or scale effect on touch. Haptic feedback on successful placement |
-| **Smooth Dragging** | Laggy dragging = broken game feel | Medium | 60fps rendering required via requestAnimationFrame (not setInterval) |
-| **State Transitions** | Jarring state changes feel broken | Low | CSS transitions with appropriate easing (200-300ms for UI, faster for gameplay) |
-| **Dark Mode Contrast** | WCAG AA required for accessibility | Medium | 4.5:1 contrast for body text, 3:1 for UI components and icons |
-| **Undo/Redo** | Mobile users make accidental touches | Medium | Standard feature in puzzle games. Should have visual limit indicator |
-| **Responsive Layout** | Works across phone/tablet sizes | Medium | UI must adapt to viewport. Use relative units (%, vh/vw, flex/grid) |
+|---------|--------------|------------|-------|
+| Floating score feedback ("+10", "+70 AMAZING!") after each placement | Players need immediate cause→effect clarity; the score counter alone is invisible | Low | This is in PROJECT.md Active requirements. Already known missing. |
+| Vinyl progress counter in HUD ("5 / 8") | Players must know when the level ends; without this, completion feels random | Low | Also in PROJECT.md Active. Trivial to add. |
+| Level rule shown clearly before and during play | Players who don't know the rule guess randomly; confusion causes abandonment | Low | "Sort by genre" displayed in HUD as persistent reminder. The level-start screen is the moment players read the rule — skip it and they're lost. |
+| Star rating on level complete (1–3 stars) | Every casual game since Angry Birds has conditioned players to expect this. It is the primary unit of "how well did I do?" | Low-Med | PROJECT.md has this as Active. Stars must mean something (gate progression). |
+| Level select / world map showing progress | Players need a mental map of how far they've come and what's next | Medium | 20+ levels with no map = players don't know where they are in the journey. |
+| Level unlock gating (need N stars to continue) | Creates meaningful progression; without it, all content is immediately trivially available | Low | PROJECT.md proposes 2 stars to unlock next. This is the right call. |
+| Save progress across sessions | Casual players leave and return; losing progress on return = quit | Low | localStorage is sufficient for a browser game. PROJECT.md Active requirement. |
+| End-of-level screen with score + stars + errors + time | The "ceremony" moment — players feel rewarded or motivated to retry | Low-Med | PROJECT.md Active requirement. Currently shows only score + errors. Missing: stars, time. |
+| Clear invalid placement feedback | Players must know immediately they made a wrong move | None — already exists | Shake + bounce-back + red flash already implemented. |
+| Restart level easily | Casual players who make early mistakes need a low-cost escape | Low | "Restart" button during play, not just on level complete. |
+| Visual differentiation between genres/categories | Players must be able to distinguish vinyls at a glance | None — already exists | Color coding by genre already implemented. |
+| Combo feedback visible during play | Combo multiplier is a key engagement driver; if players don't see it they don't feel it | None — already exists | Combo label/value shown in HUD. |
+| Tutorial / onboarding for first level | First-time players must understand drag-drop without reading documentation | None — already exists | Two-step onboarding exists. |
+
+---
 
 ## Differentiators
 
-Features that set product apart. Not expected, but valued.
+Features that set this product apart. Not universally expected, but make the game memorable and replayable.
 
 | Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|--------------|-------|
-| **Vinyl Cover Art Showcase** | Highlights the vinyl aesthetic theme | Medium | Since core mechanic is vinyl records, make covers visually prominent with high-quality art, subtle reflections, realistic lighting |
-| **Physics-based Card Movement** | Cards feel like physical objects | High | Cards tilt based on drag velocity, have weight when dropped. Requires careful tuning |
-| **Combo Counter with Visual Flair** | Adds dopamine hit for skilled play | Low-Medium | Track consecutive correct placements. Show with animation (scale up, color change, particles) |
-| **Level Theme Transitions** | Makes progress feel meaningful | Medium | Smooth visual transition between Basement → Store → Expo with atmosphere changes |
-| **Personal Best Tracking** | Gives replay value to levels | Low | Store per-level best scores/moves. Show "NEW!" indicator when beaten |
-| **Gesture Shortcuts** | Speed up gameplay for experts | Medium | Double-tap to quick-place, long-press for info, pinch for zoom (if applicable) |
-| **Satisfying Placement Audio** | Completes the physical feel | Low | Different sound for vinyl placement based on shelf slot (wooden thud, metallic click, etc.) |
-| **Animated Vinyl Texture** | Makes vinyls feel alive | Medium | Subtle grooves rotation, light reflection changes as card moves |
-| **Progressive Hint System** | Helps without feeling hand-held | High | First hint: highlight movable vinyl. Second hint: show valid shelf. Third hint: partial solution. Track usage for scoring |
-| **Level Completion Celebration** | Emotional payoff after effort | Medium | Unique animation per theme (confetti for store, dust particles for basement, spotlight for expo) |
+|---------|-------------------|------------|-------|
+| Multiple level modes (genre, chronological, customer request, blackout, rush, sleeve-match) | Variety sustains long-term engagement; each mode is a fresh puzzle type | High | Defined in LevelMode TypeScript types but not all implemented. This is Sleevo's primary differentiator. No other browser vinyl game does this. |
+| Customer Request mode | Narrative framing: player fills a specific order, not a generic rule. More engaging than abstract sorting | Med | Adds story context; makes player feel like they are running a real shop |
+| Rush mode (time pressure) | Transforms the same mechanics into a completely different feel — anxiety vs. deliberation | Low-Med | Carousel already accelerates as vinyls deplete; a full rush mode pushes this further |
+| Blackout mode (hidden column labels) | Expert-mode challenge that rewards memorization | Low | Labels hidden; player must remember genre → column from experience |
+| Sleeve-match mode | Visual pattern matching instead of metadata sorting — different cognitive challenge | Med | Requires album cover art on vinyls; currently covers are optional |
+| Combo + multiplier system already in place | Makes perfect runs feel spectacular (5x LEGENDARY!); most browser puzzle games lack this depth | None — already exists | This is already a differentiator; just needs to be more visible to players |
+| 3D vinyl disc rendering (Three.js) | Tactile, premium feel vs. flat card-based sorting games | None — already exists | This is already differentiated; worth leaning into aesthetically |
+| Level-specific difficulty curves within the same mode | e.g., Genre mode → 4 genres → 6 genres → genres with duplicate columns (ROCK appears twice) | Low-Med | The current 8-column setup already has this complexity; needs levels that exploit it progressively |
+| End-of-level replay incentive ("Best: 3 stars" shown on select screen) | Players re-play to improve; star replay is a well-established retention loop | Low | Requires save system + level select |
+
+---
 
 ## Anti-Features
 
-Features to explicitly NOT build.
+Features to explicitly NOT build for this game.
 
 | Anti-Feature | Why Avoid | What to Do Instead |
-|--------------|-------------|-------------------|
-| **Auto-complete animations** | Removes player agency and satisfaction | Skip button available after 3 seconds of inactivity, but never auto-play |
-| **Forced tutorial videos** | Mobile users hate watching videos | Interactive tutorial with "Don't show again" option. Contextual tooltips for first-time actions |
-| **Complex menu navigation** | Puzzle games need quick restart | Single tap to restart, one menu layer maximum. No nested settings menus during gameplay |
-| **Slow-motion transitions** | Feels sluggish on mobile | Keep UI transitions under 300ms. Use `cubic-bezier` for snappy feel |
-| **Gradient text on backgrounds** | Fails WCAG AA contrast in dark themes | Use solid text colors with sufficient contrast, or semi-transparent backgrounds behind text |
-| **Fullscreen ads** | Breaks flow, increases uninstall | Rewarded ads only, optional, clearly timed |
-| **Energy/stamina systems** | Artificial gating creates frustration | Play unlimited. Monetize through cosmetic options, not gameplay limits |
-| **Share gating behind progress** | Social proof should be easy | Share score/card art at any time, not just after winning |
-| **Red/green color-only indicators** | ~8% of males are colorblind | Use icons + color, or blue/orange combinations that work for most vision types |
+|--------------|-----------|-------------------|
+| Lives / energy system (lose energy on errors) | Blocks casual play; creates frustration in a game that is already punishing errors with combo resets | Use combo reset as sufficient punishment; no artificial gate |
+| Timers on every level by default | Removes the "browse a record shop" atmosphere that makes Sleevo feel premium vs. frantic mobile clones | Use rush mode as opt-in/level-specific variant; base game is unhurried |
+| Pop-up ads or intrusive monetization UI | Destroys the aesthetic experience entirely | Out of scope per PROJECT.md — but document this as a deliberate design stance |
+| Undo button | Trivializes the puzzle; no tension | PROJECT.md already notes undo() is empty by design. Keep it empty. |
+| Random / shuffled correct columns per play | Destroys replayability and memory-building; players need deterministic rules to improve | Correct columns stay fixed per vinyl ID (already the design) |
+| Leaderboards / social features in v1 | Complexity without engagement payoff at low player count; adds infrastructure burden | Defer until there is a player base to compete within |
+| Animated cutscenes between levels | High production cost, blocks experienced players on repeat plays | A brief text rule display ("Level 5: Sort by year — oldest to newest") is enough ceremony |
+| Penalty for being slow (outside rush mode) | Breaks the chill sorting-shop atmosphere | Reward speed with combo bonuses; punish errors, not pace |
+| More than 3 star tiers | Stars above 3 add confusion ("what's a 4-star run?"); 3 is the genre standard | Stick with 1/2/3 stars |
+| Full account/cloud sync | Engineering complexity not justified for v1 browser game | localStorage is sufficient |
+
+---
 
 ## Feature Dependencies
 
 ```
-VinylCard Component → ShelfSlot Component (ShelfSlot provides drop targets)
-ProgressBar → Level State (driven by game logic)
-HUD → Game State (score, moves, level all from state)
-Touch Feedback → All interactive components
-Dark Theme → All components (must maintain WCAG AA throughout)
+Save system (localStorage) → Level unlock gating
+Save system (localStorage) → Level select screen with star display
+Star rating → Level unlock gating
+Star rating → End-of-level screen
+Level rule display (HUD) → Every level mode that has a non-obvious rule
+Floating score feedback → Combo system (feedback must show multiplier label)
+Level select screen → 20+ levels (no point building the screen with 2 levels)
+Customer Request mode → Level data with specific customer order field
+Sleeve-match mode → Album cover art on vinyls (coverImage field, currently optional)
+Rush mode → Timer component in HUD
+Blackout mode → Ability to suppress column labels per level
+Progress counter ("5/8") → totalVinyls tracked in store (already tracked)
 ```
+
+---
 
 ## MVP Recommendation
 
-**Phase 1 (Core Feel):**
-1. VinylCard with 3 states (idle/dragging/placed)
-2. ShelfSlot with drop highlight
-3. Basic HUD (score/moves/level)
-4. Touch feedback animations
-5. WCAG AA dark theme colors
+Given Sleevo already has: drag-drop, combo system, error feedback, 2 levels, genre-color coding, end-of-level screen (partial).
 
-**Phase 2 (Polish):**
-1. ProgressBar for level completion
-2. Undo/Redo system
-3. Placement audio feedback
-4. Combo counter
+**Prioritize (must ship before any new modes):**
 
-**Phase 3 (Delight):**
-1. Physics-based card movement
-2. Level completion celebrations
-3. Hint system
-4. Gesture shortcuts
+1. Floating score feedback after each placement ("+10", "+35 GREAT!")
+2. Progress counter in HUD ("Piazzati: 5 / 8")
+3. Level rule persistent display in HUD (e.g., "Ordina per: Genere")
+4. Star rating system (errors + speed → 1/2/3 stars)
+5. End-of-level screen showing stars + score + errors + time (extend existing screen)
+6. Save progress to localStorage (stars per level, highest unlocked level)
+7. Level select screen (simple grid, locked/unlocked/star count)
+8. 20+ level definitions using existing modes
 
 **Defer:**
-- Complex particle systems (can add later, not core to puzzle)
-- Multiplayer (adds significant complexity, not MVP)
-- Level editor (cool feature but not essential)
-- Leaderboards (requires backend, can be v2)
 
-## Micro-Interaction Timing Benchmarks
+- Sleeve-match mode: Requires album art data and a new matching algorithm. High content cost. Build after 10+ levels exist.
+- Customer Request mode: Needs level data redesign (order lists). Build in second content wave.
+- Blackout and Rush modes: Low code cost, but need 15+ base levels first so they feel like a mode escalation rather than the first challenge.
+- Leaderboards: Post-launch.
 
-Based on CSS transitions best practices and mobile gaming UX patterns:
+**The critical insight:** The game's core loop (drag → snap → combo → score) is already solid. The entire gap is *communication to the player* — they don't see what they earned, don't know how far they are, and don't know how well they did. All MVP items above are communication fixes, not new mechanics. This is a very fast path to a shippable game.
 
-| Interaction | Duration | Easing | Notes |
-|-------------|-----------|---------|-------|
-| **Touch feedback** | 100-150ms | `ease-out` | Fast tap response. Scale(0.95) on press, return to scale(1) on release |
-| **Card pickup (idle→dragging)** | 200-250ms | `ease-out` or `cubic-bezier(0.34, 1.56, 0.64, 1)` | Snappy pickup with slight overshoot for "spring" feel |
-| **Card drop (dragging→placed)** | 150-200ms | `ease-in-out` or `cubic-bezier(0.4, 0, 0.2, 1)` | Satisfying settle into slot |
-| **Shelf hover state** | 150ms | `ease-out` | Quick highlight when card enters valid zone |
-| **Shelf unhover** | 200-300ms | `ease-in` | Slightly slower fade out for smoother feel |
-| **Score increment** | 300-400ms | `ease-out` | Count up animation for numbers |
-| **Combo popup** | 600-800ms total | `ease-out` for scale-in, linear hold, `ease-in` for fade-out | Scale up (200ms), hold (200-400ms), fade (200ms) |
-| **ProgressBar fill** | 500-800ms | `ease-out` or `cubic-bezier(0.25, 0.46, 0.45, 0.94)` | Smooth fill when level complete |
-| **Level complete reveal** | 800-1200ms | Staggered `ease-out` | Elements appear sequentially, not all at once |
-| **Button hover** | 150-200ms | `ease-out` | Fast feedback on interaction |
-| **Page/modal transitions** | 250-350ms | `ease-in-out` | Smooth but quick enough to not feel slow |
+---
 
-### Key Easing Functions
+## Confidence Assessment
 
-```css
-/* Snappy UI interactions */
-ease-out: cubic-bezier(0, 0, 0.2, 1)           /* Fast start, smooth end */
+| Claim | Confidence | Source |
+|-------|------------|--------|
+| Floating score feedback is table stakes | HIGH | Universal pattern in Candy Crush, 1010!, Two Dots, Sort It 3D — all use this |
+| Star rating (1-3) is expected | HIGH | Genre convention since Angry Birds (2009); every comparable casual game uses it |
+| 2 stars to unlock is appropriate gate | MEDIUM | Common pattern; some games use 1 star (permissive) or 3 (strict). 2 is the median observed. |
+| Undo is harmful to the puzzle loop | MEDIUM | Confirmed in Sort It 3D and Ball Sort Puzzle — neither has undo; it would trivialize |
+| Timer default-off is right for Sleevo's tone | MEDIUM | Judgment call based on Sleevo's "record shop" aesthetic; Monument Valley similarly time-free |
+| Customer/Rush/Blackout ordering advice | MEDIUM | Based on observed mode introduction order in comparable games (easy core → time pressure → memory variants) |
+| Lives/energy system as anti-feature | HIGH | Mobile-specific monetization mechanic; browser games without monetization should not use it |
 
-/* Spring-like feel */
-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1)   /* Slight bounce */
-
-/* Smooth natural motion */
-material: cubic-bezier(0.4, 0, 0.2, 1)            /* Google Material standard */
-
-/* Deceleration */
-decelerate: cubic-bezier(0.25, 0.46, 0.45, 0.94) /* Slowdown feel */
-```
-
-## Accessibility Requirements (WCAG AA Dark Theme)
-
-Based on MDN documentation for WCAG 2.1 AA standards:
-
-| Element | Contrast Ratio | Notes |
-|---------|---------------|-------|
-| **Body text** | 4.5:1 minimum | Standard text under 18pt |
-| **Large text (18pt+)** | 3:1 minimum | Headings, labels |
-| **UI components/icons** | 3:1 minimum | Buttons, progress indicators, graphical elements |
-| **VinylCard borders/edges** | 3:1 minimum | Must be distinguishable from background |
-
-### Recommended Dark Theme Colors
-
-```css
-/* Backgrounds */
---bg-dark: #1a1a1a;        /* Near-black background */
---bg-card: #2d2d2d;        /* Card background */
---bg-shelf: #252525;        /* Shelf slot */
-
-/* Text */
---text-primary: #f5f5f5;      /* 14.6:1 on bg-dark */
---text-secondary: #b8b8b8;    /* 6.5:1 on bg-dark */
-
-/* Accents (high contrast) */
---accent-blue: #64b5f6;       /* 7.2:1 on bg-dark */
---accent-green: #81c784;      /* 8.1:1 on bg-dark */
---accent-orange: #ffb74d;       /* 7.5:1 on bg-dark */
---accent-red: #e57373;         /* 6.8:1 on bg-dark */
-
-/* Borders/dividers */
---border-subtle: #404040;     /* 5.1:1 on bg-dark */
---border-strong: #606060;       /* 3.4:1 on bg-dark */
-```
-
-## Component State Patterns
-
-### VinylCard States
-
-```typescript
-interface VinylCardState {
-  // IDLE: Default resting state
-  // - scale: 1
-  // - shadow: subtle elevation
-  // - z-index: 10
-  idle: 'idle';
-
-  // DRAGGING: Active user interaction
-  // - scale: 1.05-1.1 (pickup zoom)
-  // - shadow: deep shadow below
-  // - z-index: 100 (above all)
-  // - opacity: 0.9 (see-through slightly)
-  dragging: 'dragging';
-
-  // PLACED: Successfully in shelf slot
-  // - scale: 1 (returns to normal)
-  // - shadow: flattened (sits on surface)
-  // - z-index: 5 (below dragging, above background)
-  // - locked: true (no longer draggable)
-  placed: 'placed';
-}
-```
-
-### ShelfSlot States
-
-```typescript
-interface ShelfSlotState {
-  // EMPTY: No vinyl placed
-  // - border: subtle dashed line
-  // - background: slightly darker than shelf
-  empty: 'empty';
-
-  // HIGHLIGHT: Card hovering over valid target
-  // - border: bright accent color
-  // - background: glow effect
-  // - animation: subtle pulse
-  highlight: 'highlight';
-
-  // FILLED: Vinyl successfully placed
-  // - border: matches vinyl accent
-  // - shadow: casting from vinyl
-  filled: 'filled';
-
-  // INVALID: Wrong vinyl type attempted
-  // - border: red/orange
-  // - shake animation (300ms)
-  // - card rejection (returns to idle)
-  invalid: 'invalid';
-}
-```
-
-### HUD Component Patterns
-
-| Element | Layout | Visibility | Update Behavior |
-|---------|---------|------------|-----------------|
-| **Score** | Top-left or top-center | Always visible | Animate increment (+100, +50, etc.) |
-| **Moves** | Top-right or below score | Always visible | Decrement. Flash red when < 5 remaining |
-| **Level indicator** | Top or subtle background | Always visible | "Basement 1-3" or similar |
-| **ProgressBar** | Bottom or below HUD | Visible during gameplay | Smooth fill as vinyls placed correctly |
-| **Pause button** | Top-right corner | Always visible | Icon standard (⏸ or similar) |
-| **Hint button** | Bottom-right or edge | Always visible, cooldown indicator | Grey out when no hints available |
-
-## Performance Considerations
-
-- **Use `requestAnimationFrame`** for all drag operations, not `setInterval` (smoother, better battery)
-- **CSS transforms over position changes** for animations (use `transform: translate3d()` for GPU acceleration)
-- **Avoid animating `height`/`width`** - use `transform: scale()` instead for better performance
-- **Will-change sparingly** - only on elements about to animate, remove after animation completes
-- **Debounce resize handlers** - prevent layout thrashing on mobile orientation changes
-- **Use `transform-style: preserve-3d`** for vinyl cards to enable proper z-indexing during 3D interactions
+---
 
 ## Sources
 
-- [MDN Web Docs - WCAG Contrast Requirements](https://developer.mozilla.org/en-US/docs/Web/Accessibility/Understanding_WCAG/Perceivable/Color_contrast) (HIGH confidence - official W3C spec)
-- [CSS-Tricks - CSS Transitions](https://css-tricks.com/almanac/properties/t/transition/) (HIGH confidence - established CSS reference)
-- [CSS-Tricks - requestAnimationFrame](https://css-tricks.com/using-requestanimationframe/) (HIGH confidence - animation best practices)
-- [Material Design Motion Guidelines](https://m3.material.io/styles/motion/easing-and-duration/standard-easing) (MEDIUM confidence - couldn't fully load, but Material Design is industry standard)
-
-### Confidence Assessment
-
-| Area | Confidence | Notes |
-|------|------------|-------|
-| Table Stakes Features | HIGH | Based on standard mobile game patterns and UX best practices |
-| Differentiating Features | MEDIUM | Some features (physics-based movement) are more experimental |
-| Anti-Features | HIGH | Based on common mobile gaming complaints and UX research |
-| Timing Benchmarks | MEDIUM | Based on CSS-Tricks and Material Design standards. Real-world testing recommended |
-| Accessibility (WCAG AA) | HIGH | Directly from W3C WCAG 2.1 specification via MDN |
-| Component State Patterns | MEDIUM | Standard React/TypeScript patterns, but game-specific states may need iteration |
+- Genre knowledge: Candy Crush Saga, Monument Valley, Sort It 3D, Ball Sort Puzzle, Threes!, Two Dots, 1010! (training data, HIGH confidence for well-documented games)
+- Project context: `/Users/martha2022/Documents/Sleevo/.planning/PROJECT.md`
+- Game mechanics: `/Users/martha2022/Documents/Sleevo/GAME-LOGIC.md`
+- Web search: Unavailable during this research session. Claims rely on training data (cutoff August 2025). No post-Aug 2025 sources consulted.
+- Note: All named games are pre-2024 releases well within the training window. Confidence is appropriate.

@@ -1,478 +1,380 @@
-# Architecture Research
+# Architecture Patterns
 
-**Domain:** React UI Layer over Three.js Game
-**Researched:** 2026-02-11
-**Confidence:** HIGH
+**Domain:** Level progression system for React + Three.js vinyl sorting game
+**Researched:** 2026-02-20
+**Confidence:** HIGH — Based on direct codebase analysis
 
-## Standard Architecture
+---
 
-### System Overview
+## Existing Architecture (Baseline)
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         UI Layer (React)                            │
-├─────────────────────────────────────────────────────────────────────────┤
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐        │
-│  │ TopBar   │  │ Controls │  │ Tutorial │  │ Modals   │        │
-│  │ (HUD)    │  │ (Buttons)│  │ (Dialog) │  │ (Settings)│       │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘        │
-│       │            │            │            │                      │
-├───────┴────────────┴────────────┴────────────┴──────────────────────┤
-│                    Game State Bridge (Zustand)                       │
-│  - Shared state between UI and Three.js                              │
-│  - Event callbacks for game events → UI updates                      │
-├─────────────────────────────────────────────────────────────────────────┤
-│                      Three.js Game Layer                            │
-│  ┌─────────────────────────────────────────────────────┐            │
-│  │              GameManager (1500+ lines)               │            │
-│  │  - Level loading, vinyl placement, scoring         │            │
-│  └─────────────────────────────────────────────────────┘            │
-│  ┌─────────────────────────────────────────────────────┐            │
-│  │            InputController (900+ lines)            │            │
-│  │  - Raycasting, drag/drop, collision detection    │            │
-│  └─────────────────────────────────────────────────────┘            │
-│  ┌─────────────────────────────────────────────────────┐            │
-│  │             SceneRenderer (Three.js)              │            │
-│  │  - WebGL canvas, camera, lighting, animation      │            │
-│  └─────────────────────────────────────────────────────┘            │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+The codebase has two partially-overlapping state management systems that must be reconciled before adding progression features:
 
-### Component Responsibilities
+### System A: `useReducer` in GameScreen (ACTIVE)
 
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|----------------------|
-| **App Root** | Mounts React app, initializes Three.js, provides state context | `App.tsx` with `useEffect` for game initialization |
-| **TopBar/HUD** | Displays score, level, progress | React components reading from Zustand store |
-| **Controls** | Restart, undo, settings buttons | Styled components with click handlers |
-| **Tutorial/Modals** | Onboarding, level complete, settings | Portal-rendered overlays |
-| **GameBridge** | Two-way communication between React and Three.js | Custom hook using Zustand for state |
-| **Three.js Layer** | Continues as-is (vanilla TypeScript) | Existing `GameManager.ts`, `InputController.ts` |
-
-## Recommended Project Structure
+`src/components/GameScreen.tsx` drives all live gameplay via `useReducer(gameReducer, ...)` from `src/game/engine.ts`. This is the authoritative runtime system.
 
 ```
-src/
-├── ui/                    # NEW: React UI layer
-│   ├── components/         # React components
-│   │   ├── TopBar/       # HUD (score, level, progress)
-│   │   │   ├── TopBar.tsx
-│   │   │   ├── TopBar.test.tsx
-│   │   │   └── index.ts
-│   │   ├── Controls/     # Bottom action buttons
-│   │   │   ├── Controls.tsx
-│   │   │   ├── RestartButton.tsx
-│   │   │   └── index.ts
-│   │   ├── Tutorial/     # Onboarding modal
-│   │   │   ├── Tutorial.tsx
-│   │   │   └── index.ts
-│   │   ├── Modals/       # Settings, level complete, etc.
-│   │   │   ├── LevelComplete.tsx
-│   │   │   ├── Settings.tsx
-│   │   │   └── index.ts
-│   │   └── common/       # Shared UI primitives
-│   │       ├── Button.tsx
-│   │       ├── Card.tsx
-│   │       └── index.ts
-│   ├── hooks/            # Custom React hooks
-│   │   ├── useGameState.ts    # Bridge to game state
-│   │   ├── useGameControls.ts  # Game control methods
-│   │   └── useBreakpoints.ts  # Responsive breakpoints
-│   ├── store/            # Zustand state management
-│   │   ├── gameStore.ts       # Game state (score, level, etc.)
-│   │   └── uiStore.ts        # UI state (modals, settings)
-│   ├── styles/           # Theme & design tokens
-│   │   ├── theme.ts          # styled-components theme
-│   │   ├── breakpoints.ts     # Responsive breakpoints
-│   │   └── tokens.ts         # Design tokens (colors, spacing)
-│   ├── App.tsx           # React root component
-│   └── index.tsx         # React entry point
-├── game/                 # EXISTING: Three.js game layer (minimal changes)
-│   ├── GameManager.ts    # Game logic (keep as-is)
-│   ├── InputController.ts # Input handling (keep as-is)
-│   ├── SceneRenderer.ts  # Three.js renderer (keep as-is)
-│   ├── gameRules.ts      # Game rules (keep as-is)
-│   └── types.ts         # Shared types
-├── services/             # NEW: Bridge services
-│   └── GameBridge.ts    # Communication layer between React and Three.js
-├── main.ts              # MODIFIED: Initialize both React and Three.js
-└── style.css            # Global styles (shared)
+GameScreen
+  └── useReducer(gameReducer, createGameState(LEVELS[0], 0))
+        ├── game/engine.ts      — pure reducer, all game logic
+        ├── game/rules.ts       — isValidPlacement, COMBO_TIERS
+        ├── game/levels.ts      — 20+ Level definitions (LEVELS array)
+        ├── game/storage.ts     — localStorage read/write (saveProgress, isLevelUnlocked)
+        └── game/types.ts       — GameState, ComboState, Level, LevelMode
 ```
 
-### Structure Rationale
+### System B: `useGameStore` Zustand (DORMANT)
 
-- **`ui/` folder:** Isolates React code from existing Three.js game
-- **`game/` folder:** Preserves existing architecture without refactoring
-- **`services/` folder:** Clean API for UI ↔ Game communication
-- **`hooks/` folder:** Reusable state access patterns for components
-- **`store/` folder:** Single source of truth for game state
+`src/store/gameStore.ts` is a Zustand store (`useGameStore`) with a different `GameState` shape (`phase`, `slots`, `vinyls`). It exists but is NOT wired to GameScreen. It is effectively dead code that pre-dates the current reducer architecture.
 
-## Architectural Patterns
+**Decision required before Phase 4 work:** Delete System B or replace System A with it. Based on codebase state, System A (reducer) should be kept as the canonical approach. The Zustand store (`src/store/gameStore.ts` + `src/types/game.ts`) can be removed or kept only as a typed facade if needed for devtools.
 
-### Pattern 1: Hybrid Mounting Strategy
+---
 
-**What:** Mount React root alongside existing Three.js canvas. React manages UI overlay, Three.js manages canvas.
+## Recommended Architecture
 
-**When to use:** Adding React UI to existing vanilla Three.js game without major refactoring.
+### Diagram
 
-**Trade-offs:**
-- **Pros:** Minimal changes to existing game code; clean separation; React for complex UI
-- **Cons:** Two separate update loops; state synchronization needed
+```
+                         ┌─────────────────────────────────────┐
+                         │           GameScreen.tsx             │
+                         │   useReducer(gameReducer, initial)   │
+                         └───────────────┬─────────────────────┘
+                                         │ state + dispatch
+              ┌──────────────────────────┼──────────────────────────┐
+              ▼                          ▼                           ▼
+   ┌────────────────────┐   ┌───────────────────────┐   ┌──────────────────────┐
+   │  HUD Layer         │   │   Play Surface         │   │  Overlay Layer        │
+   │                    │   │                        │   │                       │
+   │  HUD.tsx           │   │  Shelf.tsx             │   │  LevelComplete.tsx    │
+   │  ProgressBar.tsx   │   │  ShelfSlot.tsx         │   │  Tutorial.tsx         │
+   │  ComboFloat.tsx    │   │  VinylCrate (carousel) │   │  LevelSelectScreen*   │
+   │  InstructionPill   │   │  Shelf3DCanvas.tsx     │   │  ★ StarRating display │
+   │  ComboPopup.tsx    │   │                        │   │                       │
+   │  ScorePopup.tsx    │   │  (Three.js handles     │   │                       │
+   │  ★ RulePill*       │   │   own render loop)     │   │                       │
+   └────────────────────┘   └───────────────────────┘   └──────────────────────┘
 
-**Example:**
-```typescript
-// main.ts - Modified entry point
-import { SceneRenderer } from './game/SceneRenderer';
-import { GameManager } from './game/GameManager';
-import { InputController } from './game/InputController';
-import { createRoot } from 'react-dom/client';
-import { App } from './ui/App';
-import { GameBridge } from './services/GameBridge';
-import './style.css';
+* = New components to add
 
-// 1. Initialize Three.js game as before
-const container = document.getElementById('canvas-container');
-const sceneRenderer = new SceneRenderer(container);
-const gameManager = new GameManager(sceneRenderer);
-// ... InputController setup
-
-// 2. Initialize React app for UI overlay
-const uiContainer = document.getElementById('ui-overlay');
-const bridge = new GameBridge(gameManager); // State bridge
-const root = createRoot(uiContainer!);
-root.render(<App bridge={bridge} />);
-
-// 3. Connect game events to React via bridge
-bridge.initialize();
+                         ┌─────────────────────────────────────┐
+                         │          Game Logic Layer            │
+                         │                                      │
+                         │  engine.ts     — gameReducer         │
+                         │  rules.ts      — isValidPlacement    │
+                         │  levels.ts     — LEVELS array        │
+                         │  storage.ts    — localStorage        │
+                         │  ★ progression.ts*                   │
+                         └─────────────────────────────────────┘
 ```
 
-### Pattern 2: GameBridge with Zustand
+`★` = new files/components to add in this milestone.
 
-**What:** State management layer using Zustand for game state, bridging vanilla TypeScript game and React UI.
+---
 
-**When to use:** Need two-way data flow between Three.js and React without prop drilling.
+## Component Boundaries
 
-**Trade-offs:**
-- **Pros:** Single source of truth; minimal re-renders; TypeScript support
-- **Cons:** Additional dependency; learning curve for Zustand
+| Component | Responsibility | Reads From | Writes To |
+|-----------|---------------|------------|-----------|
+| `GameScreen.tsx` | Orchestrator. Owns `useReducer`. Mounts child components. Handles drag lifecycle. | `LEVELS`, `storage.ts` | `dispatch(action)`, `saveProgress()` |
+| `engine.ts` (gameReducer) | Pure state machine. All game logic. | `GameAction`, `Level` | Returns new `GameState` |
+| `rules.ts` | Validation. `isValidPlacement()` per mode. Combo tiers. | `Level`, placement args | `PlacementResult` |
+| `levels.ts` | Static level data. `LEVELS` export. | Nothing | Consumed by GameScreen |
+| `storage.ts` | Persistence layer. `saveProgress()`, `loadAllProgress()`, `isLevelUnlocked()`. | `localStorage` | `localStorage` |
+| `★ progression.ts` | Pure functions: `calculateStars()`, `getUnlockedLevels()`, `canAdvanceToLevel()`. Wraps/extends storage.ts logic. | `storage.ts` output | Consumed by GameScreen, LevelSelectScreen |
+| `HUD.tsx` | Live game stats display. Score, moves, time. | `state.score`, `state.rushTimeLeft`, `state.moves` | Nothing (display only) |
+| `ProgressBar.tsx` | Vinyl placement counter dots. | `state.unplacedVinylIds.length`, `state.level.vinyls.length` | Nothing |
+| `ComboFloat.tsx` | Active combo multiplier + decay bar. | `state.combo` | Nothing |
+| `ComboPopup.tsx` | Milestone burst (5x, 8x, 10x). | `state.combo.streak`, screen position | Nothing |
+| `ScorePopup.tsx` | Floating "+N" score delta after placement. | Points delta, screen coords | Nothing |
+| `LevelComplete.tsx` | End-of-level overlay. Stars, stats, next/replay. | `state.stars`, `state.mistakes`, `timeElapsed` | `onNextLevel()`, `onReplay()` callbacks |
+| `★ LevelSelectScreen.tsx` | Level map/grid. Shows locked/unlocked state + best stars. | `progression.ts`, `LEVELS` | Navigates to selected level |
+| `★ RulePill.tsx` | Current level mode rule banner in HUD. | `state.level.mode`, `state.level.hint` | Nothing |
+| `Tutorial.tsx` | Onboarding overlay. | `state.levelIndex`, `localStorage` | `localStorage` (marks seen) |
+| `CustomerPanel.tsx` | Customer timer + request display. | `state.customerTimeLeft`, `state.level.customerRequest` | Nothing |
 
-**Example:**
-```typescript
-// store/gameStore.ts - Zustand store
-import { create } from 'zustand';
-
-interface GameState {
-  score: number;
-  level: number;
-  progress: number;
-  total: number;
-  status: 'playing' | 'completed' | 'idle';
-  updateScore: (score: number) => void;
-  updateProgress: (placed: number, total: number) => void;
-  updateStatus: (status: GameState['status']) => void;
-}
-
-export const useGameStore = create<GameState>((set) => ({
-  score: 0,
-  level: 1,
-  progress: 0,
-  total: 0,
-  status: 'idle',
-  updateScore: (score) => set({ score }),
-  updateProgress: (placed, total) => set({ progress: placed, total }),
-  updateStatus: (status) => set({ status }),
-}));
-
-// services/GameBridge.ts - Connects game to store
-import { useGameStore } from '../ui/store/gameStore';
-
-export class GameBridge {
-  constructor(private gameManager: GameManager) {}
-
-  initialize() {
-    // Subscribe to game state changes
-    this.gameManager.onStateChange((state) => {
-      useGameStore.getState().updateScore(state.score);
-      useGameStore.getState().updateProgress(state.placed, state.total);
-      useGameStore.getState().updateStatus(state.status);
-    });
-  }
-
-  restart() {
-    this.gameManager.restart();
-  }
-}
-
-// ui/components/TopBar/TopBar.tsx - UI component
-import { useGameStore } from '../../store/gameStore';
-import styled from 'styled-components';
-
-const StatCard = styled.div`
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.68) 0%, rgba(253, 241, 228, 0.82) 100%);
-  border-radius: 16px;
-  /* ...existing styles from index.html... */
-`;
-
-export const TopBar = () => {
-  const { score, level, progress, total } = useGameStore();
-
-  return (
-    <TopBarContainer>
-      <Brand>
-        <Title>SLEEVO</Title>
-        <Subtitle>Analog Puzzle Mode</Subtitle>
-      </Brand>
-      <HUD>
-        <StatCard>
-          <Label>Level</Label>
-          <Value>{level}</Value>
-        </StatCard>
-        <StatCard>
-          <Label>Score</Label>
-          <Value>{score}</Value>
-        </StatCard>
-        <StatCard>
-          <Label>Progress</Label>
-          <Value>{progress}/{total}</Value>
-        </StatCard>
-      </HUD>
-    </TopBarContainer>
-  );
-};
-```
-
-### Pattern 3: Theme Provider with styled-components
-
-**What:** Centralized design system using styled-components ThemeProvider.
-
-**When to use:** Building UI layer with consistent styling across components.
-
-**Trade-offs:**
-- **Pros:** Type-safe theme; dynamic theming; collocated styles
-- **Cons:** Bundle size increase; CSS-in-JS runtime overhead
-
-**Example:**
-```typescript
-// ui/styles/theme.ts
-import { DefaultTheme } from 'styled-components';
-
-export const theme: DefaultTheme = {
-  colors: {
-    ink: {
-      main: '#24180f',
-      soft: '#6f5947',
-    },
-    accent: {
-      main: '#ff6c3f',
-      ice: '#2db2d7',
-    },
-    glass: {
-      border: 'rgba(255, 255, 255, 0.38)',
-      fill: 'rgba(255, 250, 244, 0.72)',
-    },
-  },
-  spacing: {
-    xs: '8px',
-    sm: '12px',
-    md: '16px',
-    lg: '24px',
-  },
-  fonts: {
-    display: "'Bebas Neue', sans-serif",
-    ui: "'Manrope', sans-serif",
-  },
-  breakpoints: {
-    compact: '430px',
-    medium: '768px',
-    large: '1024px',
-  },
-};
-
-// ui/App.tsx
-import { ThemeProvider } from 'styled-components';
-import { theme } from './styles/theme';
-import { TopBar } from './components/TopBar';
-import { Controls } from './components/Controls';
-import { Tutorial } from './components/Tutorial';
-
-export const App = () => {
-  return (
-    <ThemeProvider theme={theme}>
-      <Tutorial />
-      <TopBar />
-      <Controls />
-    </ThemeProvider>
-  );
-};
-```
+---
 
 ## Data Flow
 
-### Request Flow (UI → Game)
+### Score Feedback (per placement)
 
 ```
-[User clicks Restart in React]
-    ↓
-[Controls.tsx → onClick handler]
-    ↓
-[useGameControls hook → restart()]
-    ↓
-[GameBridge.restart() → gameManager.restart()]
-    ↓
-[GameManager resets level]
-    ↓
-[GameBridge emits state change]
-    ↓
-[React components re-render with new state]
+1. User drops vinyl onto slot
+   │
+   ▼
+2. GameScreen handleDrop()
+   → dispatch({ type: 'PLACE_VINYL', vinylId, row, col })
+   │
+   ▼
+3. gameReducer (engine.ts)
+   → isValidPlacement() returns { valid: true/false }
+   → If valid: compute earnedScore = BASE_SCORE * combo.multiplier + rareBonus
+   → Update state.score, state.combo, state.placedVinyls
+   → If complete: calculate state.stars (0 mistakes = 3, ≤2 = 2, else 1)
+   │
+   ▼
+4. GameScreen receives new state
+   → lastSlotPosition ref updated (DOM rect of slot)
+   → Sets lastSlotPosition state → triggers ScorePopup render
+   → New score flows to HUD via props
+   → New combo flows to ComboFloat via props
+   → PlacedCount change flows to ProgressBar via props
 ```
 
-### State Update Flow (Game → UI)
+### Level Completion + Persistence
 
 ```
-[GameManager updates score/moves]
-    ↓
-[GameBridge callback triggered]
-    ↓
-[Zustand store updated]
-    ↓
-[React components subscribed to store re-render]
-    ↓
-[UI displays new values]
+1. gameReducer returns state.status = 'completed'
+   │
+   ▼
+2. GameScreen useEffect [state.status]
+   → saveProgress(state.level.id, state.stars, timeElapsed)
+      → reads existing best from localStorage
+      → writes only if improved (more stars, or same stars + faster time)
+   │
+   ▼
+3. LevelComplete overlay mounts (conditional render on status === 'completed')
+   → displays state.stars, state.mistakes, state.hintsUsed, timeElapsed
+   │
+   ▼
+4. User clicks "Livello successivo"
+   → GameScreen onNextLevel()
+   → Checks isLevelUnlocked(nextIndex) via progression.ts
+   → dispatch({ type: 'NEXT_LEVEL', level: LEVELS[nextIndex], levelIndex: nextIndex })
+   → LevelComplete unmounts, gameplay resumes
 ```
 
-### Key Data Flows
+### Level Unlock Check
 
-1. **Vinyl Placement:** Three.js InputController → GameManager.placeVinylOnShelf() → GameBridge → Zustand store → React TopBar update
-2. **Restart:** React Controls button → GameBridge.restart() → GameManager.loadLevel() → Zustand reset → React re-render
-3. **Responsive Breakpoints:** Window resize → useBreakpoints hook → theme breakpoint → styled-components media queries
+```
+progression.ts::canAdvanceToLevel(targetIndex)
+  → loadAllProgress() from localStorage
+  → Check: LEVELS[targetIndex - 1] has stars >= 2 (per PROJECT.md requirement)
+  → Returns boolean
 
-## Scaling Considerations
+Called from:
+  - LevelSelectScreen: marks slots as locked/unlocked
+  - GameScreen onNextLevel: prevents advancing if not enough stars
+    (though completing a level always grants ≥1 star, so unlock threshold is 2)
+```
 
-| Scale | Architecture Adjustments |
-|-------|--------------------------|
-| 10-20 UI components | Single Zustand store sufficient; styled-components theme works as-is |
-| 20-50 UI components | Split stores: `gameStore`, `uiStore`; consider CSS modules for performance |
-| 50+ UI components | Multiple feature-based stores; evaluate React Query for server state; consider CSS extraction |
+### Stars Calculation (engine.ts, in PLACE_VINYL when isComplete)
 
-### Scaling Priorities
+```
+Current logic (in engine.ts):
+  mistakes === 0 && hintsUsed === 0  → 3 stars
+  mistakes <= 2  || hintsUsed <= 1   → 2 stars
+  else                               → 1 star
 
-1. **First bottleneck:** Too many Zustand subscribers → use `useShallow` selector for partial updates
-2. **Second bottleneck:** styled-components runtime → extract static CSS for production builds
+Note: PROJECT.md says "2 stelle = sblocca il prossimo livello"
+Note: Star logic is already in engine.ts PLACE_VINYL case.
+      The `progression.ts` wrapper does not recalculate stars — it reads
+      the stars value already computed and persisted.
+```
 
-## Anti-Patterns
+---
 
-### Anti-Pattern 1: Direct DOM Manipulation from React
+## Where to Add the Level Unlock / Persistence Layer
 
-**What people do:** Using `useRef` to manipulate existing HTML UI elements created by vanilla JS.
+### What Already Exists
 
-**Why it's wrong:** Breaks React's declarative model; causes sync issues; hard to maintain.
+`src/game/storage.ts` is already implemented and correct:
+- `saveProgress(levelId, stars, timeSeconds)` — idempotent, only saves if improved
+- `loadAllProgress()` — returns `Record<string, LevelProgress>` from localStorage
+- `getLevelProgress(levelId)` — single-level lookup
+- `isLevelUnlocked(levelIndex)` — checks prev level has `stars >= 1`
 
-**Instead:** Migrate all DOM UI to React components. Let React control the entire UI overlay.
+**The unlock threshold in storage.ts is currently `>= 1` but PROJECT.md requires `>= 2`.** This is a one-line fix.
 
-### Anti-Pattern 2: Tight Coupling Between UI and Game
+### What Needs to Be Added
 
-**What people do:** Importing React components directly into GameManager.ts.
-
-**Why it's wrong:** Breaks separation of concerns; makes game layer depend on UI framework.
-
-**Instead:** Use GameBridge with callback interfaces. Game layer shouldn't know about React.
-
-### Anti-Pattern 3: Inline Styling Over styled-components
-
-**What people do:** Using `style={{}}` prop instead of styled components for theming.
-
-**Why it's wrong:** Loses design token benefits; inconsistent styling; harder to maintain.
-
-**Instead:** Use styled-components with theme tokens for all visual elements.
-
-## Integration Points
-
-### External Services
-
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| None (client-side game) | N/A | Game runs entirely in browser |
-
-### Internal Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| **UI Layer ↔ Game Layer** | GameBridge callbacks + Zustand store | Game emits events, UI consumes via store |
-| **React Components ↔ GameBridge** | Custom hooks (`useGameState`, `useGameControls`) | Hooks abstract bridge complexity |
-| **Three.js ↔ React** | Read-only canvas reference | React doesn't manipulate Three.js objects directly |
-
-## Responsive Breakpoint Handling
-
-### Three Breakpoints (from requirements)
+**`src/game/progression.ts`** — a thin module that adds:
 
 ```typescript
-// ui/styles/breakpoints.ts
-export const breakpoints = {
-  compact: '430px',   // Mobile optimization
-  medium: '768px',    // Tablet/small desktop
-  large: '1024px',    // Full desktop experience
-};
+// Returns list of {level, stars, unlocked, bestTime} for the level select screen
+export function getLevelSelectData(): LevelSelectEntry[]
 
-// ui/hooks/useBreakpoints.ts
-import { useMemo } from 'react';
-import { useMediaQuery } from 'react-responsive'; // or use window.matchMedia
+// True if player has >= 2 stars on previous level
+export function canAdvanceToLevel(index: number): boolean
 
-export const useBreakpoints = () => {
-  const isCompact = useMediaQuery({ maxWidth: 430 });
-  const isMedium = useMediaQuery({ minWidth: 431, maxWidth: 767 });
-  const isLarge = useMediaQuery({ minWidth: 768 });
-
-  return { isCompact, isMedium, isLarge };
-};
+// Best completion stats for display
+export function getBestStats(levelId: string): { stars: number; bestTime?: number } | null
 ```
 
-### Theme-Based Breakpoints in styled-components
+This keeps `storage.ts` as the raw I/O layer and `progression.ts` as the domain logic layer.
+
+### Integration Points in GameScreen.tsx
 
 ```typescript
-import styled from 'styled-components';
+// 1. On mount: determine starting level index
+const startingIndex = getLastUnlockedLevelIndex(); // from progression.ts
 
-const TopBar = styled.div`
-  padding: 12px 14px;
+// 2. On NEXT_LEVEL button press:
+const nextIndex = state.levelIndex + 1;
+if (nextIndex < LEVELS.length && canAdvanceToLevel(nextIndex)) {
+  dispatch({ type: 'NEXT_LEVEL', level: LEVELS[nextIndex], levelIndex: nextIndex });
+}
 
-  @media (max-width: ${({ theme }) => theme.breakpoints.compact}) {
-    flex-direction: column;
-    min-height: 106px;
-  }
-
-  @media (min-width: ${({ theme }) => theme.breakpoints.large}) {
-    min-height: 86px;
-  }
-`;
+// 3. On level complete (useEffect):
+saveProgress(state.level.id, state.stars, timeElapsed); // already exists
 ```
 
-## Migration Strategy
+---
 
-### Phase 1: Setup (Don't break existing game)
-1. Install React dependencies (`react`, `react-dom`, `styled-components`, `zustand`)
-2. Create `src/ui/` structure with basic components
-3. Modify `main.ts` to mount React alongside Three.js
-4. Migrate static UI elements (top bar, controls) to React
+## Patterns to Follow
 
-### Phase 2: State Bridge
-1. Create `GameBridge` service for communication
-2. Set up Zustand store for game state
-3. Connect GameManager events to store updates
-4. Replace manual DOM updates with React state
+### Pattern 1: Pure Reducer Actions (existing, extend this)
 
-### Phase 3: Interactive UI
-1. Migrate tutorial modal to React
-2. Add settings modal with audio controls
-3. Implement level complete screen with animations
-4. Add responsive breakpoints for mobile/tablet
+**What:** All game state mutations go through `dispatch(action)` into `gameReducer`. No direct state mutation outside the reducer.
+
+**When:** Every new gameplay feature (rush timer tick, customer patience, star calculation) should be a new `GameAction` type handled in the `switch`.
+
+**Example:**
+```typescript
+// Adding a "LEVEL_UNLOCKED" side-effect notification
+case 'PLACE_VINYL': {
+  // ... existing logic ...
+  // Stars already calculated here — no additional action needed
+  // GameScreen useEffect handles the saveProgress side-effect
+}
+```
+
+### Pattern 2: useEffect for Side Effects (existing, extend this)
+
+**What:** GameScreen has `useEffect` watchers on state slices to trigger side effects (save progress, trigger timers, show tutorial). All new persistence and navigation side effects belong here.
+
+**When:** Any time reducer-state change must trigger an external action (save, navigate, animate).
+
+**Example (already exists):**
+```typescript
+useEffect(() => {
+  if (state.status === 'completed') {
+    saveProgress(state.level.id, state.stars, timeElapsed);
+  }
+}, [state.status, state.stars]);
+```
+
+### Pattern 3: Props-Down for Display Components
+
+**What:** HUD, ProgressBar, ComboFloat, ScorePopup, LevelComplete receive data as props. They do NOT read from the reducer directly — GameScreen passes down what they need.
+
+**When:** Every new display component. This keeps components reusable and testable.
+
+**Example:**
+```typescript
+// RulePill gets only what it needs
+<RulePill mode={state.level.mode} hint={state.level.hint} />
+```
+
+### Pattern 4: Position from DOM Ref for Score Popups (existing)
+
+**What:** ScorePopup and ComboPopup need screen coordinates. These are obtained by calling `element.getBoundingClientRect()` on the slot element ref, not from the Three.js scene.
+
+**When:** Any floating animation that originates at a UI element position.
+
+---
+
+## Anti-Patterns to Avoid
+
+### Anti-Pattern 1: Bypass the Reducer
+
+**What:** Directly mutating state or using `useState` for game logic state inside GameScreen.
+
+**Why bad:** Breaks the single source of truth. `timeElapsed` is currently tracked as a local `useState` in GameScreen — this is acceptable (it is display-only, not game-logic). Stars, mistakes, score must stay in the reducer.
+
+**Instead:** Add any new game-logic state as fields in `GameState` and handle transitions in `gameReducer`.
+
+### Anti-Pattern 2: Mixing the Two State Systems
+
+**What:** Calling `useGameStore()` (Zustand) alongside `useReducer` in the same component.
+
+**Why bad:** Two sources of truth for game state. The Zustand store (`src/store/gameStore.ts`) uses a completely different `GameState` shape and has no connection to the live reducer.
+
+**Instead:** Keep `useGameStore` dormant or delete it. If Zustand devtools are needed, wrap the reducer with a Zustand store adapter in the future — but not during this milestone.
+
+### Anti-Pattern 3: Level Data Inside the Reducer
+
+**What:** Putting `LEVELS` array access or level loading logic inside `gameReducer`.
+
+**Why bad:** The reducer is a pure function — it receives `action.level` as a payload. Level selection logic (which index to load, unlock checks) belongs in GameScreen, not the reducer.
+
+**Instead:** GameScreen resolves which `Level` object to use, then passes it to `dispatch({ type: 'NEXT_LEVEL', level, levelIndex })`.
+
+### Anti-Pattern 4: localStorage Access in the Reducer
+
+**What:** Calling `saveProgress()` or `loadAllProgress()` inside `gameReducer`.
+
+**Why bad:** Reducers must be pure functions (no side effects). localStorage is a side effect.
+
+**Instead:** GameScreen useEffect calls `saveProgress()` after observing `state.status === 'completed'`.
+
+---
+
+## Suggested Build Order
+
+This order minimizes integration risk by building on what already works:
+
+### Step 1: Fix unlock threshold in storage.ts (5 min)
+Change `isLevelUnlocked` threshold from `>= 1` to `>= 2` to match PROJECT.md requirement. No other code changes needed — it is the single source of truth for unlock logic.
+
+### Step 2: Add `progression.ts` (30 min)
+Pure functions wrapping `storage.ts`. Provides `canAdvanceToLevel()` and `getLevelSelectData()`. No UI changes. Testable in isolation.
+
+### Step 3: Expand `LEVELS` array to 20+ levels (bulk of time)
+Add level definitions to `src/game/levels.ts` covering all 6 modes (`free`, `genre`, `chronological`, `customer`, `blackout`, `rush`, `sleeve-match`). The engine already handles all modes — this is data, not code. Each level definition should include `id`, `mode`, `sortRule`, `hint`, `rows`, `cols`, `vinyls`.
+
+### Step 4: Wire HUD to show level rule (RulePill)
+New `RulePill` component receives `state.level.mode` and `state.level.hint`. Mount it in GameScreen next to the HUD. No reducer changes needed.
+
+### Step 5: Ensure ScorePopup fires on every valid placement
+GameScreen already tracks `lastSlotPosition` and renders `ScorePopup`. Verify it shows the correct `earnedScore` delta (currently `BASE_SCORE * multiplier + rareBonus` from the reducer). Wire the delta value through — currently `ScorePopup` receives only `points` prop.
+
+### Step 6: LevelComplete screen — verify stars display
+`LevelComplete.tsx` already renders stars. Verify it receives `state.stars` from GameScreen. Stars are already calculated in `gameReducer` PLACE_VINYL case. No reducer changes needed.
+
+### Step 7: LevelSelectScreen (new component)
+Renders a grid of levels using data from `progression.ts::getLevelSelectData()`. Shows lock/unlock state and best star count per level. Navigates to GameScreen with a specific `levelIndex` prop.
+
+### Step 8: Persist + restore last unlocked level on app start
+GameScreen currently always starts at `LEVELS[0]`. Add: on mount, read `getLastPlayableIndex()` from `progression.ts` to start at the last unlocked level (or let LevelSelectScreen handle this by passing `initialLevelIndex` prop).
+
+---
+
+## Scalability Considerations
+
+| Concern | Current (2 levels) | 20+ levels | 50+ levels |
+|---------|-------------------|------------|------------|
+| Level data size | Inline in `levels.ts` | Still fine in single file | Consider splitting by mode or chapter |
+| localStorage schema | `Record<levelId, {stars, bestTime}>` | Same schema, more keys | Add version field, migration utility |
+| Star calculation logic | Hardcoded thresholds in reducer | Extract to `rules.ts::calculateStars(mistakes, hints, time, level)` | Per-level star thresholds in `Level` type |
+| Level select rendering | N/A | Simple grid, all levels in DOM | Virtual list (react-window) if 50+ |
+
+**Immediate recommendation:** Move star calculation out of the `PLACE_VINYL` case in `engine.ts` into a pure function `calculateStars(mistakes: number, hintsUsed: number): number` in `rules.ts`. This makes per-level star tuning possible without touching the reducer.
+
+---
+
+## Key Existing Files (reference for implementation)
+
+| File | Role | Relevant to Progression |
+|------|------|------------------------|
+| `src/game/engine.ts` | gameReducer + createGameState | Star calculation in PLACE_VINYL case |
+| `src/game/rules.ts` | isValidPlacement, COMBO_TIERS | Extract calculateStars here |
+| `src/game/levels.ts` | LEVELS array (needs expansion to 20+) | Central data source |
+| `src/game/storage.ts` | localStorage persistence | Fix unlock threshold >=1 → >=2 |
+| `src/game/types.ts` | GameState, Level, LevelMode | Add fields for future modes |
+| `src/components/GameScreen.tsx` | Orchestrator + drag system | All integration wiring |
+| `src/components/LevelComplete.tsx` | End-of-level overlay | Already correct shape |
+| `src/components/HUD/HUD.tsx` | Score/timer/moves | Add level rule display |
+| `src/components/ScorePopup/ScorePopup.tsx` | Floating score delta | Already implemented |
+| `src/components/ProgressBar.tsx` | Placement dots counter | Already implemented |
+
+---
 
 ## Sources
 
-- **React + Three.js Integration:** React Three Fiber documentation (pmnd.rs/react-three-fiber) - HIGH confidence
-- **Zustand Patterns:** Zustand official docs (github.com/pmndrs/zustand) - HIGH confidence
-- **styled-components Theme:** styled-components documentation (styled-components.com/docs) - HIGH confidence
-- **Existing Codebase Analysis:** GameManager.ts (1763 lines), InputController.ts (873 lines), main.ts - HIGH confidence
-- **HTML Structure:** index.html - existing UI overlay pattern - HIGH confidence
-
----
-*Architecture research for: React UI Layer over Three.js Game*
-*Researched: 2026-02-11*
+- Direct analysis of `src/game/engine.ts`, `rules.ts`, `storage.ts`, `types.ts` (HIGH confidence)
+- Direct analysis of `src/components/GameScreen.tsx`, `LevelComplete.tsx`, `HUD/HUD.tsx` (HIGH confidence)
+- Project requirements from `.planning/PROJECT.md` (HIGH confidence)
+- Game mechanics documentation from `GAME-LOGIC.md` (HIGH confidence)
