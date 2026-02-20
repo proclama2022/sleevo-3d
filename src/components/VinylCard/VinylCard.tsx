@@ -46,7 +46,7 @@ const SleeveWrapper = styled.div<{
   opacity: ${(props) => props.$state === 'dragging' ? 0.9 : 1};
   transform: ${(props) => {
     if (props.$state === 'dragging') {
-      return 'scale(1.05) rotate(2deg)';
+      return 'scale(1.08) rotate(2deg)';
     }
     return 'scale(1)';
   }};
