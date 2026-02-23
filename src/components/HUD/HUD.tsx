@@ -8,6 +8,10 @@ export interface HUDProps {
   timeRemaining?: number; // in seconds
   moves: number;
   progress: number; // 0-100
+  placed?: number;
+  total?: number;
+  sortRule?: string;
+  levelMode?: string;
 }
 
 const HUDWrapper = styled.header`
@@ -34,6 +38,8 @@ const HUDWrapper = styled.header`
 const LeftSection = styled.div`
   display: flex;
   justify-content: flex-start;
+  flex-direction: column;
+  gap: 8px;
 `;
 
 // Center section: Progress Gauge
@@ -122,17 +128,65 @@ const TimerValue = styled(StatValue)<{ $lowTime?: boolean }>`
   ${reducedMotion}
 `;
 
+const RuleBadge = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  font-family: ${(props) => props.theme.typography.fontFamily.ui};
+  font-size: ${(props) => props.theme.typography.fontSize.ui.xs};
+  color: ${(props) => props.theme.colors.text.primary};
+  opacity: 0.9;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+
+  @media (max-width: ${(props) => props.theme.breakpoints.compact}) {
+    font-size: 10px;
+    padding: 3px 8px;
+    gap: 3px;
+  }
+`;
+
+const RuleBadgeIcon = styled.span`
+  font-size: 1.1em;
+  line-height: 1;
+`;
+
+const RuleBadgeLabel = styled.span`
+  font-weight: ${(props) => props.theme.typography.fontWeight.medium};
+  letter-spacing: 0.3px;
+`;
+
 const formatTime = (seconds: number): string => {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
+function getLevelRuleDisplay(
+  sortRule: string,
+  mode: string
+): { icon: string; label: string } | null {
+  if (mode === 'customer')          return { icon: '👤', label: 'Cliente' };
+  if (mode === 'blackout')          return { icon: '👁', label: 'Memoria' };
+  if (mode === 'rush')              return { icon: '⏱', label: 'Rush' };
+  if (mode === 'sleeve-match')      return { icon: '🖼', label: 'Abbina' };
+  if (sortRule === 'genre')         return { icon: '🎵', label: 'Genere' };
+  if (sortRule === 'chronological') return { icon: '📅', label: 'Anno' };
+  return null; // free mode — no badge shown
+}
+
 export const HUD: React.FC<HUDProps> = ({
   score,
   timeRemaining,
   moves,
   progress,
+  placed,
+  total,
+  sortRule,
+  levelMode,
 }) => {
   const [displayScore, setDisplayScore] = useState(score);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -161,6 +215,15 @@ export const HUD: React.FC<HUDProps> = ({
           </AnimatedScore>
           <StatLabel>Score</StatLabel>
         </StatItem>
+        {(() => {
+          const ruleDisplay = sortRule && levelMode ? getLevelRuleDisplay(sortRule, levelMode) : null;
+          return ruleDisplay && (
+            <RuleBadge>
+              <RuleBadgeIcon>{ruleDisplay.icon}</RuleBadgeIcon>
+              <RuleBadgeLabel>{ruleDisplay.label}</RuleBadgeLabel>
+            </RuleBadge>
+          );
+        })()}
       </LeftSection>
 
       <CenterSection>
@@ -178,6 +241,13 @@ export const HUD: React.FC<HUDProps> = ({
               {formatTime(timeRemaining)}
             </TimerValue>
             <StatLabel>Time</StatLabel>
+          </StatItem>
+        )}
+
+        {placed !== undefined && total !== undefined && (
+          <StatItem>
+            <StatValue>{placed} / {total}</StatValue>
+            <StatLabel>Placed</StatLabel>
           </StatItem>
         )}
 
