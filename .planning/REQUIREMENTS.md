@@ -17,7 +17,7 @@
 - [x] **COMM-01**: Il giocatore vede un feedback visivo immediato con i punti guadagnati dopo ogni piazzamento corretto ("+10", "+35 GREAT!" fluttuante vicino allo slot)
 - [x] **COMM-02**: L'HUD mostra un contatore progresso vinili ("5 / 8 piazzati")
 - [x] **COMM-03**: L'HUD mostra la regola del livello corrente in modo persistente (es. "Ordina per: Genere")
-- [ ] **COMM-04**: La schermata di fine livello mostra stelle, punteggio, errori e tempo impiegato
+- [x] **COMM-04**: La schermata di fine livello mostra stelle, punteggio, errori e tempo impiegato
 
 ### Star System
 
@@ -83,7 +83,7 @@
 | STAR-01 | Phase 2 | Complete |
 | STAR-02 | Phase 2 | Complete |
 | STAR-03 | Phase 2 | Complete |
-| COMM-04 | Phase 2 | Pending |
+| COMM-04 | Phase 2 | Complete |
 | PROG-01 | Phase 3 | Pending |
 | PROG-02 | Phase 3 | Pending |
 | PROG-03 | Phase 3 | Pending |
