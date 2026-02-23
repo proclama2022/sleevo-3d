@@ -6,6 +6,7 @@ export interface ScorePopupProps {
   points: number;
   x: number;
   y: number;
+  label?: string;
   onComplete?: () => void;
 }
 
@@ -44,6 +45,7 @@ export const ScorePopup: React.FC<ScorePopupProps> = ({
   points,
   x,
   y,
+  label,
   onComplete,
 }) => {
   const [isAnimating, setIsAnimating] = useState(true);
@@ -62,6 +64,7 @@ export const ScorePopup: React.FC<ScorePopupProps> = ({
       <PointsText $isAnimating={isAnimating} aria-live="polite">
         <PlusSign>+</PlusSign>
         {points}
+        {label && <span style={{ marginLeft: 4, fontSize: '0.8em', opacity: 0.9 }}>{label}</span>}
       </PointsText>
     </PopupContainer>
   );
