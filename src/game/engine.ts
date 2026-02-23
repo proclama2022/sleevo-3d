@@ -150,16 +150,29 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       const isComplete = newUnplaced.length === 0;
 
       // Calculate stars on completion
-      let stars = state.stars;
+      let stars = 1; // Default to 1 star for completion
       if (isComplete) {
-        const newMistakes = state.mistakes; // mistakes already counted, this was a valid drop
-        const newHintsUsed = state.hintsUsed;
-        if (newMistakes === 0 && newHintsUsed === 0) {
-          stars = 3;
-        } else if (newMistakes <= 2 || newHintsUsed <= 1) {
-          stars = 2;
+        const mistakes = state.mistakes;
+        const parTime = state.level.parTime;
+        const currentTime = state.timeElapsed; // Time tracked in GameState
+
+        if (parTime !== undefined) {
+          // 3 stars: 0 errors + time ≤ par × 1.10 (10% margin)
+          if (mistakes === 0 && currentTime <= parTime * 1.10) {
+            stars = 3;
+          }
+          // 2 stars: ≤1 error + time < par (strict, must be UNDER par)
+          else if (mistakes <= 1 && currentTime < parTime) {
+            stars = 2;
+          }
+          // 1 star: default for completion
+          else {
+            stars = 1;
+          }
         } else {
-          stars = 1;
+          // Fallback for levels without parTime (shouldn't happen after Plan 01)
+          // Use mistakes-only calculation: 0 mistakes = 3 stars, ≤2 mistakes = 2 stars
+          stars = mistakes === 0 ? 3 : mistakes <= 2 ? 2 : 1;
         }
       }
 
