@@ -1,30 +1,11 @@
-// 4 columns x 2 rows grid
-// Each slot has a target vinyl ID
-export const SLOT_TARGETS: Record<string, string> = {
-  '0-0': 'v1', // Row 0, Col 0 = Rock
-  '0-1': 'v2', // Row 0, Col 1 = Jazz
-  '0-2': 'v3', // Row 0, Col 2 = Pop
-  '0-3': 'v4', // Row 0, Col 3 = Hip-Hop
-  '1-0': 'v6', // Row 1, Col 0 = Rock
-  '1-1': 'v7', // Row 1, Col 1 = Jazz
-  '1-2': 'v8', // Row 1, Col 2 = Pop
-  '1-3': 'v5', // Row 1, Col 3 = Classica
-};
-
 export const COLUMN_GENRES = ['Rock', 'Jazz', 'Pop', 'Hip-Hop'] as const;
 
 export function getSlotKey(row: number, col: number): string {
   return `${row}-${col}`;
 }
 
-export function getTargetSlot(vinylId: string): { row: number; col: number } | null {
-  for (const [key, id] of Object.entries(SLOT_TARGETS)) {
-    if (id === vinylId) {
-      const [r, c] = key.split('-').map(Number);
-      return { row: r, col: c };
-    }
-  }
-  return null;
+export function getTargetSlot(_vinylId: string): { row: number; col: number } | null {
+  return null; // FIX-03: SLOT_TARGETS removed; hint glow is disabled (no hint button in UI)
 }
 
 /** Mappa decadi → intervallo di anni */
