@@ -876,6 +876,8 @@ export function GameScreen() {
             mistakes={state.mistakes ?? 0}
             hintsUsed={state.hintsUsed ?? 0}
             timeElapsed={timeElapsed}
+            score={state.score}
+            parTime={state.level.parTime}
             hasNextLevel={state.levelIndex + 1 < LEVELS.length}
             onNextLevel={handleNext}
             onReplay={handleRestart}
