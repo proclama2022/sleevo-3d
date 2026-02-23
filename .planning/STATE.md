@@ -10,36 +10,36 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 2 of 4 (Star System and Level Complete)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-23 — Completed Plan 02-01: Added parTime property to Level interface and all level definitions
+Last activity: 2026-02-23 — Completed Plan 02-02: Implemented D1 star calculation formula with parTime thresholds
 
-Progress: [███░░░░░░] 33%
+Progress: [█████░░░░] 66%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 9 min
-- Total execution time: 33 min
+- Total plans completed: 5
+- Average duration: 7 min
+- Total execution time: 35 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01    | 3     | 29 min | 10 min   |
-| 02    | 1     | 4 min  | 4 min    |
+| 02    | 2     | 6 min  | 3 min    |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (4 min), 01-03 (15 min), 01-02 (4 min), 01-01 (8 min)
-- Trend: Phase 2 started; parTime infrastructure complete
+- Last 5 plans: 02-02 (2 min), 02-01 (4 min), 01-03 (15 min), 01-02 (4 min), 01-01 (8 min)
+- Trend: Phase 2 progressing; star calculation formula implemented
 
 *Updated after each plan completion*
 | Phase 01-foundation-fixes P01-01 | 8 min | 2 tasks | 2 files |
 | Phase 01-foundation-fixes P01-02 | 4 min | 1 task | 8 files |
 | Phase 01-foundation-fixes P01-03 | 15 min | 4 tasks | 3 files |
 | Phase 02-star-system-and-level-complete P02-01 | 4 min | 2 tasks | 2 files |
-| Phase 02-star-system-and-level-complete P01 | 256 | 2 tasks | 2 files |
+| Phase 02-star-system-and-level-complete P02-02 | 2 min | 1 task | 1 file |
 
 ## Accumulated Context
 
@@ -67,9 +67,10 @@ Recent decisions affecting current work:
 - [Phase 02-star-system-and-level-complete]: parTime calculated as (vinyls × 3s) × mode_multiplier for consistent baseline across all levels
 - [Phase 02-star-system-and-level-complete]: Mode multipliers established: free=1.0, genre=1.2, chronological=1.3, customer=1.1, blackout=1.5, rush=0.8, sleeve-match=1.4
 - [Phase 02-star-system-and-level-complete]: parTime made optional property for backward compatibility with existing level definitions
-- [Phase 02-star-system-and-level-complete]: parTime calculated as (vinyls × 3s) × mode_multiplier for consistent baseline across all levels
-- [Phase 02-star-system-and-level-complete]: Mode multipliers established: free=1.0, genre=1.2, chronological=1.3, customer=1.1, blackout=1.5, rush=0.8, sleeve-match=1.4
-- [Phase 02-star-system-and-level-complete]: parTime made optional property for backward compatibility with existing level definitions
+- [Plan 02-02]: Star formula uses mistakes + time (not hints) per CONTEXT.md D1 decision
+- [Plan 02-02]: 3★ allows 10% margin over par (par × 1.10) for player flexibility
+- [Plan 02-02]: 2★ requires strict under par time (< parTime, not <=) for meaningful challenge
+- [Plan 02-02]: Fallback for levels without parTime prevents crashes during transition
 
 ### Pending Todos
 
@@ -82,5 +83,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-23
-Stopped at: Completed Plan 02-01 (Star System and Level Complete — Par Time Infrastructure)
+Stopped at: Completed 02-star-system-and-level-complete-02-PLAN.md (Star Formula with parTime Thresholds)
 Resume file: None
