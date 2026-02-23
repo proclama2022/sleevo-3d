@@ -10,7 +10,7 @@
 - [x] **FIX-01**: La soglia di sblocco livello successivo è >= 2 stelle (attualmente hardcoded >= 1)
 - [x] **FIX-02**: La chiave di storage per i livelli usa l'ID livello (non l'indice numerico) per evitare rotture quando si aggiungono livelli
 - [x] **FIX-03**: `SLOT_TARGETS` / `getTargetSlot()` supporta vinili arbitrari (non solo v1-v8 hardcoded)
-- [ ] **FIX-04**: Il Zustand store dormante (`gameStore.ts`) è rimosso o isolato per evitare confusione
+- [x] **FIX-04**: Il Zustand store dormante (`gameStore.ts`) è rimosso o isolato per evitare confusione
 
 ### Player Communication
 
@@ -76,7 +76,7 @@
 | FIX-01 | Phase 1 | Complete |
 | FIX-02 | Phase 1 | Complete |
 | FIX-03 | Phase 1 | Complete |
-| FIX-04 | Phase 1 | Pending |
+| FIX-04 | Phase 1 | Complete |
 | COMM-01 | Phase 1 | Pending |
 | COMM-02 | Phase 1 | Pending |
 | COMM-03 | Phase 1 | Pending |
