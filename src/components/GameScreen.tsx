@@ -7,11 +7,12 @@ import { InstructionPill } from './InstructionPill';
 import { Controls } from './Controls';
 import { ComboFloat } from './ComboFloat';
 import { ComboPopup } from './ComboPopup/ComboPopup';
+import { ScorePopup } from './ScorePopup/ScorePopup';
 import { LevelComplete } from './LevelComplete';
 import { ParticleBurst } from './ParticleBurst';
 import { saveProgress } from '../game/storage';
 import { LEVELS } from '../game/levels';
-import { isValidPlacement } from '../game/rules';
+import { isValidPlacement, COMBO_TIERS, COMBO_DECAY_MS } from '../game/rules';
 import { createGameState, gameReducer, getNextGlowingSlot } from '../game/engine';
 import styles from './GameScreen.module.css';
 import { Tutorial, shouldShowTutorial } from './Tutorial';
@@ -42,6 +43,19 @@ interface DropTargetInfo {
   element: HTMLElement;
 }
 
+interface CachedDropTarget extends DropTargetInfo {
+  rect: DOMRect;
+  centerX: number;
+  centerY: number;
+  magneticRadius: number;
+}
+
+interface HoverCandidate {
+  slot: { row: number; col: number } | null;
+  element: HTMLElement | null;
+  magnetic: boolean;
+}
+
 export function GameScreen() {
   const [state, dispatch] = useReducer(gameReducer, null, () =>
     createGameState(LEVELS[0], 0)
@@ -58,10 +72,13 @@ export function GameScreen() {
   const dropTargets = useRef<Map<string, DropTargetInfo>>(new Map());
   const ghostRef = useRef<HTMLDivElement>(null);
   // Cache dei rect degli slot — calcolata una volta al dragStart, riutilizzata per tutto il drag
-  const cachedRects = useRef<{ row: number; col: number; rect: DOMRect; element: HTMLElement }[]>([]);
+  const cachedRects = useRef<CachedDropTarget[]>([]);
   // Ref per l'ultimo slot sotto il dito e il suo elemento DOM
   const hoverSlotRef = useRef<{ row: number; col: number } | null>(null);
   const hoverElementRef = useRef<HTMLElement | null>(null);
+  const hoverMagneticRef = useRef(false);
+  const dropCommitTimerRef = useRef<number | null>(null);
+  const isCommittingDropRef = useRef(false);
 
   // Elapsed time counter (seconds) — tracked locally, resets on restart/next level
   const [timeElapsed, setTimeElapsed] = useState(0);
@@ -76,6 +93,17 @@ export function GameScreen() {
   // Track combo milestone bursts (5x, 8x, 10x)
   const [comboBurst, setComboBurst] = useState<{ x: number; y: number } | null>(null);
   const previousComboRef = useRef(0);
+
+  // Score popup state and refs (COMM-01)
+  const [scorePopups, setScorePopups] = useState<Array<{
+    id: number;
+    points: number;
+    label: string;
+    x: number;
+    y: number;
+  }>>([]);
+  const popupIdRef = useRef(0);
+  const scoreElementRef = useRef<HTMLElement | null>(null);
 
   // Combo decay timer
   useEffect(() => {
@@ -106,6 +134,14 @@ export function GameScreen() {
     }
     previousComboRef.current = currentCombo;
   }, [state.combo.streak, lastSlotPosition]);
+
+  useEffect(() => {
+    return () => {
+      if (dropCommitTimerRef.current !== null) {
+        window.clearTimeout(dropCommitTimerRef.current);
+      }
+    };
+  }, []);
 
   // Fix 2: countdown visivo del combo — conta da 4 a 0 ogni secondo
   useEffect(() => {
@@ -197,47 +233,103 @@ export function GameScreen() {
 
   // ── Drag handlers ──
 
-  const handleDragStart = useCallback((vinylId: string, color: string, x: number, y: number) => {
-    // Cache tutti i rect degli slot UNA VOLTA — zero reflow durante il drag
-    const rects: typeof cachedRects.current = [];
+  const clearDropUiState = useCallback(() => {
+    if (hoverElementRef.current) {
+      hoverElementRef.current.removeAttribute('data-hover');
+      hoverElementRef.current.removeAttribute('data-hover-magnetic');
+      hoverElementRef.current.removeAttribute('data-drop-lock');
+    }
+    for (const cached of cachedRects.current) {
+      cached.element.removeAttribute('data-col-hover');
+      cached.element.removeAttribute('data-drop-lock');
+    }
+  }, []);
+
+  const resetDragState = useCallback(() => {
+    setDrag(null);
+    hoverSlotRef.current = null;
+    hoverElementRef.current = null;
+    hoverMagneticRef.current = false;
+    cachedRects.current = [];
+    isCommittingDropRef.current = false;
+    if (dropCommitTimerRef.current !== null) {
+      window.clearTimeout(dropCommitTimerRef.current);
+      dropCommitTimerRef.current = null;
+    }
+  }, []);
+
+  const buildDropTargetCache = useCallback(() => {
+    const rects: CachedDropTarget[] = [];
     for (const [, target] of dropTargets.current) {
+      const rect = target.element.getBoundingClientRect();
       rects.push({
         row: target.row,
         col: target.col,
-        rect: target.element.getBoundingClientRect(),
         element: target.element,
+        rect,
+        centerX: rect.left + rect.width / 2,
+        centerY: rect.top + rect.height / 2,
+        magneticRadius: Math.max(26, Math.min(rect.width, rect.height) * 0.72),
       });
     }
     cachedRects.current = rects;
+  }, []);
+
+  const findHoverCandidate = useCallback((x: number, y: number): HoverCandidate => {
+    let directMatch: CachedDropTarget | null = null;
+    let magneticMatch: CachedDropTarget | null = null;
+    let bestMagneticDistance = Number.POSITIVE_INFINITY;
+
+    for (const cached of cachedRects.current) {
+      const r = cached.rect;
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        directMatch = cached;
+        break;
+      }
+
+      const dx = x - cached.centerX;
+      const dy = y - cached.centerY;
+      const distanceSq = dx * dx + dy * dy;
+      const radiusSq = cached.magneticRadius * cached.magneticRadius;
+      if (distanceSq <= radiusSq && distanceSq < bestMagneticDistance) {
+        magneticMatch = cached;
+        bestMagneticDistance = distanceSq;
+      }
+    }
+
+    const target = directMatch ?? magneticMatch;
+    return {
+      slot: target ? { row: target.row, col: target.col } : null,
+      element: target?.element ?? null,
+      magnetic: !directMatch && magneticMatch !== null,
+    };
+  }, []);
+
+  const handleDragStart = useCallback((vinylId: string, color: string, x: number, y: number) => {
+    // Cache tutti i rect degli slot UNA VOLTA — zero reflow durante il drag
+    buildDropTargetCache();
     hoverSlotRef.current = null;
     hoverElementRef.current = null;
+    hoverMagneticRef.current = false;
     setDrag({ vinylId, color, x, y });
-  }, []);
+  }, [buildDropTargetCache]);
 
   // Drag dallo scaffale — rimuove il vinile dalla griglia (REMOVE_VINYL) poi avvia il drag
   const handleDragFromShelf = useCallback((vinylId: string, color: string, x: number, y: number) => {
     dispatch({ type: 'REMOVE_VINYL', vinylId });
     // rAF: aspetta che React aggiorni il DOM prima di cachare i rect
     requestAnimationFrame(() => {
-      const rects: typeof cachedRects.current = [];
-      for (const [, target] of dropTargets.current) {
-        rects.push({
-          row: target.row,
-          col: target.col,
-          rect: target.element.getBoundingClientRect(),
-          element: target.element,
-        });
-      }
-      cachedRects.current = rects;
+      buildDropTargetCache();
       hoverSlotRef.current = null;
       hoverElementRef.current = null;
+      hoverMagneticRef.current = false;
       setDrag({ vinylId, color, x, y });
     });
-  }, []);
+  }, [buildDropTargetCache]);
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
-      if (!drag) return;
+      if (!drag || isCommittingDropRef.current) return;
 
       // ── Ghost segue il dito 1:1 — aggiornamento DOM diretto ──
       const ghost = ghostRef.current;
@@ -246,25 +338,23 @@ export function GameScreen() {
         ghost.style.top = `${e.clientY - 44}px`;
       }
 
-      // ── Hit-test con rect dalla cache (zero layout reflow) ──
-      let foundSlot: { row: number; col: number } | null = null;
-      let foundElement: HTMLElement | null = null;
-      for (const cached of cachedRects.current) {
-        const r = cached.rect;
-        if (e.clientX >= r.left && e.clientX <= r.right &&
-            e.clientY >= r.top  && e.clientY <= r.bottom) {
-          foundSlot = { row: cached.row, col: cached.col };
-          foundElement = cached.element;
-          break;
-        }
-      }
+      // Hit-test + magnetismo: se sei vicino allo slot, lo agganciamo per facilitare il drop
+      const candidate = findHoverCandidate(e.clientX, e.clientY);
+      const foundSlot = candidate.slot;
+      const foundElement = candidate.element;
 
       // ── Solo se lo slot cambia: aggiorna highlight via DOM (zero setState) ──
       const prev = hoverSlotRef.current;
-      if (prev?.row !== foundSlot?.row || prev?.col !== foundSlot?.col) {
+      const prevMagnetic = hoverMagneticRef.current;
+      if (
+        prev?.row !== foundSlot?.row ||
+        prev?.col !== foundSlot?.col ||
+        prevMagnetic !== candidate.magnetic
+      ) {
         // Rimuovi highlight dal precedente
         if (hoverElementRef.current) {
           hoverElementRef.current.removeAttribute('data-hover');
+          hoverElementRef.current.removeAttribute('data-hover-magnetic');
         }
 
         // Glow colonna: rimuovi da tutti, applica alla colonna attiva
@@ -283,6 +373,7 @@ export function GameScreen() {
 
         hoverSlotRef.current = foundSlot;
         hoverElementRef.current = foundElement;
+        hoverMagneticRef.current = candidate.magnetic;
 
         if (foundSlot && foundElement && ghost) {
           // Valida placement
@@ -299,9 +390,16 @@ export function GameScreen() {
 
           // Highlight slot via data-attribute (CSS si occupa del rendering)
           foundElement.setAttribute('data-hover', valid ? 'valid' : 'invalid');
+          if (valid && candidate.magnetic) {
+            foundElement.setAttribute('data-hover-magnetic', 'true');
+          } else {
+            foundElement.removeAttribute('data-hover-magnetic');
+          }
 
           // Ghost: scala + ombra
-          ghost.style.transform = 'scale(0.88)';
+          ghost.style.transform = valid && candidate.magnetic
+            ? 'scale(0.82) translateY(-2px)'
+            : 'scale(0.88)';
           ghost.style.boxShadow = valid
             ? '0 8px 24px rgba(0,0,0,0.5), 0 0 18px 4px rgba(80,220,120,0.5), 0 0 0 2.5px rgba(80,220,120,0.65)'
             : '0 8px 24px rgba(0,0,0,0.5), 0 0 18px 4px rgba(220,60,60,0.45), 0 0 0 2.5px rgba(220,60,60,0.6)';
@@ -311,28 +409,63 @@ export function GameScreen() {
         }
       }
     },
-    [drag]
+    [drag, findHoverCandidate, state.grid, state.level]
   );
 
-  const handlePointerUp = useCallback(() => {
-    if (!drag) return;
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (!drag || isCommittingDropRef.current) return;
 
     // Rimuovi highlight dallo slot attivo e glow colonna
-    if (hoverElementRef.current) {
-      hoverElementRef.current.removeAttribute('data-hover');
-    }
-    for (const cached of cachedRects.current) {
-      cached.element.removeAttribute('data-col-hover');
-    }
+    clearDropUiState();
 
-    const currentSlot = hoverSlotRef.current;
+    const fallbackCandidate = findHoverCandidate(e.clientX, e.clientY);
+    const currentSlot = hoverSlotRef.current ?? fallbackCandidate.slot;
+    const currentElement = hoverElementRef.current ?? fallbackCandidate.element;
     if (currentSlot) {
       if (state.grid[currentSlot.row][currentSlot.col].vinylId === null) {
+        // Calculate combo and show score popup (COMM-01)
+        const timeSinceLast = Date.now() - state.combo.lastPlacementTime;
+        const comboReset = state.combo.lastPlacementTime > 0 && timeSinceLast > COMBO_DECAY_MS;
+        const newStreak = comboReset ? 1 : state.combo.streak + 1;
+        const tier = [...COMBO_TIERS].reverse().find(t => newStreak >= t.minStreak) ?? COMBO_TIERS[0];
+        const earned = Math.round(100 * tier.multiplier);
+        const popupX = scoreElementRef.current?.getBoundingClientRect().x ?? 56;
+        const popupY = scoreElementRef.current?.getBoundingClientRect().y ?? 52;
+        setScorePopups(prev => [...prev, {
+          id: popupIdRef.current++,
+          points: earned,
+          label: tier.label,
+          x: popupX,
+          y: popupY,
+        }]);
+
         // Capture slot position before dispatching
-        const slotElement = hoverElementRef.current;
-        if (slotElement) {
+        // Capture slot position before dispatching
+        const slotElement = currentElement;
+        const ghost = ghostRef.current;
+        if (slotElement && ghost) {
           const rect = slotElement.getBoundingClientRect();
           setLastSlotPosition({ x: rect.left + rect.width / 2, y: rect.top });
+
+          // Lock-in animation: il ghost scivola dentro la cella prima del commit.
+          const targetLeft = rect.left + rect.width / 2 - 44;
+          const targetTop = rect.top + rect.height * 0.6 - 44;
+          slotElement.setAttribute('data-drop-lock', 'true');
+          isCommittingDropRef.current = true;
+          ghost.style.transition =
+            'left 150ms cubic-bezier(0.22, 1, 0.36, 1), top 150ms cubic-bezier(0.22, 1, 0.36, 1), transform 150ms cubic-bezier(0.22, 1, 0.36, 1), opacity 150ms ease-out';
+          ghost.style.left = `${targetLeft}px`;
+          ghost.style.top = `${targetTop}px`;
+          ghost.style.transform = 'scale(0.66) translateY(7px)';
+          ghost.style.opacity = '0.84';
+
+          dropCommitTimerRef.current = window.setTimeout(() => {
+            slotElement.removeAttribute('data-drop-lock');
+            dispatch({ type: 'PLACE_VINYL', vinylId: drag.vinylId, row: currentSlot.row, col: currentSlot.col });
+            if (navigator.vibrate) navigator.vibrate(50);
+            resetDragState();
+          }, 150);
+          return;
         }
 
         dispatch({ type: 'PLACE_VINYL', vinylId: drag.vinylId, row: currentSlot.row, col: currentSlot.col });
@@ -346,11 +479,8 @@ export function GameScreen() {
       dispatch({ type: 'MISSED_DROP', vinylId: drag.vinylId });
     }
 
-    setDrag(null);
-    hoverSlotRef.current = null;
-    hoverElementRef.current = null;
-    cachedRects.current = [];
-  }, [drag, state.grid]);
+    resetDragState();
+  }, [clearDropUiState, drag, findHoverCandidate, resetDragState, state.grid, state.combo, scoreElementRef]);
 
   // Computed values
   const level = state.level;
@@ -359,6 +489,7 @@ export function GameScreen() {
     : 0;
   const hudTimeRemaining = state.level.mode === 'rush' ? state.rushTimeLeft : undefined;
   const vinylMap = new Map(level.vinyls.map((v) => [v.id, v]));
+  const columnName = (col: number) => ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'][col] ?? `${col + 1}`;
 
   // Build placed vinyls array for shelf
   const placedVinyls = Object.entries(state.placedVinyls).map(([id, pos]) => ({
@@ -435,6 +566,10 @@ export function GameScreen() {
           moves={state.moves}
           progress={progress}
           timeRemaining={hudTimeRemaining}
+          placed={Object.keys(state.placedVinyls).length}
+          total={state.level.vinyls.length}
+          sortRule={state.level.sortRule}
+          levelMode={state.level.mode}
         />
 
         {/* Themed scene backdrop — AI photo + atmosphere */}
@@ -480,6 +615,18 @@ export function GameScreen() {
             onComplete={() => setLastSlotPosition(null)}
           />
         )}
+
+        {/* Score popups - appear near HUD score on every correct drop (COMM-01) */}
+        {scorePopups.map(p => (
+          <ScorePopup
+            key={p.id}
+            points={p.points}
+            label={p.label}
+            x={p.x}
+            y={p.y}
+            onComplete={() => setScorePopups(prev => prev.filter(sp => sp.id !== p.id))}
+          />
+        ))}
 
         {/* Combo milestone burst - larger burst at 5x, 8x, 10x */}
         {comboBurst && (
@@ -553,6 +700,41 @@ export function GameScreen() {
               const draggedVinyl = level.vinyls.find(v => v.id === drag.vinylId);
               if (draggedVinyl?.year) {
                 return `${draggedVinyl.year} — scegli la colonna giusta!`;
+              }
+            }
+            // Durante il drag in modalità genre: indica chiaramente le colonne valide
+            if (drag && level.sortRule === 'genre') {
+              const draggedVinyl = level.vinyls.find(v => v.id === drag.vinylId);
+              const draggedGenre = draggedVinyl?.genre;
+              if (draggedGenre) {
+                const colGenres: Array<string | null> = Array.from({ length: level.cols }, () => null);
+                for (const [id, pos] of Object.entries(state.placedVinyls)) {
+                  if (!colGenres[pos.col]) {
+                    colGenres[pos.col] = vinylMap.get(id)?.genre ?? null;
+                  }
+                }
+
+                const genreCols: number[] = [];
+                const emptyCols: number[] = [];
+                for (let c = 0; c < level.cols; c += 1) {
+                  const g = colGenres[c];
+                  if (!g) {
+                    emptyCols.push(c);
+                  } else if (g === draggedGenre) {
+                    genreCols.push(c);
+                  }
+                }
+
+                const formatCols = (arr: number[]) => arr.map(columnName).join('/');
+                if (genreCols.length > 0 && emptyCols.length > 0) {
+                  return `${draggedGenre.toUpperCase()} → colonna ${formatCols(genreCols)} (o vuota: ${formatCols(emptyCols)})`;
+                }
+                if (genreCols.length > 0) {
+                  return `${draggedGenre.toUpperCase()} → colonna ${formatCols(genreCols)}`;
+                }
+                if (emptyCols.length > 0) {
+                  return `${draggedGenre.toUpperCase()} → scegli una colonna vuota: ${formatCols(emptyCols)}`;
+                }
               }
             }
             const rushRule = level.sortRule === 'genre'
