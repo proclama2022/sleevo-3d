@@ -45,7 +45,12 @@ Plans:
   2. The end-of-level screen shows the final score, error count, and time elapsed
   3. A rush/blackout level with 2 mistakes and under par time yields a different star count than a genre level with the same stats (mode-differentiated thresholds)
   4. Star ratings and level completion state persist across browser sessions (reload does not reset progress)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 02-star-system-and-level-complete-01-PLAN.md — Add parTime to Level interface and all level definitions (STAR-01, STAR-02, STAR-03)
+- [ ] 02-star-system-and-level-complete-02-PLAN.md — Replace star formula with mistakes + time calculation (STAR-01, STAR-02)
+- [ ] 02-star-system-and-level-complete-03-PLAN.md — Update LevelComplete to show score and time vs par (COMM-04, STAR-01)
 
 ### Phase 3: Progression and Navigation
 **Goal**: Players can navigate between levels, see their history, and the game resumes at the right level on load
@@ -77,7 +82,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Fixes | 2/3 | In Progress|  |
-| 2. Star System and Level Complete | 0/? | Not started | - |
+| 1. Foundation Fixes | 3/3 | Complete | 2026-02-23 |
+| 2. Star System and Level Complete | 0/3 | Planned | - |
 | 3. Progression and Navigation | 0/? | Not started | - |
 | 4. Level Content and Mode Validation | 0/? | Not started | - |
