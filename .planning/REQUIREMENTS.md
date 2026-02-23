@@ -21,9 +21,9 @@
 
 ### Star System
 
-- [ ] **STAR-01**: Il sistema stelle calcola il rating da combinazione errori + velocità (3 stelle = nessun errore + sotto il par time del livello)
-- [ ] **STAR-02**: Le soglie stelle sono differenziate per modalità (le modalità più difficili come blackout/rush hanno soglie più permissive)
-- [ ] **STAR-03**: Ogni livello ha un `parTime` definito usato nel calcolo stelle
+- [x] **STAR-01**: Il sistema stelle calcola il rating da combinazione errori + velocità (3 stelle = nessun errore + sotto il par time del livello)
+- [x] **STAR-02**: Le soglie stelle sono differenziate per modalità (le modalità più difficili come blackout/rush hanno soglie più permissive)
+- [x] **STAR-03**: Ogni livello ha un `parTime` definito usato nel calcolo stelle
 
 ### Progression
 
@@ -80,9 +80,9 @@
 | COMM-01 | Phase 1 | Complete |
 | COMM-02 | Phase 1 | Complete |
 | COMM-03 | Phase 1 | Complete |
-| STAR-01 | Phase 2 | Pending |
-| STAR-02 | Phase 2 | Pending |
-| STAR-03 | Phase 2 | Pending |
+| STAR-01 | Phase 2 | Complete |
+| STAR-02 | Phase 2 | Complete |
+| STAR-03 | Phase 2 | Complete |
 | COMM-04 | Phase 2 | Pending |
 | PROG-01 | Phase 3 | Pending |
 | PROG-02 | Phase 3 | Pending |
