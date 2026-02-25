@@ -8,7 +8,7 @@ progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 5 of 7 (Storage and Score Utility)
-Plan: 2 of 2 (05-02 next)
-Status: In progress — 05-01 complete
-Last activity: 2026-02-25 — 05-01 complete: extended LevelProgress with bestScore, created formatScore utility
+Plan: 2 of 2 (05-02 complete)
+Status: In progress — 05-02 complete, Phase 5 fully done
+Last activity: 2026-02-25 — 05-02 complete: GameScreen wired to pass state.score to saveProgress; full storage pipeline human-verified
 
-Progress: [##░░░░░░░░] 20% (1 of 5 plans — v1.1 only)
+Progress: [####░░░░░░] 40% (2 of 5 plans — v1.1 only)
 
 ## Performance Metrics
 
@@ -49,7 +49,7 @@ Progress: [##░░░░░░░░] 20% (1 of 5 plans — v1.1 only)
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 05    | 1/2   | 7 min  | 7 min   |
+| 05    | 2/2   | ~22 min | ~11 min |
 
 ## Accumulated Context
 
@@ -65,6 +65,7 @@ Recent decisions affecting current work:
 - [Plan 05-01]: scoreImproved is an independent OR condition — not nested under starsImproved — so higher-score runs save even without star change
 - [Plan 05-01]: Spread-merge write { ...existing, ... } in saveProgress prevents silent field loss when schema grows
 - [Plan 05-01]: formatScore returns em dash U+2014 for undefined/null to distinguish unplayed levels from score zero
+- [Plan 05-02]: state.score intentionally excluded from saveProgress useEffect deps — fires once per completion, not on each mid-game score increment; closure capture is the correct pattern here
 
 ### Pending Todos
 
@@ -77,5 +78,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 05-01-PLAN.md
+Stopped at: Completed 05-02-PLAN.md
 Resume file: None
