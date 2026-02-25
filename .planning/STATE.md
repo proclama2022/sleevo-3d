@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 4 of 4 (Level Content and Mode Validation)
-Plan: 1 of 6 in current phase
+Plan: 2 of 6 in current phase
 Status: In Progress
-Last activity: 2026-02-25 — Completed Plan 04-01: Level types foundation (rushTime, customerName, blackoutSecondsLeft)
+Last activity: 2026-02-25 — Completed Plan 04-02: LevelHintOverlay component (standalone pre-level hint gate)
 
-Progress: [████████████████████░░░░░░░░] 58% (6 of 10 plans across all phases)
+Progress: [█████████████████████░░░░░░░] 62% (7 of 11 plans across all phases)
 
 ## Performance Metrics
 
@@ -46,6 +46,7 @@ Progress: [████████████████████░░░
 | Phase 03-progression-and-navigation P03-02 | 1 min | 2 tasks | 2 files |
 | Phase 03-progression-and-navigation P03-03 | 2 min | 2 tasks | 1 file |
 | Phase 04-level-content-and-mode-validation P01 | 4min | 2 tasks | 2 files |
+| Phase 04-level-content-and-mode-validation P02 | 3min | 1 task | 2 files |
 
 ## Accumulated Context
 
@@ -92,6 +93,9 @@ Recent decisions affecting current work:
 - [Plan 03-03]: storage.ts saveProgress already had best-only semantics — no change required
 - [Phase 04-level-content-and-mode-validation]: Remove timeLimit from blackout levels 5 and 13 — unused artifacts; blackout timing driven by engine blackoutSecondsLeft, not level-defined field
 - [Phase 04-level-content-and-mode-validation]: Level 1 parTime set to 15s (not 12s formula) for comfortable beginner par; customerName uses Italian names Marco/Sofia/Luca/Elena/Giovanni
+- [Plan 04-02]: LevelHintOverlay z-index 200 — above shelf (5-8) and HUD (100), below drag ghost (1000); overlay dismissed before any drag starts so no conflict
+- [Plan 04-02]: getModeLabel uses plain switch (not HUD's getLevelRuleDisplay) — overlay needs full Italian mode names, not short badge labels
+- [Plan 04-02]: CSS Modules overlay pattern: position fixed inset-0 backdrop + stopPropagation on inner card for dismiss-on-backdrop-click
 
 ### Pending Todos
 
@@ -104,5 +108,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 04-level-content-and-mode-validation-01-PLAN.md (Level types foundation: rushTime, customerName, blackoutSecondsLeft)
+Stopped at: Completed 04-level-content-and-mode-validation-02-PLAN.md (LevelHintOverlay standalone pre-level hint gate component)
 Resume file: None
