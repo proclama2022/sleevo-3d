@@ -5,20 +5,32 @@ const PROGRESS_KEY = 'sleevo_progress';
 export interface LevelProgress {
   stars: number;
   bestTime?: number;
+  bestScore?: number;   // undefined means level was never scored
 }
 
-export function saveProgress(levelId: string, stars: number, timeSeconds?: number): void {
+export function saveProgress(
+  levelId: string,
+  stars: number,
+  timeSeconds?: number,
+  score?: number
+): void {
   try {
     const data = loadAllProgress();
     const existing = data[levelId];
-    const improved = !existing || stars > existing.stars ||
-      (stars === existing.stars && timeSeconds !== undefined &&
-       (existing.bestTime === undefined || timeSeconds < existing.bestTime));
+    const starsImproved = !existing || stars > existing.stars;
+    const timeImproved = !starsImproved &&
+      stars === existing?.stars &&
+      timeSeconds !== undefined &&
+      (existing.bestTime === undefined || timeSeconds < existing.bestTime);
+    const scoreImproved = score !== undefined &&
+      (existing?.bestScore === undefined || score > existing.bestScore);
 
-    if (improved) {
+    if (starsImproved || timeImproved || scoreImproved) {
       data[levelId] = {
-        stars,
-        bestTime: timeSeconds,
+        ...existing,
+        stars: starsImproved ? stars : (existing?.stars ?? stars),
+        bestTime: starsImproved || timeImproved ? timeSeconds : existing?.bestTime,
+        bestScore: scoreImproved ? score : existing?.bestScore,
       };
       localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
     }
