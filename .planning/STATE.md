@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Il giocatore deve sempre sapere esattamente cosa deve fare, perché ha guadagnato punti, e quanto manca alla fine del livello.
-**Current focus:** Phase 2 — Star System and Level Complete
+**Current focus:** Phase 3 — Progression and Navigation
 
 ## Current Position
 
-Phase: 2 of 4 (Star System and Level Complete)
-Plan: 3 of 3 in current phase
-Status: Completed
-Last activity: 2026-02-23 — Completed Plan 02-03: LevelComplete screen with score display and time vs par formatting
+Phase: 3 of 4 (Progression and Navigation)
+Plan: 1 of 3 in current phase
+Status: In Progress
+Last activity: 2026-02-25 — Completed Plan 03-01: LevelSelect component with 3-column grid
 
-Progress: [█████████] 100%
+Progress: [██████████] 33% (Phase 3)
 
 ## Performance Metrics
 
@@ -29,10 +29,11 @@ Progress: [█████████] 100%
 |-------|-------|-------|----------|
 | 01    | 3     | 29 min | 10 min   |
 | 02    | 3     | 8 min  | 3 min    |
+| 03    | 1     | 4 min  | 4 min    |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (2 min), 02-02 (2 min), 02-01 (4 min), 01-03 (15 min), 01-02 (4 min)
-- Trend: Phase 2 complete; star system with score display and time vs par formatting implemented
+- Last 5 plans: 03-01 (4 min), 02-03 (2 min), 02-02 (2 min), 02-01 (4 min), 01-03 (15 min)
+- Trend: Phase 3 in progress; LevelSelect component with 3-column grid and locked/focused state built
 
 *Updated after each plan completion*
 | Phase 01-foundation-fixes P01-01 | 8 min | 2 tasks | 2 files |
@@ -41,6 +42,7 @@ Progress: [█████████] 100%
 | Phase 02-star-system-and-level-complete P02-01 | 4 min | 2 tasks | 2 files |
 | Phase 02-star-system-and-level-complete P02-02 | 2 min | 1 task | 1 file |
 | Phase 02-star-system-and-level-complete P02-03 | 2 min | 2 tasks | 2 files |
+| Phase 03-progression-and-navigation P03-01 | 4 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -75,6 +77,10 @@ Recent decisions affecting current work:
 - [Plan 02-03]: Score and parTime props are optional for backward compatibility with existing level definitions
 - [Plan 02-03]: formatTimeWithPar helper returns 'X:XX / Y:YY par' when parTime exists, or 'X:XX' when undefined
 - [Plan 02-03]: Score stat appears as first item in stats display for visual hierarchy
+- [Plan 03-01]: LevelCell is an inline function component in the same file — not exported, not split to a separate file
+- [Plan 03-01]: loadAllProgress() called directly in render — synchronous localStorage read requires no async pattern
+- [Plan 03-01]: data-unlocked=false uses both opacity: 0.38 and pointer-events: none — double-layer silent block for accessibility and UX
+- [Plan 03-01]: Locked cells still show level number and empty stars under the padlock — consistent cell shape across all states
 
 ### Pending Todos
 
@@ -86,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-23
-Stopped at: Completed 02-star-system-and-level-complete-03-PLAN.md (LevelComplete screen with score display and time vs par formatting)
+Last session: 2026-02-25
+Stopped at: Completed 03-progression-and-navigation-01-PLAN.md (LevelSelect component with 3-column grid, locked/focused states)
 Resume file: None

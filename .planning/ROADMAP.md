@@ -64,7 +64,7 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — Build LevelSelect component with 3-column grid, locked/focused states (PROG-03)
+- [x] 03-01-PLAN.md — Build LevelSelect component with 3-column grid, locked/focused states (PROG-03)
 - [ ] 03-02-PLAN.md — Wire App.tsx screen router and GameScreen initialLevelIndex prop (PROG-01, PROG-02)
 - [ ] 03-03-PLAN.md — Update LevelComplete Continue button + human verify end-to-end (PROG-01, PROG-02, PROG-03)
 
