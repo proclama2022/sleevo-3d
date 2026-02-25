@@ -40,9 +40,9 @@
 
 ### Mode Implementation
 
-- [ ] **MODE-01**: La modalità `rush` è completamente implementata con timer nell'HUD e comportamento "time's up" definito
+- [x] **MODE-01**: La modalità `rush` è completamente implementata con timer nell'HUD e comportamento "time's up" definito
 - [x] **MODE-02**: La modalità `blackout` nasconde le etichette colonna in modo affidabile (logica nel engine, non in useEffect)
-- [ ] **MODE-03**: La modalità `customer` mostra chiaramente la richiesta del cliente durante il gioco
+- [x] **MODE-03**: La modalità `customer` mostra chiaramente la richiesta del cliente durante il gioco
 - [ ] **MODE-04**: La modalità `sleeve-match` abbina il disco fisico alla copertina mostrata nello slot
 
 ## v2 Requirements
@@ -91,9 +91,9 @@
 | LVLS-02 | Phase 4 | Complete |
 | LVLS-03 | Phase 4 | Complete |
 | LVLS-04 | Phase 4 | Complete |
-| MODE-01 | Phase 4 | Pending |
+| MODE-01 | Phase 4 | Complete |
 | MODE-02 | Phase 4 | Complete |
-| MODE-03 | Phase 4 | Pending |
+| MODE-03 | Phase 4 | Complete |
 | MODE-04 | Phase 4 | Pending |
 
 **Coverage:**

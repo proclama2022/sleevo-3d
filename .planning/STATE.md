@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 4 of 4 (Level Content and Mode Validation)
-Plan: 2 of 6 in current phase
+Plan: 4 of 6 in current phase
 Status: In Progress
-Last activity: 2026-02-25 — Completed Plan 04-02: LevelHintOverlay component (standalone pre-level hint gate)
+Last activity: 2026-02-25 — Completed Plan 04-04: CustomerPanel customerName prop and HUD urgency threshold fix (10s)
 
-Progress: [█████████████████████░░░░░░░] 62% (7 of 11 plans across all phases)
+Progress: [████████████████████████░░░░] 69% (9 of 13 plans across all phases)
 
 ## Performance Metrics
 
@@ -48,6 +48,7 @@ Progress: [█████████████████████░░
 | Phase 04-level-content-and-mode-validation P01 | 4min | 2 tasks | 2 files |
 | Phase 04-level-content-and-mode-validation P02 | 3min | 1 task | 2 files |
 | Phase 04-level-content-and-mode-validation P03 | 174min | 1 tasks | 1 files |
+| Phase 04-level-content-and-mode-validation P04 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Plan 04-02]: CSS Modules overlay pattern: position fixed inset-0 backdrop + stopPropagation on inner card for dismiss-on-backdrop-click
 - [Phase 04]: BLACKOUT_TRIGGER retained for backward compatibility until Plan 05 GameScreen cleanup
 - [Phase 04]: BLACKOUT_TICK reducer case makes label-hide deterministic — pure engine logic, not useEffect-driven
+- [Plan 04-04]: CustomerPanel speech changed from 'Cerco qualcosa di...' to '{name} vuole:...' — matches CONTEXT design spec
+- [Plan 04-04]: isLowTime threshold <= 10 (inclusive) so urgency fires exactly when clock reads 10 seconds
 
 ### Pending Todos
 
@@ -111,5 +114,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 04-level-content-and-mode-validation-02-PLAN.md (LevelHintOverlay standalone pre-level hint gate component)
+Stopped at: Completed 04-level-content-and-mode-validation-04-PLAN.md (CustomerPanel customerName prop and HUD urgency threshold fix)
 Resume file: None
