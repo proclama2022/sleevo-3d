@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import styles from './LevelComplete.module.css';
+import { formatScore } from '../utils';
 
 interface Props {
   levelNumber: number;
@@ -12,6 +13,8 @@ interface Props {
   hasNextLevel: boolean;
   onNextLevel: () => void;
   onReplay: () => void;
+  isNewRecord?: boolean;   // true only on genuine improvement over prior bestScore
+  scoreDelta?: number;     // undefined when isNewRecord is false
 }
 
 function formatTime(seconds: number): string {
@@ -48,6 +51,8 @@ export function LevelComplete({
   hasNextLevel,
   onNextLevel,
   onReplay,
+  isNewRecord,
+  scoreDelta,
 }: Props) {
   const messages = ['Ottimo lavoro!', 'Perfetto!', 'Incredibile! ✨'];
   const titleMsg = stars === 3 ? messages[2] : stars === 2 ? messages[1] : messages[0];
@@ -97,6 +102,17 @@ export function LevelComplete({
             </span>
           ))}
         </div>
+
+        {isNewRecord && (
+          <div className={styles.recordBadge}>
+            <span className={styles.recordBadgeTitle}>Nuovo Record!</span>
+            {scoreDelta !== undefined && (
+              <span className={styles.recordBadgeDelta}>
+                +{formatScore(scoreDelta)}
+              </span>
+            )}
+          </div>
+        )}
 
         <div className={styles.stats}>
           <div className={styles.stat}>
