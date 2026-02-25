@@ -196,17 +196,14 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
     setShowHintOverlay(true);
   }, [state.level.id]);
 
-  // Blackout mode: nascondi le etichette dopo 3 secondi dall'inizio
+  // Blackout mode: tick the countdown in the engine (engine handles label hide logic)
   useEffect(() => {
-    if (state.level.mode === 'blackout' && state.status === 'playing' && state.labelsVisible) {
-      const timer = setTimeout(() => {
-        dispatch({ type: 'BLACKOUT_TRIGGER' });
-      }, 3000);
-      return () => clearTimeout(timer);
+    if (state.level.mode !== 'blackout' || state.blackoutSecondsLeft <= 0 || state.status !== 'playing') {
+      return;
     }
-  // Solo al cambio di livello (level.id) o riavvio
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.level.id, state.status]);
+    const timer = setInterval(() => dispatch({ type: 'BLACKOUT_TICK' }), 1000);
+    return () => clearInterval(timer);
+  }, [state.level.mode, state.blackoutSecondsLeft, state.status]);
 
   // Customer timer: tick every second when customer has a timer
   useEffect(() => {
@@ -666,6 +663,7 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
         {/* Customer request panel (solo in customer mode) */}
         {level.mode === 'customer' && level.customerRequest && (
           <CustomerPanel
+            customerName={state.level.customerName}
             genre={level.customerRequest.genre}
             era={level.customerRequest.era}
             served={state.customerServed}
