@@ -38,7 +38,11 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
   2. Replaying a level and scoring lower does not overwrite the stored best score
   3. Completing a level does not erase previously stored bestStars or unlocked state
   4. The number 1420 formats to "1.420 pt" consistently across every surface that displays a score
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Extend LevelProgress + saveProgress (merge-write, scoreImproved condition) and create formatScore utility
+- [ ] 05-02-PLAN.md — Wire GameScreen save call to pass state.score; manual localStorage verification
 
 ### Phase 6: Level Complete Record Badge
 **Goal**: Players receive a clear signal when they beat their personal best, including the exact improvement margin
@@ -70,6 +74,6 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 | 2. Star System and Level Complete | v1.0 | 3/3 | Complete | 2026-02-23 |
 | 3. Progression and Navigation | v1.0 | 3/3 | Complete | 2026-02-25 |
 | 4. Level Content and Mode Validation | v1.0 | 6/6 | Complete | 2026-02-25 |
-| 5. Storage and Score Utility | v1.1 | 0/? | Not started | - |
+| 5. Storage and Score Utility | v1.1 | 0/2 | Not started | - |
 | 6. Level Complete Record Badge | v1.1 | 0/? | Not started | - |
 | 7. Level Select Score Display | v1.1 | 0/? | Not started | - |
