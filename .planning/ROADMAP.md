@@ -78,5 +78,5 @@ Plans:
 | 3. Progression and Navigation | v1.0 | 3/3 | Complete | 2026-02-25 |
 | 4. Level Content and Mode Validation | v1.0 | 6/6 | Complete | 2026-02-25 |
 | 5. Storage and Score Utility | v1.1 | 2/2 | Complete | 2026-02-25 |
-| 6. Level Complete Record Badge | 1/1 | Complete   | 2026-02-25 | - |
+| 6. Level Complete Record Badge | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 7. Level Select Score Display | v1.1 | 0/? | Not started | - |
