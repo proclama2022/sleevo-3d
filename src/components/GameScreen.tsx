@@ -19,6 +19,7 @@ import { Tutorial, shouldShowTutorial } from './Tutorial';
 import { CustomerPanel } from './CustomerPanel';
 import { ProgressBar } from './ProgressBar';
 import { SceneBackdrop } from './SceneBackdrop';
+import { LevelHintOverlay } from './LevelHintOverlay';
 
 // Dust particles (static, computed once) - ridotto per performance
 const particles = Array.from({ length: 6 }, (_, i) => ({
@@ -88,6 +89,8 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
   // Elapsed time counter (seconds) — tracked locally, resets on restart/next level
   const [timeElapsed, setTimeElapsed] = useState(0);
 
+  // Pre-level hint overlay — shown at every level load and restart
+  const [showHintOverlay, setShowHintOverlay] = useState(true);
 
   // Combo countdown (Fix 2) — conta i secondi rimanenti prima del decay
   const [comboSecondsLeft, setComboSecondsLeft] = useState<number | null>(null);
@@ -187,6 +190,11 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.status, state.stars]);
+
+  // Reset hint overlay on level change (NEXT_LEVEL dispatches a new level.id)
+  useEffect(() => {
+    setShowHintOverlay(true);
+  }, [state.level.id]);
 
   // Blackout mode: nascondi le etichette dopo 3 secondi dall'inizio
   useEffect(() => {
@@ -539,6 +547,7 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
   // Handlers
   const handleRestart = useCallback(() => {
     setTimeElapsed(0);
+    setShowHintOverlay(true);  // show hint on restart — same level.id so useEffect won't fire
     dispatch({ type: 'RESTART' });
   }, []);
   const handleNext = useCallback(() => {
@@ -576,6 +585,15 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
           sortRule={state.level.sortRule}
           levelMode={state.level.mode}
         />
+
+        {/* Pre-level hint overlay — shown at every level start and restart, dismissed by player */}
+        {showHintOverlay && state.status === 'playing' && (
+          <LevelHintOverlay
+            hint={state.level.hint ?? ''}
+            mode={state.level.mode}
+            onDismiss={() => setShowHintOverlay(false)}
+          />
+        )}
 
         {/* Themed scene backdrop — AI photo + atmosphere */}
         <SceneBackdrop theme={level.theme} />
