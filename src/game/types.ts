@@ -35,9 +35,10 @@ export interface Level {
   vinyls: Vinyl[];
   sortRule: SortRule;
   mode: LevelMode;
-  timeLimit?: number;
+  rushTime?: number;  // rush mode countdown seconds
   parTime?: number;  // seconds for star calculation
   hint?: string;
+  customerName?: string;  // Italian name displayed in CustomerPanel (customer mode)
   theme?: LevelTheme;
   customerRequest?: CustomerRequest;
   blockedSlots?: { row: number; col: number }[];  // slots under repair
@@ -77,6 +78,7 @@ export interface GameState {
   stars: number;
   // Blackout mode
   labelsVisible: boolean;
+  blackoutSecondsLeft: number;  // countdown before labels hide; 0 = already hidden or not blackout mode
   // Customer mode
   customerServed: boolean;
   customerTimeLeft: number;  // seconds remaining for customer patience
