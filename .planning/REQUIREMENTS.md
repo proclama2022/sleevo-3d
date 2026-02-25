@@ -17,8 +17,8 @@ Il giocatore può confrontare le proprie performance passate — best score visi
 
 ### Display — Level Complete
 
-- [ ] **COMPLETE-01**: La schermata di fine livello mostra il badge "Nuovo Record!" quando il punteggio corrente supera il record personale precedente (escluso il primo completamento — nessun record precedente non conta come "nuovo record")
-- [ ] **COMPLETE-02**: Il badge "Nuovo Record!" mostra anche il delta rispetto al record precedente (es. "+340 pt")
+- [x] **COMPLETE-01**: La schermata di fine livello mostra il badge "Nuovo Record!" quando il punteggio corrente supera il record personale precedente (escluso il primo completamento — nessun record precedente non conta come "nuovo record")
+- [x] **COMPLETE-02**: Il badge "Nuovo Record!" mostra anche il delta rispetto al record precedente (es. "+340 pt")
 
 ## Future Requirements
 

@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
+milestone: v1.0
 milestone_name: Social & Retention
-status: in_progress
-last_updated: "2026-02-25T17:59:56Z"
+status: unknown
+last_updated: "2026-02-25T18:47:31.514Z"
 progress:
-  total_phases: 3
-  completed_phases: 0
-  total_plans: 5
-  completed_plans: 2
+  total_phases: 6
+  completed_phases: 6
+  total_plans: 18
+  completed_plans: 18
 ---
 
 # Project State
@@ -66,6 +66,8 @@ Recent decisions affecting current work:
 - [Plan 05-01]: Spread-merge write { ...existing, ... } in saveProgress prevents silent field loss when schema grows
 - [Plan 05-01]: formatScore returns em dash U+2014 for undefined/null to distinguish unplayed levels from score zero
 - [Plan 05-02]: state.score intentionally excluded from saveProgress useEffect deps — fires once per completion, not on each mid-game score increment; closure capture is the correct pattern here
+- [Phase 06-level-complete-record-badge]: Read getLevelProgress before saveProgress (read-before-save) to compute isNewRecord and scoreDelta without stale data
+- [Phase 06-level-complete-record-badge]: Strict undefined guard prevents false Nuovo Record badge on first play; 0.6s animation delay sequences after star pop-ins; entrance-only animation avoids looping
 
 ### Pending Todos
 
