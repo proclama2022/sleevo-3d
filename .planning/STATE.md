@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 3 of 4 (Progression and Navigation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-02-25 — Completed Plan 03-01: LevelSelect component with 3-column grid
+Last activity: 2026-02-25 — Completed Plan 03-02: App.tsx screen router and GameScreen initialLevelIndex prop
 
-Progress: [██████████] 33% (Phase 3)
+Progress: [████████████████████] 67% (Phase 3)
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Progress: [██████████] 33% (Phase 3)
 | Phase 02-star-system-and-level-complete P02-02 | 2 min | 1 task | 1 file |
 | Phase 02-star-system-and-level-complete P02-03 | 2 min | 2 tasks | 2 files |
 | Phase 03-progression-and-navigation P03-01 | 4 min | 2 tasks | 2 files |
+| Phase 03-progression-and-navigation P03-02 | 1 min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -81,6 +82,10 @@ Recent decisions affecting current work:
 - [Plan 03-01]: loadAllProgress() called directly in render — synchronous localStorage read requires no async pattern
 - [Plan 03-01]: data-unlocked=false uses both opacity: 0.38 and pointer-events: none — double-layer silent block for accessibility and UX
 - [Plan 03-01]: Locked cells still show level number and empty stars under the padlock — consistent cell shape across all states
+- [Plan 03-02]: findFirstIncompleteLevel defined at module level (not inside App component) to keep useState lazy initializer readable
+- [Plan 03-02]: handleReturnToSelect recomputes focus index via findFirstIncompleteLevel() so newly earned stars update the highlight
+- [Plan 03-02]: handleNext kept in GameScreen — still used by Controls.onNext; only LevelComplete wiring changed to onReturnToSelect
+- [Plan 03-02]: LevelComplete 'Continue' now always returns to level select — players see full progress before re-entering a level
 
 ### Pending Todos
 
@@ -93,5 +98,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 03-progression-and-navigation-01-PLAN.md (LevelSelect component with 3-column grid, locked/focused states)
+Stopped at: Completed 03-progression-and-navigation-02-PLAN.md (App.tsx screen router, GameScreen initialLevelIndex prop, LevelComplete return-to-select wiring)
 Resume file: None

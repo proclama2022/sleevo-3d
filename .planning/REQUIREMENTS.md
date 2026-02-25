@@ -27,8 +27,8 @@
 
 ### Progression
 
-- [ ] **PROG-01**: Il progresso è salvato in localStorage (stelle per livello, livello più alto sbloccato)
-- [ ] **PROG-02**: I livelli si sbloccano quando il precedente raggiunge almeno 2 stelle
+- [x] **PROG-01**: Il progresso è salvato in localStorage (stelle per livello, livello più alto sbloccato)
+- [x] **PROG-02**: I livelli si sbloccano quando il precedente raggiunge almeno 2 stelle
 - [x] **PROG-03**: Una schermata di selezione livelli mostra la griglia con stato locked/unlocked e stelle acquisite
 
 ### Level Content
@@ -84,8 +84,8 @@
 | STAR-02 | Phase 2 | Complete |
 | STAR-03 | Phase 2 | Complete |
 | COMM-04 | Phase 2 | Complete |
-| PROG-01 | Phase 3 | Pending |
-| PROG-02 | Phase 3 | Pending |
+| PROG-01 | Phase 3 | Complete |
+| PROG-02 | Phase 3 | Complete |
 | PROG-03 | Phase 3 | Complete |
 | LVLS-01 | Phase 4 | Pending |
 | LVLS-02 | Phase 4 | Pending |
