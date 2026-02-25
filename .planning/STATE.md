@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 3 of 4 (Progression and Navigation)
-Plan: 2 of 3 in current phase
-Status: In Progress
-Last activity: 2026-02-25 — Completed Plan 03-02: App.tsx screen router and GameScreen initialLevelIndex prop
+Plan: 3 of 3 in current phase
+Status: Phase Complete
+Last activity: 2026-02-25 — Completed Plan 03-03: LevelComplete button label update and Phase 3 end-to-end verification
 
-Progress: [████████████████████] 67% (Phase 3)
+Progress: [████████████████████████████] 100% (Phase 3)
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [████████████████████] 67% (Ph
 | Phase 02-star-system-and-level-complete P02-03 | 2 min | 2 tasks | 2 files |
 | Phase 03-progression-and-navigation P03-01 | 4 min | 2 tasks | 2 files |
 | Phase 03-progression-and-navigation P03-02 | 1 min | 2 tasks | 2 files |
+| Phase 03-progression-and-navigation P03-03 | 2 min | 2 tasks | 1 file |
 
 ## Accumulated Context
 
@@ -86,6 +87,8 @@ Recent decisions affecting current work:
 - [Plan 03-02]: handleReturnToSelect recomputes focus index via findFirstIncompleteLevel() so newly earned stars update the highlight
 - [Plan 03-02]: handleNext kept in GameScreen — still used by Controls.onNext; only LevelComplete wiring changed to onReturnToSelect
 - [Plan 03-02]: LevelComplete 'Continue' now always returns to level select — players see full progress before re-entering a level
+- [Plan 03-03]: Button always renders — hasNextLevel only changes label ('Continua →' vs 'Torna alla mappa →'), not visibility
+- [Plan 03-03]: storage.ts saveProgress already had best-only semantics — no change required
 
 ### Pending Todos
 
@@ -98,5 +101,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 03-progression-and-navigation-02-PLAN.md (App.tsx screen router, GameScreen initialLevelIndex prop, LevelComplete return-to-select wiring)
+Stopped at: Completed 03-progression-and-navigation-03-PLAN.md (LevelComplete button label, Phase 3 end-to-end verified)
 Resume file: None
