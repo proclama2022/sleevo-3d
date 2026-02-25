@@ -33,10 +33,10 @@
 
 ### Level Content
 
-- [ ] **LVLS-01**: Esistono 20+ livelli con difficoltà crescente
-- [ ] **LVLS-02**: I livelli coprono tutte le modalità: free, genre, chronological, customer, blackout, rush, sleeve-match
-- [ ] **LVLS-03**: La curva di difficoltà introduce le modalità gradualmente (base → varianti avanzate)
-- [ ] **LVLS-04**: Ogni livello ha un `hint` chiaro che spiega la regola
+- [x] **LVLS-01**: Esistono 20+ livelli con difficoltà crescente
+- [x] **LVLS-02**: I livelli coprono tutte le modalità: free, genre, chronological, customer, blackout, rush, sleeve-match
+- [x] **LVLS-03**: La curva di difficoltà introduce le modalità gradualmente (base → varianti avanzate)
+- [x] **LVLS-04**: Ogni livello ha un `hint` chiaro che spiega la regola
 
 ### Mode Implementation
 
@@ -87,10 +87,10 @@
 | PROG-01 | Phase 3 | Complete |
 | PROG-02 | Phase 3 | Complete |
 | PROG-03 | Phase 3 | Complete |
-| LVLS-01 | Phase 4 | Pending |
-| LVLS-02 | Phase 4 | Pending |
-| LVLS-03 | Phase 4 | Pending |
-| LVLS-04 | Phase 4 | Pending |
+| LVLS-01 | Phase 4 | Complete |
+| LVLS-02 | Phase 4 | Complete |
+| LVLS-03 | Phase 4 | Complete |
+| LVLS-04 | Phase 4 | Complete |
 | MODE-01 | Phase 4 | Pending |
 | MODE-02 | Phase 4 | Pending |
 | MODE-03 | Phase 4 | Pending |
