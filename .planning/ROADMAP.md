@@ -23,7 +23,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 
 **Milestone Goal:** Il giocatore può confrontare le proprie performance passate — best score visibile nel level select e celebrazione del nuovo record alla fine del livello.
 
-- [x] **Phase 5: Storage and Score Utility** — Extend localStorage schema with bestScore and create the shared formatScore utility (1/2 plans complete)
+- [x] **Phase 5: Storage and Score Utility** — Extend localStorage schema with bestScore and create the shared formatScore utility (2/2 plans complete — 2026-02-25)
 - [ ] **Phase 6: Level Complete Record Badge** — Show "Nuovo Record! +340 pt" badge when the player beats their personal best
 - [ ] **Phase 7: Level Select Score Display** — Display best score per level cell as "1.420 pt" (or "--" if never completed)
 
@@ -74,6 +74,6 @@ Plans:
 | 2. Star System and Level Complete | v1.0 | 3/3 | Complete | 2026-02-23 |
 | 3. Progression and Navigation | v1.0 | 3/3 | Complete | 2026-02-25 |
 | 4. Level Content and Mode Validation | v1.0 | 6/6 | Complete | 2026-02-25 |
-| 5. Storage and Score Utility | v1.1 | 1/2 | In Progress | - |
+| 5. Storage and Score Utility | v1.1 | 2/2 | Complete | 2026-02-25 |
 | 6. Level Complete Record Badge | v1.1 | 0/? | Not started | - |
 | 7. Level Select Score Display | v1.1 | 0/? | Not started | - |
