@@ -35,7 +35,20 @@ Il giocatore deve sempre sapere esattamente cosa deve fare, perché ha guadagnat
 
 ### Active
 
-*(next milestone requirements go here)*
+- [ ] PERSIST-01: Il gioco salva il punteggio migliore per ogni livello in localStorage (best-only)
+- [ ] PERSIST-02: Il salvataggio usa merge-write per non sovrascrivere bestStars/unlocked esistenti
+- [ ] SELECT-01: La cella di ogni livello mostra il punteggio migliore come "1.420 pt" sotto le stelle (o "--" se mai completato)
+- [ ] COMPLETE-01: La schermata di fine livello mostra "Nuovo Record!" quando score > record precedente (escluso primo completamento)
+- [ ] COMPLETE-02: Il badge "Nuovo Record!" mostra anche il delta es. "+340 pt"
+
+## Current Milestone: v1.1 Social & Retention
+
+**Goal:** Il giocatore può confrontare le proprie performance passate — best score visibile nel level select e celebrazione del nuovo record alla fine del livello.
+
+**Target features:**
+- Best score (punti) salvato in localStorage per ogni livello
+- "1.420 pt" sotto le stelle in ogni cella del level select
+- Badge "Nuovo Record! +340 pt" in LevelComplete quando si batte il record
 
 ### Out of Scope
 
@@ -73,4 +86,4 @@ Tech stack: React + Three.js + TypeScript + Vite. State: useReducer in GameScree
 - **Lingua**: UI in italiano
 
 ---
-*Last updated: 2026-02-25 after v1.0 milestone*
+*Last updated: 2026-02-25 after v1.1 milestone start*

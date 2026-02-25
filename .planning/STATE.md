@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-last_updated: "2026-02-25T16:19:03.349Z"
+milestone: v1.1
+milestone_name: Social & Retention
+status: defining_requirements
+last_updated: "2026-02-25T00:00:00.000Z"
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 15
-  completed_plans: 15
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-20)
 
 **Core value:** Il giocatore deve sempre sapere esattamente cosa deve fare, perché ha guadagnato punti, e quanto manca alla fine del livello.
-**Current focus:** Phase 4 — Level Content and Mode Validation
+**Current focus:** v1.1 — Social & Retention
 
 ## Current Position
 
-Phase: 4 of 4 (Level Content and Mode Validation)
-Plan: 6 of 6 in current phase
-Status: Complete
-Last activity: 2026-02-25 — Completed Plan 04-06: Build verification and end-to-end mode validation — all 7 modes human-verified
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-25 — Milestone v1.1 started
 
 Progress: [████████████████████████████] 100% (14 of 14 plans across all phases)
 
