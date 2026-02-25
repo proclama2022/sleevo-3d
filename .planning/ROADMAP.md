@@ -67,7 +67,10 @@ Plans:
   2. A level never completed shows "--" in place of a score
   3. Locked level cells show no score value
   4. The score format matches Phase 5's formatScore utility (Italian thousand separator)
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 07-01-PLAN.md — Add bestScore prop to LevelCell and score CSS class; human-verify layout
 
 ## Progress
 
@@ -79,4 +82,4 @@ Plans:
 | 4. Level Content and Mode Validation | v1.0 | 6/6 | Complete | 2026-02-25 |
 | 5. Storage and Score Utility | v1.1 | 2/2 | Complete | 2026-02-25 |
 | 6. Level Complete Record Badge | v1.1 | 1/1 | Complete | 2026-02-25 |
-| 7. Level Select Score Display | v1.1 | 0/? | Not started | - |
+| 7. Level Select Score Display | v1.1 | 0/1 | Not started | - |
