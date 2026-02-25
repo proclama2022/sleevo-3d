@@ -53,7 +53,10 @@ Plans:
   2. The badge shows the improvement delta, e.g. "+340 pt"
   3. Completing a level for the first time (no prior record) shows no "Nuovo Record!" badge
   4. Replaying a level and scoring lower shows no "Nuovo Record!" badge
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Add isNewRecord + scoreDelta logic to GameScreen and record badge UI to LevelComplete
 
 ### Phase 7: Level Select Score Display
 **Goal**: Players can compare their best scores across all levels at a glance from the level select grid
