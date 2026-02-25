@@ -366,3 +366,296 @@ blackout).
 - `.planning/PROJECT.md` (stated requirements and design decisions)
 - `GAME-LOGIC.md` (authoritative description of current game mechanics)
 - Confidence: HIGH — all pitfalls grounded in direct code evidence, not assumption
+
+---
+
+---
+
+# Milestone Pitfalls: Best Score Persistence + Personal Record UI
+
+**Milestone:** Adding `bestScore` to localStorage + score display in LevelSelect + "Nuovo Record!" in LevelComplete
+**Researched:** 2026-02-25
+**Confidence:** HIGH — based on direct inspection of `storage.ts`, `LevelComplete.tsx`, `LevelSelect.tsx`, `GameScreen.tsx`, `game/types.ts`
+
+> These pitfalls are additive to the project-level pitfalls above. They are specific to the brownfield extension described in the milestone context.
+
+---
+
+## Critical Pitfalls
+
+---
+
+### Pitfall M1: Schema Extension Clobbers Existing Records via Destructive Write
+
+**What goes wrong:**
+`saveProgress()` currently writes the entire `LevelProgress` object atomically:
+
+```ts
+data[levelId] = { stars, bestTime: timeSeconds };
+```
+
+If `bestScore` is added naively as a third argument and assigned the same way, any completion where `bestScore` is not provided (or is `undefined`) will write `bestScore: undefined`. `JSON.stringify` drops `undefined` values silently, so the key disappears. On read, `existing.bestScore` resolves as `undefined` — which looks the same as "never played." More dangerously: if the `improved` guard is not updated to include score, a high-score run on a slow completion may be rejected because `stars` stayed the same.
+
+The existing `improved` condition is:
+```ts
+const improved = !existing || stars > existing.stars ||
+  (stars === existing.stars && timeSeconds !== undefined &&
+   (existing.bestTime === undefined || timeSeconds < existing.bestTime));
+```
+
+This gates writes on star improvement or time improvement. A run that scores higher with identical stars and equal-or-slower time is **silently discarded**.
+
+**Why it happens:**
+The save function was written for stars-then-time and was never designed to be extended. Developers add a third parameter without auditing the guard.
+
+**How to avoid:**
+- Add `bestScore?: number` to the `LevelProgress` interface.
+- Extend `improved`: also write when `score !== undefined && (existing.bestScore === undefined || score > existing.bestScore)`.
+- Use a merge-then-overwrite pattern to preserve fields not being updated:
+  ```ts
+  data[levelId] = { ...existing, stars: newStars, bestTime: ..., bestScore: ... };
+  ```
+- Keep `bestScore` optional — pre-existing records without it read as `undefined`, which is correct.
+
+**Warning signs:**
+- localStorage entry shows `{ "stars": 2, "bestTime": 45 }` with no `bestScore` key after a completed run.
+- Replaying a level with a higher score does not update the stored value.
+- LevelSelect shows `—` (or `NaN pt`) even after multiple completions.
+
+**Phase to address:**
+Phase 1 — extend `LevelProgress` interface and `saveProgress` function before any UI work.
+
+---
+
+### Pitfall M2: "Nuovo Record!" Fires on Every First Play
+
+**What goes wrong:**
+The most natural implementation of the new-record guard is:
+```ts
+const isNewRecord = score > (existingProgress?.bestScore ?? 0);
+```
+
+On first play, `existingProgress` is `null` (from `getLevelProgress`), so `existingProgress?.bestScore` is `undefined`, and `?? 0` substitutes `0`. Any positive score — which is the normal case in Sleevo — triggers "Nuovo Record!" every time a level is played for the first time. This devalues the moment for when it actually matters and trains players to ignore it.
+
+**Why it happens:**
+`?? 0` is the safe-default pattern for arithmetic, but it conflates "no previous score" with "previous score was zero."
+
+**How to avoid:**
+Gate strictly on the existence of a prior record:
+```ts
+const isNewRecord =
+  existingProgress?.bestScore !== undefined &&
+  (score ?? 0) > existingProgress.bestScore;
+```
+When `bestScore` is absent (first play), `isNewRecord` is `false`. On subsequent plays, it is `true` only for genuine improvement.
+
+**Warning signs:**
+- Clear localStorage, play any level once — if the "Nuovo Record!" banner appears, the guard is wrong.
+- Testing: open DevTools, delete `sleevo_progress`, reload, complete level 1 — no banner should appear.
+
+**Phase to address:**
+Phase 2 — LevelComplete UI. The `isNewRecord` prop must use the strict guard before being passed to the component.
+
+---
+
+### Pitfall M3: `isNewRecord` Reads Stale Pre-Save Value
+
+**What goes wrong:**
+In `GameScreen.tsx`, `saveProgress` is called inside a `useEffect` that runs **after paint**:
+
+```ts
+useEffect(() => {
+  if (state.status === 'completed') {
+    saveProgress(state.level.id, state.stars, timeElapsed);
+  }
+}, [state.status, state.stars]);
+```
+
+`LevelComplete` is rendered in the same render that sets `status === 'completed'`. If `isNewRecord` is computed inside `LevelComplete` by calling `getLevelProgress()`, or if it is computed anywhere that reads from localStorage in the same render cycle, it reads the **old record** — because the save effect has not run yet. Result: `isNewRecord` is always `false` even when the score genuinely improved, because the comparison runs against the pre-save value.
+
+**Why it happens:**
+React effects run after paint, not synchronously with the render that triggers them. Developers assume the save and the read happen at the same moment.
+
+**How to avoid:**
+Compute `isNewRecord` in `GameScreen` at render time by reading the **current stored value** before the save effect fires, then passing it as a prop to `LevelComplete`:
+
+```tsx
+// In GameScreen render (not in an effect):
+const existingBest = state.status === 'completed'
+  ? getLevelProgress(state.level.id)?.bestScore
+  : undefined;
+const isNewRecord =
+  existingBest !== undefined &&
+  (state.score ?? 0) > existingBest;
+
+// Pass to LevelComplete:
+<LevelComplete isNewRecord={isNewRecord} ... />
+```
+
+This reads localStorage once per render while `status === 'completed'`, which is infrequent. Do not read from localStorage inside `LevelComplete` itself.
+
+**Warning signs:**
+- `isNewRecord` prop is always `false` in React DevTools even after a confirmed personal best.
+- Console log inside the `saveProgress` effect shows the new value written, but the banner did not appear.
+
+**Phase to address:**
+Phase 2 — LevelComplete UI. The prop must be computed in `GameScreen`, never derived inside the component.
+
+---
+
+### Pitfall M4: Score Formatting Diverges Across Two Surfaces
+
+**What goes wrong:**
+The score is displayed in two separate places:
+1. LevelSelect cell: `"1.420 pt"` (Italian thousands separator, unit suffix)
+2. LevelComplete stats row: currently `{score ?? 0}` with label `"Punti"` — no thousands separator, no unit
+
+If formatting is implemented inline at each call site, the two surfaces will diverge — different separators, different zero-state strings, different `undefined` handling. In Italian locale, the thousands separator is `.` (period), the opposite of English. `Intl.NumberFormat` uses the browser locale by default; a browser set to `en-US` will use `,` instead.
+
+**Why it happens:**
+Developers implement formatting at the first call site, then copy-paste with variations at the second. The browser's locale is silently used, making the output machine-dependent.
+
+**How to avoid:**
+Create a single `formatScore(score: number | undefined): string` utility — in `src/utils/index.ts` or co-located with storage — before implementing either surface:
+
+```ts
+export function formatScore(score: number | undefined): string {
+  if (score === undefined || score === null) return '—';
+  return new Intl.NumberFormat('it-IT').format(score) + ' pt';
+}
+```
+
+Zero-state (`undefined`) renders as `—` (em-dash), not `0 pt`. Both surfaces import this function. The locale `'it-IT'` is hardcoded, not derived from the browser.
+
+**Warning signs:**
+- LevelSelect shows `0 pt` for unplayed levels.
+- Score above 999 shows without thousands separator.
+- LevelComplete and LevelSelect show the same number formatted differently.
+
+**Phase to address:**
+Phase 1 — create the utility in the same commit that extends the schema, before any rendering work.
+
+---
+
+### Pitfall M5: Double-Write Race from Save Effect Dependency Array
+
+**What goes wrong:**
+The save effect has an intentionally minimal dependency array `[state.status, state.stars]` and a lint suppression comment. `state.score` is not in the array. If a developer "fixes" the lint warning by adding `score` to the dependencies, the effect will fire on every score change during gameplay — i.e. on every vinyl placement. This hammers localStorage 5-12 times per level and can write in-progress scores as "best scores."
+
+Conversely, if `score` is removed from the effect closure by moving it outside, a stale value may be written.
+
+**Why it happens:**
+The lint suppression (`// eslint-disable-next-line react-hooks/exhaustive-deps`) is a known smell that future developers may "fix" without understanding the intent.
+
+**How to avoid:**
+Keep the dependency array as `[state.status, state.stars]`. Read `state.score` from the closure inside the effect body — this is safe because React guarantees the closure captures current values when the effect runs. Add a comment explaining why `score` is intentionally omitted from dependencies:
+
+```ts
+useEffect(() => {
+  if (state.status === 'completed') {
+    // score is read from closure, not deps — intentional: fires once per completion
+    saveProgress(state.level.id, state.stars, timeElapsed, state.score);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [state.status, state.stars]);
+```
+
+**Warning signs:**
+- Console shows `saveProgress` being called multiple times during a single level.
+- localStorage `bestScore` updates mid-level (check with DevTools Application tab open during play).
+
+**Phase to address:**
+Phase 1 — extend the save effect in the same task that extends `saveProgress`.
+
+---
+
+## Technical Debt Patterns
+
+| Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
+|----------|-------------------|----------------|-----------------|
+| Inline score formatting at each call site | Faster to write | Two surfaces diverge; broken Italian separator on non-IT browsers | Never — one utility is <10 lines |
+| `?? 0` as new-record guard fallback | One line, no null check | "Nuovo Record!" on every first play; reward cheapened | Never |
+| Computing `isNewRecord` inside `LevelComplete` via `getLevelProgress()` | No extra prop needed | Reads stale pre-save value; banner never shows | Never |
+| Writing `bestScore` without merge (`data[levelId] = { stars, bestScore }`) | Simple assignment | Drops `bestTime` from existing record; corrupts historical data | Never |
+| Adding `score` to the save effect dependency array | Satisfies lint | Fires on every vinyl placement; writes in-progress scores as bests | Never |
+| Showing "Nuovo Record!" with `>=` instead of `>` | Catches score ties | Fires on replay with identical score; annoys player | Never |
+
+---
+
+## Integration Gotchas
+
+| Integration | Common Mistake | Correct Approach |
+|-------------|----------------|------------------|
+| `localStorage` JSON round-trip | Storing `undefined` — key is dropped by `JSON.stringify` silently | Use optional field `bestScore?: number`; guard reads with `=== undefined`, not `=== null` |
+| `LevelProgress` interface extension | Adding field but forgetting `isLevelUnlocked` caller — it only reads `stars`, so it is safe, but audit all `getLevelProgress` call sites | Grep for `getLevelProgress` and `loadAllProgress` before shipping |
+| `Intl.NumberFormat` locale | Omitting locale argument — output depends on browser locale | Always pass `'it-IT'` explicitly; test with browser set to `en-US` |
+| `saveProgress` `improved` guard | Not updating guard to include score comparison | Guard must cover: `stars improved OR (same stars, score improved)` |
+| `LevelSelect` — `loadAllProgress` call | Calling `getLevelProgress()` per cell in render = 21 `JSON.parse` calls | Existing pattern calls `loadAllProgress()` once — maintain it; pass `bestScore` as prop to `LevelCell` |
+
+---
+
+## UX Pitfalls
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| "Nuovo Record!" on every first play | Reward cheapened; players ignore it when it matters | Only show on genuine improvement over stored `bestScore` |
+| "Nuovo Record!" on replay with same score (using `>=`) | Annoying repeated celebration | Strict `>` comparison only |
+| `0 pt` in LevelSelect for unplayed levels | Implies the player scored zero, not that the level is new | Show `—` for `bestScore === undefined` |
+| Animating "Nuovo Record!" with the full confetti burst | Dilutes the existing completion celebration | Use a distinct, smaller effect (gold shimmer/flash on the score row) separate from the confetti already present |
+| Displaying bestScore in LevelSelect without a label or icon | Score meaning unclear | Include unit `pt` and optionally a small trophy icon to identify as personal best |
+
+---
+
+## "Looks Done But Isn't" Checklist
+
+- [ ] **bestScore in LevelSelect:** Score is shown — verify it shows `—` for unplayed levels, not `0 pt` or `undefined pt`
+- [ ] **Nuovo Record! first-play guard:** Play a level for the first time (clear localStorage first) — banner must NOT appear
+- [ ] **Nuovo Record! genuine improvement:** Play a level twice with second run scoring higher — banner MUST appear on second run
+- [ ] **Nuovo Record! same score:** Play a level twice with identical score — banner must NOT appear on second run
+- [ ] **saveProgress writes bestScore:** Inspect localStorage after completion — value is a `number`, not `null`, not absent
+- [ ] **Replay does not regress bestScore:** Complete a level with a lower score — localStorage bestScore must not decrease
+- [ ] **Existing records not corrupted:** After new code runs once, existing `{ stars, bestTime }` records are intact and unlock logic still works
+- [ ] **Score formatting consistency:** Complete a level scoring > 1000 — both LevelSelect and LevelComplete show `1.XXX pt` with Italian thousands separator
+- [ ] **Non-IT browser locale:** Test with browser language set to `en-US` — thousands separator must still be `.` not `,`
+
+---
+
+## Recovery Strategies
+
+| Pitfall | Recovery Cost | Recovery Steps |
+|---------|---------------|----------------|
+| `bestScore` written as `null` (if `undefined` was explicitly assigned) | LOW | Add migration in `loadAllProgress`: delete `null` bestScore keys on read; re-persist cleaned data |
+| `isNewRecord` always false (stale read) | LOW | Move computation to GameScreen render time; no data migration needed |
+| `isNewRecord` always true (wrong guard) | LOW | Fix guard expression; no data migration needed |
+| Score formatting diverged between surfaces | LOW | Extract utility, replace two inline call sites |
+| `improved` guard too strict — bestScore never updates | LOW | Fix condition; future runs write correctly; cannot recover true past best |
+| `improved` guard too loose — regressions stored as bests | MEDIUM | Fix condition immediately; add migration that clears only `bestScore` (preserves stars/unlock); player replays to re-establish best |
+| Existing `bestTime` dropped from records (non-merge write) | MEDIUM | Migration impossible (data lost); add merge pattern and add regression test |
+
+---
+
+## Pitfall-to-Phase Mapping
+
+| Pitfall | Prevention Phase | Verification |
+|---------|------------------|--------------|
+| Schema extension clobbers existing records (M1) | Phase 1: extend `LevelProgress` + `saveProgress` | Inspect localStorage after save; old fields preserved |
+| First-play triggers "Nuovo Record!" (M2) | Phase 2: LevelComplete `isNewRecord` prop | Clear storage, play level, confirm no banner |
+| `isNewRecord` reads stale pre-save value (M3) | Phase 2: compute prop in GameScreen render | React DevTools: prop is `true` on first genuine improvement |
+| Score formatting inconsistency (M4) | Phase 1: create `formatScore` utility before any display | Play to >999 pts; both surfaces show identical format |
+| Double-write from effect dependency (M5) | Phase 1: extend save effect, keep dep array minimal | `saveProgress` fires exactly once per completion (add temp log) |
+
+---
+
+## Sources
+
+- Direct codebase inspection: `/src/game/storage.ts` — `saveProgress`, `loadAllProgress`, `getLevelProgress`, `isLevelUnlocked`
+- Direct codebase inspection: `/src/components/LevelComplete.tsx` — current props, stats rendering, confetti pattern
+- Direct codebase inspection: `/src/components/LevelSelect/LevelSelect.tsx` — `loadAllProgress` call pattern, `LevelCell` props
+- Direct codebase inspection: `/src/components/GameScreen.tsx` — save effect (lines 186–192), dependency array, `state.score` closure
+- Direct codebase inspection: `/src/game/types.ts` — `GameState.score`, `LevelProgress` shape
+- MDN: `JSON.stringify` drops `undefined` object values — serialisation behaviour confirmed
+- MDN: `Intl.NumberFormat` locale-aware formatting — `'it-IT'` thousands separator is `.`
+
+---
+*Pitfalls research for: Sleevo — best score persistence and personal record UI (milestone addition)*
+*Researched: 2026-02-25*

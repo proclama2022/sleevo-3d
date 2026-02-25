@@ -1,17 +1,17 @@
 # Project Research Summary
 
-**Project:** Sleevo — Level Progression & Score Feedback Milestone
-**Domain:** Browser-based casual puzzle/sorting game (vinyl records)
-**Researched:** 2026-02-20
+**Project:** Sleevo — best score persistence + personal record UI
+**Domain:** Brownfield feature addition to an existing React/TypeScript browser puzzle game
+**Researched:** 2026-02-25
 **Confidence:** HIGH
 
 ## Executive Summary
 
-Sleevo's core gameplay loop — drag-drop, combo system, invalid placement feedback, 3D vinyl rendering — is already complete and differentiated. The milestone is not about new mechanics; it is about communication and progression infrastructure. Players currently cannot see what they earned (no score popup firing), do not know how far they are (no persistent progress counter), have no sense of how well they performed (star rating not displayed), and cannot navigate the game's 21 levels (no level select screen). The research confirms all capabilities needed to fix this are already installed in the codebase: `ScorePopup`, `storage.ts`, `LevelComplete.tsx` with star display, `ProgressBar.tsx`, and the `LEVELS` array. The work is integration, not invention, and no new packages are required.
+This milestone adds best score persistence and a personal record UI to Sleevo v1.0, a shipped vinyl-sorting browser game. The scope is deliberately narrow: three additive changes to four existing files — extend `LevelProgress` in `storage.ts` with a `bestScore` field, display it per cell in `LevelSelect`, and show a "Nuovo Record!" badge on `LevelComplete` when the player beats their saved best. No new dependencies are needed. The entire feature is implementable using native browser APIs (`localStorage`, `Intl.NumberFormat`), React hooks (`useState`, `useRef`), and CSS Module keyframes that are already the project standard.
 
-The recommended approach is to work within the existing `useReducer` + `GameScreen` architecture without touching the dormant Zustand `gameStore`. A thin new `progression.ts` module wraps `storage.ts` to provide level-select data and unlock logic, a new `LevelSelectScreen` component provides navigation, and a `RulePill` component surfaces the active rule in the HUD. The star formula needs one unambiguous decision (does time factor in?) before implementation, and the localStorage unlock logic needs a one-line fix (threshold `>= 1` to `>= 2`). Neither is blocked.
+The recommended build order is strict: storage layer first, then `GameScreen` orchestration, then `LevelComplete` display, then `LevelSelect` display. This order respects the dependency chain — every UI change depends on a correctly extended `saveProgress` signature and `LevelProgress` interface. Skipping straight to UI before the storage layer is extended is the primary source of integration bugs documented in pitfalls research.
 
-The critical risks are architectural: the dormant Zustand store must not be mixed into the reducer-driven game session, the unlock key naming is a latent off-by-one trap that must be refactored before 20+ levels land, and the star thresholds must be designed per-mode from the start — retrofitting them after levels are authored invalidates player saves. Addressing these three items before expanding the level array avoids the most expensive possible rework.
+The dominant risk category is logic-sequencing: the "Nuovo Record!" comparison must happen in `GameScreen` at render time, reading storage before the save effect fires. Reading after the write, or delegating the comparison to `LevelComplete`, produces a flag that is permanently `false`. The second risk is the new-record guard: using `?? 0` as a fallback causes the badge to fire on every first play, cheapening the reward signal. Both risks are straightforward to avoid with the patterns documented in research — they are traps only when developers assume the naive approach is correct.
 
 ---
 
@@ -19,166 +19,145 @@ The critical risks are architectural: the dormant Zustand store must not be mixe
 
 ### Recommended Stack
 
-No new packages are required. The existing stack (React 19, TypeScript, Zustand ^4, CSS Modules/keyframes, `localStorage`) covers every feature in scope. The research found that each proposed feature maps directly to an already-installed capability: CSS `scoreFloat` keyframe for score popups, `storage.ts` for persistence, `LevelComplete.tsx` for star display, `ProgressBar.tsx` for the vinyl counter. Attempts to introduce framer-motion, React Router, `canvas-confetti`, IndexedDB, or Zustand `persist` middleware would each contradict a working system already in place.
+No new dependencies are required. The project already has everything needed: React 19.2.4 with standard hooks, TypeScript 5.9.3 for optional interface fields, Vite + CSS Modules for animation, and `localStorage` via the existing `storage.ts` abstraction. All libraries evaluated (idb, zustand, framer-motion, numeral, react-confetti) were rejected — the native equivalents are already in use and sufficient.
 
-The only new structural code is a `progressionStore` Zustand slice (thin reactive wrapper over `storage.ts`) and a `progression.ts` pure-function module. Both follow established patterns already present in the codebase.
+Score formatting uses `Intl.NumberFormat('it-IT')` hardcoded — not the browser's default locale — to ensure `1420` always renders as `"1.420 pt"` regardless of the user's system language. A single shared `formatScore` utility must be created before any display work begins.
 
 **Core technologies:**
-- **Zustand (existing) ^4:** Cross-session progression state — follows pattern of `useGameStore`; new `progressionStore` slice keeps persistence concerns separate from game session
-- **`useReducer` / `gameReducer` (existing):** All per-level game logic — pure reducer handles stars, mistakes, combo; do not migrate to Zustand
-- **`localStorage` via `storage.ts` (existing):** Progress persistence — 21 levels × ~20 bytes = ~420 bytes total; synchronous, already working, no migration needed
-- **CSS keyframe animations (existing):** Score floats, star reveals, combo popups — `scoreFloat`, `checkPop`, `glowPulse` all defined in `src/animations/keyframes.ts`
-- **React CSS Modules (existing):** All new UI components — consistent with `ShelfSlot.module.css`, `LevelComplete.module.css` patterns
+- `localStorage` (native): Persistence via `sleevo_progress` key — already active in `src/game/storage.ts`; extend in-place with `bestScore?: number`
+- `Intl.NumberFormat('it-IT')` (native): Italian thousand-separator score formatting — no library needed; hardcode locale, never rely on browser default
+- `useState` / `useRef` (React 19): Hold `isNewRecord` across renders; `useState` for the prop passed to `LevelComplete`, `useRef` as an alternative for values that must not trigger re-renders
+- CSS Module keyframes (Vite built-in): Gold pulse animation for "Nuovo Record!" badge — project standard; two CSS rules, no animation library
 
 ### Expected Features
 
-The feature research confirms this is a genre-conventional casual puzzle game. Players trained by Candy Crush, Sort It 3D, and Two Dots will arrive with precise expectations about what a level-completion ceremony looks like, how unlock gates feel, and why star ratings exist. Failing to meet these expectations reads as "broken," not "intentionally minimal."
+Research confirms three features as table stakes for this milestone. Players of score-based puzzle games (Alto's Adventure, Threes!, 2048, Crossy Road) expect all three, and their absence reads as a broken feature rather than an intentional omission.
 
-**Must have (table stakes):**
-- Floating score feedback ("+10", "+35 GREAT!") after each valid placement — cause→effect clarity; `ScorePopup` exists but is not wired to the drop handler
-- Vinyl progress counter in HUD ("5 / 8") — players must know when the level ends; already in `ProgressBar.tsx` but confirm wiring
-- Level rule persistent display in HUD ("Ordina per: Genere") — players who don't know the rule guess randomly; `RulePill` component needed
-- 1–3 star rating on level complete — primary unit of "how well did I do?"; stars already computed in engine, displayed in `LevelComplete.tsx`, but star formula must be finalized
-- End-of-level screen with stars + score + errors + time — the ceremony moment; `LevelComplete.tsx` exists but currently missing stars + time display
-- Level unlock gating (2 stars to advance) — creates meaningful progression; threshold fix is a one-liner in `storage.ts`
-- Save progress across sessions — `storage.ts` already fully implements this; needs wiring to level select
-- Level select screen showing star ratings and lock state — without it, the replay incentive loop has no entry point; `LevelSelectScreen` is new work
+**Must have (table stakes — this milestone):**
+- `bestScore` persisted in `localStorage` — scores on `LevelSelect` are meaningless if they reset every visit; players returning to retry expect their record to be present
+- Best score shown on each `LevelCell` as "X.XXX pt" — the level-select grid is the de facto scoreboard; seeing only stars but no score feels like missing data for a score-based game
+- "Nuovo Record!" badge on `LevelComplete` when the score is genuinely beaten — absent signal means the player cannot tell they improved; every comparable mobile puzzle game provides this signal
 
-**Should have (differentiators):**
-- Multiple game modes (genre, chronological, customer, blackout, rush, sleeve-match) — Sleevo's primary differentiator; types and engine logic exist, need level data and mode-specific star tuning
-- Customer Request mode — narrative framing makes the game feel like running a real shop; partial implementation exists
-- Rush and Blackout modes — transform the base mechanic into a different cognitive challenge; low code cost, need 15+ base levels first
-- Per-level difficulty curves within modes — e.g. Genre mode with 4 genres → 6 genres → duplicate columns
-- End-of-level replay incentive ("Best: 3 stars" on select screen) — requires save system + level select (both in scope)
+**Should have (add after core is stable — v1.x):**
+- Delta display alongside badge ("+ 340 pt") — makes the improvement concrete and quantified, motivates one more run; defer until core is confirmed working
+- Best score shown on `LevelHintOverlay` before a retry run ("Il tuo record: 1.420 pt") — low-effort context for players replaying to improve
 
 **Defer (v2+):**
-- Sleeve-match mode — requires album cover art data and a new matching algorithm; high content cost
-- Leaderboards and social features — infrastructure complexity without payoff at current player count
-- Full account/cloud sync — localStorage is sufficient; engineering cost not justified for v1
-- Animated cutscenes between levels — high production cost, blocks experienced players
+- Online leaderboard — explicitly out of scope in `PROJECT.md`; requires backend infrastructure
+- Score history over multiple runs — localStorage-only makes this a growing array with no clear value ceiling
+
+**Anti-features confirmed as harmful:**
+- "Nuovo Record!" on first completion — there is nothing to beat; cheapens every subsequent genuine record signal
+- Animated score counter on `LevelSelect` — adds perceived loading delay in a navigation context; save animation budget for `LevelComplete`
+- Sound effect — no audio system exists in Sleevo; unexpected browser audio events are jarring
+- Showing score on locked cells — "0 pt" reads as a bug, not data; render `—` for `bestScore === undefined`, nothing for locked cells
 
 ### Architecture Approach
 
-The architecture is a single-orchestrator pattern: `GameScreen.tsx` owns the `useReducer` session and passes all data down as props. This must remain the canonical model. The dormant Zustand `gameStore` (in `src/store/gameStore.ts`) uses a different `GameState` shape and is effectively dead code — it should be deleted or left dormant. The new `progressionStore` (cross-session, persistent) and `progression.ts` (pure functions) sit alongside the reducer without mixing into it. New display components (`RulePill`, `LevelSelectScreen`) receive data as props; they do not read from `localStorage` directly.
+The architecture is purely additive: four existing files are modified, no new files are created. `storage.ts` is the foundation; `GameScreen.tsx` is the orchestrator; `LevelComplete.tsx` and `LevelSelect/LevelSelect.tsx` are the display layers. The critical architectural constraint is that `LevelComplete` must remain a pure display component — it must never read from storage directly, because by the time it renders, `saveProgress` may have already overwritten the previous best.
 
-**Major components:**
-1. **`GameScreen.tsx` (orchestrator)** — owns `useReducer`, handles drag lifecycle, fires `saveProgress` in `useEffect`, resolves level index for `dispatch`
-2. **`src/game/engine.ts` (gameReducer)** — pure state machine; all gameplay events including star calculation; no side effects, no localStorage access
-3. **`src/game/progression.ts` (new)** — pure functions: `calculateStars()`, `canAdvanceToLevel()`, `getLevelSelectData()`; wraps `storage.ts`; consumed by `GameScreen` and `LevelSelectScreen`
-4. **`src/game/storage.ts` (persistence)** — raw localStorage I/O; fix unlock threshold from `>= 1` to `>= 2`
-5. **`LevelSelectScreen.tsx` (new)** — level grid with locked/unlocked/star state; reads from `progression.ts`; navigates to `GameScreen` with `initialLevelIndex`
-6. **`RulePill.tsx` (new)** — HUD sub-component showing active mode rule; receives `state.level.mode` and `state.level.hint` as props
-7. **`ScorePopup.tsx` (existing, needs wiring)** — floating "+N" after each placement; receives points delta and slot coordinates from `GameScreen`
+**Major components and their changes:**
+1. `src/game/storage.ts` — extend `LevelProgress` with `bestScore?: number`; add optional `score` param to `saveProgress`; independent best-only write condition (`scoreImproved`); merge-write pattern to preserve existing fields
+2. `src/components/GameScreen.tsx` — compute `isNewRecord` at render time (before save effect fires) by reading `getLevelProgress()`; pass as prop to `LevelComplete`; reset to `false` in `handleRestart` and `handleNext`
+3. `src/components/LevelComplete.tsx` — accept `isNewRecord?: boolean` prop; render conditional "Nuovo Record!" badge with gold CSS keyframe pulse; delay badge animation ~0.6s to sequence after star pop-in
+4. `src/components/LevelSelect/LevelSelect.tsx` — read `bestScore` from the existing `loadAllProgress()` call (no additional reads); pass to `LevelCell` as new optional prop; render with `formatScore` utility
+
+**Key data flows:**
+- Write path: `GameScreen` completion `useEffect` reads existing via `getLevelProgress` (before write) → derives `isNewRecord` → calls `saveProgress` with score
+- Record badge path: `isNewRecord` in `GameScreen` state → prop to `LevelComplete` → conditional badge render
+- LevelSelect display path: `loadAllProgress()` at render → `LevelCell.bestScore` prop → `formatScore('it-IT')` output
 
 ### Critical Pitfalls
 
-1. **Flat star thresholds punish hard modes** — the current `engine.ts` formula (`mistakes === 0` = 3 stars) is applied identically to `rush`, `blackout`, and `genre` modes. Hard modes need more forgiving thresholds. Define per-mode or per-level `starThresholds` in the `Level` type before authoring more than 4 levels. Retrofitting is painful after player saves exist.
+The top five pitfalls identified across project-level and milestone-specific research:
 
-2. **Unlock key naming is an off-by-one trap** — `isLevelUnlocked(levelIndex)` constructs the key as `level-${levelIndex}` but level IDs are 1-based. This works today by coincidence. Refactor to look up the previous level's ID directly from the `LEVELS` array (`LEVELS[levelIndex - 1].id`) before adding 20+ levels. One inserted level scrambles all unlock state.
+1. **Schema extension clobbers existing records (M1)** — Naively assigning `data[levelId] = { stars, bestScore }` without merging drops `bestTime` from existing records. Always use spread-merge: `{ ...existing, bestScore: newBest }`. Also: extend the `improved` guard to include an independent `scoreImproved` condition — without it, high-score runs with identical stars and equal-or-slower time are silently discarded and never written to storage.
 
-3. **Dual state systems must not mix** — `useGameStore` (Zustand, dormant) and `useReducer` (active) have incompatible `GameState` shapes. Calling both in the same component creates two sources of truth. Decision: keep System A (reducer) as canonical; delete or ignore `src/store/gameStore.ts`.
+2. **"Nuovo Record!" fires on every first play (M2)** — Using `?? 0` as the fallback for `existingProgress?.bestScore` means any positive score triggers the badge on first play. The correct guard: `existingProgress?.bestScore !== undefined && score > existingProgress.bestScore`. When `bestScore` is absent (first play), `isNewRecord` must be `false`. Test by clearing localStorage and completing a level — the badge must not appear.
 
-4. **Time-elapsed is unresolved in the star spec** — PROJECT.md says stars reflect "errori + velocità" but `timeElapsed` is never consulted by `engine.ts`. Decide whether time factors into stars before implementing. If yes, wire it into the engine at implementation time. If no, remove it from the spec language. Retrofitting time into star calculations after levels ship invalidates all saves.
+3. **`isNewRecord` reads stale pre-save value (M3)** — React effects run after paint. If `isNewRecord` is computed inside the `useEffect` that calls `saveProgress`, or inside `LevelComplete` after the effect has run, the comparison reads the already-overwritten value and is always `false`. Solution: compute `isNewRecord` in `GameScreen` at render time using `getLevelProgress()`, before any effect fires, then pass as a prop.
 
-5. **localStorage schema has no version guard** — renaming level IDs or changing the `LevelProgress` shape silently orphans or misreads player saves. Add a `version` field and migration check before first public release.
+4. **Score formatting diverges across two surfaces (M4)** — Inline formatting at each call site leads to different separators, different zero-state strings, and different `undefined` handling between `LevelSelect` and `LevelComplete`. Create a single `formatScore(score: number | undefined): string` utility before implementing either surface. Hardcode `'it-IT'` — never rely on browser locale. Zero-state renders as `—`, not `0 pt`.
+
+5. **`isLevelUnlocked` off-by-one trap (Pitfall 2, project-level)** — The function constructs unlock-check keys using `levelIndex`, which silently works only because IDs are currently sequential. Adding or renaming any level scrambles the entire unlock chain. Refactor to derive the previous level's ID from the levels array directly (`LEVELS[levelIndex - 1].id`) before expanding beyond ~10 levels.
 
 ---
 
 ## Implications for Roadmap
 
-Based on the combined research, this milestone decomposes into four sequential phases. Each phase is independently shippable and unblocks the next.
+This milestone has tight, well-understood dependencies. The correct phase structure follows the data dependency chain — each phase produces an artifact that the next phase consumes. All phases use standard, well-documented patterns; none require a `/gsd:research-phase` pass.
 
-### Phase 1: Foundation Fixes and Wiring
+### Phase 1: Storage and Utility Foundation
 
-**Rationale:** Three pre-existing issues create integration risk for everything that follows. Fix them first so that Phase 2+ builds on solid ground. All three are small, low-risk, and have clear correct answers from the research.
+**Rationale:** All UI changes depend on `bestScore` existing in the `LevelProgress` shape and a correct `saveProgress` signature. Building UI first against placeholder data produces throwaway code. Creating the `formatScore` utility here prevents formatting divergence between `LevelComplete` and `LevelSelect` later.
 
-**Delivers:**
-- `storage.ts` unlock threshold changed from `>= 1` to `>= 2`
-- `isLevelUnlocked` refactored to derive previous level ID from `LEVELS` array (not string construction)
-- Dormant `src/store/gameStore.ts` deleted or explicitly quarantined with a comment
-- `ScorePopup` wired to `GameScreen` drop handler (uses existing `lastSlotPosition` ref and placement timestamp as `key`)
-- `mistakes` / `invalidDrops` dual-counter resolved to a single authoritative counter
+**Delivers:** Extended `LevelProgress` interface with `bestScore?: number`; extended `saveProgress` with independent score improvement logic and merge-write pattern; `formatScore('it-IT')` shared utility
 
-**Addresses:** Table-stakes feature: floating score feedback. Pitfalls 2, 3, 10.
+**Addresses:** `bestScore` persistence (table stakes #1); score formatting consistency across all surfaces
 
-**Avoids:** Unlock off-by-one breaks at level expansion; mixed state systems causing debugging hell.
+**Avoids:** Schema clobber (M1), formatting divergence (M4), save effect double-write (M5)
 
-**Research flag:** Standard patterns — skip phase-level research. All implementation paths are fully documented in ARCHITECTURE.md with line-level specifics.
+**Research flag:** None — standard TypeScript interface extension with optional field, backward-compatible localStorage JSON, established project patterns.
 
 ---
 
-### Phase 2: Star System and Level Complete Ceremony
+### Phase 2: GameScreen Orchestration
 
-**Rationale:** Stars are the central unit of player progress. The unlock gate, level select display, and replay incentive all depend on stars being correct and meaningful. Must be implemented before the level select screen, not after.
+**Rationale:** `GameScreen` is the only component with access to both `state.score` (current run) and `getLevelProgress()` (stored best). The `isNewRecord` derivation must live here, computed at render time before the save effect fires. This phase extends the `saveProgress` call and produces the `isNewRecord` prop that Phase 3 consumes. Nothing in Phase 3 or 4 can be correctly implemented until Phase 2 establishes this contract.
 
-**Delivers:**
-- Explicit decision on whether `timeElapsed` factors into stars (recommend: yes, as "par time" baseline per level)
-- `calculateStars()` extracted to a pure function in `rules.ts` with per-mode thresholds
-- `Level` type extended with optional `starThresholds` and `parTime` fields
-- `LevelComplete.tsx` updated to display stars + time + score + errors with staggered star reveal animation (`checkPop` keyframe, 200ms delay per star)
-- `saveProgress` call verified in `GameScreen` `useEffect [state.status]`
-- `localStorage` schema versioned with `version: 1` guard
+**Delivers:** `isNewRecord` derived at render time (pre-save); `saveProgress` call extended with `state.score`; `isNewRecord` reset to `false` in `handleRestart` and `handleNext`; dependency array intentionally kept as `[state.status, state.stars]` with explanatory comment
 
-**Addresses:** Table-stakes feature: end-of-level ceremony. Table-stakes: save progress. Pitfalls 1, 7, 8.
+**Addresses:** New-record comparison logic (dependency chain prerequisite for "Nuovo Record!" badge)
 
-**Research flag:** Needs one design decision (time in stars or not) before coding starts — but this is a 5-minute team call, not a research phase. No external research needed.
+**Avoids:** Stale pre-save read (M3), first-play false positive (M2), double-write from expanded dependency array (M5)
+
+**Research flag:** None — patterns are fully specified in ARCHITECTURE.md with code examples.
 
 ---
 
-### Phase 3: Level Select Screen and Progression Navigation
+### Phase 3: LevelComplete Record Badge
 
-**Rationale:** Stars have no replay value without a level select screen to surface them. The progression store and `progression.ts` module also unblock the HUD rule display and the "last unlocked level on app start" behaviour. Build after stars are reliable.
+**Rationale:** Depends on `isNewRecord` prop from Phase 2. `LevelComplete` is a pure display component — it renders only what it is told. The badge is one conditional element with a CSS keyframe animation timed to sequence after the existing star pop-in.
 
-**Delivers:**
-- `src/game/progression.ts` module with `canAdvanceToLevel()`, `getLevelSelectData()`, `getBestStats()`
-- `progressionStore` Zustand slice providing reactive access to `loadAllProgress()` for `LevelSelectScreen`
-- `LevelSelectScreen.tsx` — scrollable grid of level cards showing lock state, best star count, level number and mode icon
-- `App.tsx` screen routing via `screen: 'game' | 'level-select'` local state (no router library)
-- `GameScreen` on-mount reads `getLastPlayableIndex()` to resume at the player's current level
-- `GameScreen` "Next Level" button gates on `canAdvanceToLevel(nextIndex)`
-- `RulePill.tsx` sub-component in HUD showing active mode rule ("Ordina per: Genere")
+**Delivers:** "Nuovo Record!" badge visible when `isNewRecord === true`; gold pulse animation (CSS keyframe, ~0.6s delay after card entrance); no dismiss required; does not replace or compete with existing confetti
 
-**Addresses:** Table-stakes: level select, unlock gating, progress counter in HUD. Pitfall 11 (no replay incentive).
+**Addresses:** Personal record signal on `LevelComplete` (table stakes #3)
 
-**Research flag:** Standard patterns — full implementation blueprint in ARCHITECTURE.md including data flow diagrams, component boundaries, and integration points. Skip research phase.
+**Avoids:** Badge on first play (M2), diluting existing completion celebration (anti-feature from FEATURES.md), looping animation (annoying pattern confirmed by competitive analysis)
+
+**Research flag:** None — CSS Module keyframe animation is the established project pattern; conditional prop rendering is standard React.
 
 ---
 
-### Phase 4: Level Authoring (20+ Levels) and Mode Validation
+### Phase 4: LevelSelect Score Display
 
-**Rationale:** Level content expansion is only safe after the progression and star infrastructure is correct. Adding 20 levels on top of a broken unlock chain or flat star formula requires rewriting level data. The mode audit (Pitfall 3) must gate this phase.
+**Rationale:** Depends only on Phase 1 (storage shape). Can be developed in parallel with Phases 2–3 once Phase 1 is complete. Listed last here for simplicity; in practice, Phases 3 and 4 may proceed concurrently.
 
-**Delivers:**
-- Audit of all 7 `LevelMode` implementations end-to-end (blackout timer moved to engine `TICK` action; customer double-bonus fixed; `blockedSlots` level validator added)
-- Level data in `levels.ts` expanded from 2 to 21+ levels covering all modes
-- Difficulty curve scored and plotted (vinyl count + active constraints) to ensure monotonic ramp with relief levels
-- `comboDecayMs` made per-level configurable (longer for `blackout`/`chronological`, tighter for `rush`)
-- Mode-by-mode "contract" documentation for `blackout`, `customer`, `rush`, `sleeve-match` before levels using each mode are authored
-- `blackout` mode: pre-timer memorization overlay added; optional hint strip added (1-star penalty)
-- `customer` mode: scoring path audited for double-bonus; `customerServed` reset on `LOAD_LEVEL`
+**Delivers:** "X.XXX pt" score displayed below stars in each `LevelCell` via `formatScore` utility; `—` shown for unplayed levels (never `0 pt`); score hidden on locked cells; consistent `it-IT` locale via shared utility
 
-**Addresses:** Differentiator features: all mode variants. Pitfalls 3, 4, 5, 6, 9, 12.
+**Addresses:** Best score display on `LevelCell` (table stakes #2)
 
-**Research flag:** Mode implementations (blackout timer in engine, rush progression) may benefit from a focused research-phase before tasking. The mode-contract approach (one-page spec per mode before level authoring) is the key mitigation.
+**Avoids:** Formatting divergence (M4), `0 pt` on unplayed levels (UX pitfall), `0 pt` on locked cells (anti-feature), repeated `JSON.parse` per cell (existing `loadAllProgress()` call covers all cells in one read)
+
+**Research flag:** None — `loadAllProgress()` pattern is already established; `LevelCell` extension is a single optional prop and one conditional render.
 
 ---
 
 ### Phase Ordering Rationale
 
-- Phase 1 before Phase 2: the dual-counter and unlock key bugs will corrupt star and progression data if not fixed first.
-- Phase 2 before Phase 3: the level select screen renders stars; if the star formula changes after the level select ships, it creates a confusing player experience.
-- Phase 3 before Phase 4: unlocking 20 levels without a level select screen means players have no way to replay them, defeating the purpose of authoring them.
-- Phase 4 last: mode content expansion is safe only once the infrastructure beneath it is validated.
+- **Storage must be first.** Both `LevelComplete` badge and `LevelSelect` score display depend on `bestScore` being in the data shape. Developing UI against stubs means re-integration work.
+- **GameScreen before LevelComplete.** `LevelComplete` is a dumb component; it needs the prop contract established by `GameScreen`'s Phase 2 work before its own `isNewRecord` prop can be finalized.
+- **LevelSelect is independent of LevelComplete.** After Phase 1, `LevelSelect` work can proceed in parallel with Phases 2–3. The two display phases share only the `formatScore` utility.
+- **Single `formatScore` utility created in Phase 1.** This is the only cross-cutting dependency between the display phases. Creating it first eliminates the main source of divergence.
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 4 (Mode Validation):** The `blackout` and `rush` timer architectures have component-level `useEffect` timeouts that need to move into the engine. The correct `TICK` action pattern is documented at a high level but the detailed refactor path warrants a focused investigation of the current `GameScreen` timer setup before tasking.
+All four phases use standard patterns — no phase needs `/gsd:research-phase`:
 
-Phases with standard patterns (skip research phase):
-- **Phase 1 (Foundation Fixes):** All changes are one-line or already have exact code samples in ARCHITECTURE.md.
-- **Phase 2 (Stars):** Implementation blueprint is complete. Decision about time-in-stars is a design call, not a research question.
-- **Phase 3 (Level Select):** Full architecture documented including component tree, data flow, and integration points.
+- **Phase 1 (Storage + Utility):** Textbook TypeScript optional interface extension. Backward-compatible `localStorage` JSON. `Intl.NumberFormat` is a documented ECMAScript API. No ambiguity.
+- **Phase 2 (GameScreen):** Read-before-write pattern in a `useEffect` is fully specified in ARCHITECTURE.md with code samples. Pre-render computation of `isNewRecord` is a well-understood React pattern.
+- **Phase 3 (LevelComplete):** CSS Module keyframe is already in heavy use throughout the project. Conditional prop rendering is standard React.
+- **Phase 4 (LevelSelect):** Extending an existing synchronous render-time read. One new prop, one conditional render expression.
 
 ---
 
@@ -186,47 +165,54 @@ Phases with standard patterns (skip research phase):
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Direct codebase audit confirmed all existing capabilities; no new packages needed; all package.json dependencies verified |
-| Features | MEDIUM | Genre conventions drawn from training-data knowledge of comparable games (Candy Crush, Sort It 3D, Two Dots); no live web search. Core table-stakes claims (star ratings, level select, score feedback) are HIGH — universal genre conventions. Mode ordering and gating choices are MEDIUM. |
-| Architecture | HIGH | Based on direct analysis of engine.ts, storage.ts, GameScreen.tsx, rules.ts, types.ts. Component boundaries, data flow diagrams, and integration points are grounded in actual code, not inference. |
-| Pitfalls | HIGH | All 12 pitfalls cite specific file paths and line-level evidence from the codebase. No speculative pitfalls. |
+| Stack | HIGH | Based entirely on direct codebase inspection of `storage.ts`, `GameScreen.tsx`, `LevelComplete.tsx`, `LevelSelect.tsx`, `package.json`, `types.ts` — all integration points confirmed by reading actual source files |
+| Features | HIGH | Patterns from well-documented pre-2024 mobile/browser games (Alto's Adventure, Threes!, 2048, Crossy Road, Cut the Rope); codebase audit confirmed existing prop shapes and animation timing |
+| Architecture | HIGH | Every component boundary verified by reading actual source files; data flow diagrams in ARCHITECTURE.md grounded in code, not inference; anti-patterns identified from direct code evidence |
+| Pitfalls | HIGH | All milestone pitfalls cite specific file paths, line numbers, and actual code snippets from the codebase; `JSON.stringify` dropping `undefined` and React effect timing confirmed against MDN |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Time-in-stars decision:** PROJECT.md says "errori + velocità" but the engine ignores speed. This is a product design decision that must be made before Phase 2 starts. Recommendation: use a per-level `parTime` field (default `totalVinyls * 8` seconds); 3 stars requires under 1.5x par time with 0 mistakes. Exact thresholds need playtesting.
+The following items were identified but are not blockers to starting Phase 1:
 
-- **Sleeve-match mode readiness:** `rules.ts` acknowledges sleeve-match validation is handled elsewhere. Before any sleeve-match level is authored (deferred to v2+), a complete audit of the validation path is needed.
+- **Time-elapsed in star formula (Pitfall 8, project-level):** `PROJECT.md` states stars should factor in "velocità" (speed), but `timeElapsed` is never consulted by `engine.ts`. This milestone does not touch the star formula, but the ambiguity must be resolved before the next star-related milestone. Decision needed: is time a star factor or only a personal-best display metric? If time becomes a star factor after levels ship, all existing saves are invalidated.
 
-- **Rush mode completion condition:** The current engine returns `status: 'completed'` with `stars: 1` when `rushTimeLeft` reaches 0. Whether partially-completed rush levels should show a distinct "time's up" screen vs. the standard `LevelComplete` overlay is an unresolved UX question. Address during Phase 4 mode audit.
+- **`isLevelUnlocked` key construction (Pitfall 2, project-level):** The unlock function's index-based key construction is correct only for sequential level IDs. This milestone does not modify unlock logic, but the refactor should be scheduled before level count exceeds ~10. One-line fix now; potentially high-cost repair after players have saves.
+
+- **Delta display ("+ 340 pt") scope:** FEATURES.md marks this P2. Confirm with stakeholder whether it belongs in this milestone or the next. Low implementation cost; the only decision is scope boundary.
 
 ---
 
 ## Sources
 
-### Primary (HIGH confidence)
-- `src/game/engine.ts` — gameReducer, star calculation, PLACE_VINYL action
-- `src/game/storage.ts` — persistence implementation, unlock logic
-- `src/game/levels.ts` — LEVELS array (21 levels confirmed)
-- `src/game/types.ts` — GameState, LevelMode, ComboState type definitions
-- `src/game/rules.ts` — isValidPlacement, COMBO_TIERS
-- `src/components/GameScreen.tsx` — orchestrator, drag lifecycle, timer, ScorePopup integration gap
-- `src/components/LevelComplete.tsx` — end-of-level screen, star display, confetti
-- `src/components/HUD/HUD.tsx` — live stats display
-- `src/components/ScorePopup/ScorePopup.tsx` — floating score delta (implemented, not wired)
-- `src/animations/keyframes.ts` — scoreFloat, checkPop, glowPulse, cardPickup
-- `.planning/PROJECT.md` — stated requirements and design decisions
-- `GAME-LOGIC.md` — authoritative mechanics description
-- `package.json` — installed dependencies (no router, no animation library)
+### Primary (HIGH confidence — direct codebase inspection)
 
-### Secondary (MEDIUM confidence)
-- Genre knowledge: Candy Crush Saga, Monument Valley, Sort It 3D, Ball Sort Puzzle, Threes!, Two Dots, 1010! (training data, August 2025 cutoff) — feature conventions, anti-features, mode introduction ordering
+- `src/game/storage.ts` — `LevelProgress` interface, `saveProgress` logic, `PROGRESS_KEY`, `getLevelProgress`, `isLevelUnlocked`
+- `src/components/GameScreen.tsx` (lines 186–192) — `saveProgress` call site, completion `useEffect` structure, dependency array and lint suppression
+- `src/components/LevelComplete.tsx` — existing `score` prop, stats layout, animation timings, confetti pattern
+- `src/components/LevelSelect/LevelSelect.tsx` — `LevelCell` props and layout, `loadAllProgress` call pattern
+- `src/App.tsx` — screen routing; confirms App has no score awareness
+- `src/game/types.ts` — `GameState.score` field, `LevelProgress` structure
+- `src/game/engine.ts` — star formula, `improved` guard, `mistakes` vs `invalidDrops` counters
+- `package.json` — `zustand` confirmed absent; `styled-components` v6.3.9 present but unused in game components
+- `.planning/PROJECT.md` — online leaderboard confirmed out of scope
 
-### Tertiary (LOW confidence)
-- Star threshold exact values (0 mistakes = 3 stars, parTime multipliers) — derived from PROJECT.md + genre conventions; requires playtesting to validate
+### Primary (HIGH confidence — established browser/ECMAScript APIs)
+
+- `Intl.NumberFormat('it-IT')` / `Number.prototype.toLocaleString` — MDN: standard ECMAScript API; `1420` → `"1.420"` in `it-IT` locale; hardcoded locale avoids browser-default divergence
+- `JSON.stringify` drops `undefined` values silently — MDN: confirmed serialization behavior; source of M1 pitfall
+- React `useEffect` runs after paint — React documentation: effects run after the browser has painted; source of M3 pitfall
+
+### Secondary (HIGH confidence — domain UX patterns, pre-2024 releases within training window)
+
+- Alto's Adventure (Snowman, 2014) — personal best display, "New best!" banner, strict `>` comparison, no badge on first run
+- Threes! (Sirvo, 2014) — score-based new-record pattern, strict `>`, badge on game-over card
+- 2048 (Cirulli, 2014) — persistent best score in browser `localStorage` across sessions
+- Crossy Road (Hipster Whale, 2014) — record fires only on genuine beat, not on ties or first play
+- Cut the Rope (ZeptoLab, 2010) — star ceremony timing as additive layer, not replacement of completion screen; staggered information reveal
 
 ---
 
-*Research completed: 2026-02-20*
+*Research completed: 2026-02-25*
 *Ready for roadmap: yes*

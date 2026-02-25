@@ -1,380 +1,368 @@
-# Architecture Patterns
+# Architecture Research
 
-**Domain:** Level progression system for React + Three.js vinyl sorting game
-**Researched:** 2026-02-20
-**Confidence:** HIGH — Based on direct codebase analysis
+**Domain:** Best score persistence + personal record UI in existing React browser game
+**Researched:** 2026-02-25
+**Confidence:** HIGH — based entirely on direct codebase inspection
+
+## Standard Architecture
+
+### System Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Screen Router (App.tsx)                  │
+│   useState: 'levelSelect' | 'playing'                        │
+├──────────────────────┬──────────────────────────────────────┤
+│   LevelSelect.tsx    │         GameScreen.tsx               │
+│   (read-only)        │   useReducer → GameState             │
+│   loadAllProgress()  │   saveProgress() on complete         │
+│   → bestStars        │   → bestStars + bestScore (NEW)      │
+│   → bestScore (NEW)  │                                      │
+│   LevelCell renders  │   LevelComplete.tsx                  │
+│   score per cell     │   receives isNewRecord prop (NEW)    │
+│   (NEW: "1.420 pt")  │   shows "Nuovo Record!" badge (NEW)  │
+├──────────────────────┴──────────────────────────────────────┤
+│                    src/game/storage.ts                       │
+│   LevelProgress: { stars, bestTime?, bestScore? (NEW) }     │
+│   saveProgress(id, stars, time?, score?) — best-only write  │
+│   loadAllProgress() → Record<string, LevelProgress>         │
+│   getLevelProgress(id) → LevelProgress | null               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Component Responsibilities
+
+| Component | Responsibility | Current State |
+|-----------|----------------|---------------|
+| `src/game/storage.ts` | Persist progress to localStorage; best-only semantics | Saves `stars` + `bestTime`. Must add `bestScore`. |
+| `GameScreen.tsx` | Orchestrate game loop; save progress on complete; pass data to LevelComplete | Calls `saveProgress(id, stars, time)`. Must add score arg and `isNewRecord` derivation. |
+| `LevelComplete.tsx` | Display end-of-level stats; show record badge | Renders score. Must accept `isNewRecord` prop and render "Nuovo Record!" badge. |
+| `LevelSelect.tsx / LevelCell` | Render per-level grid cells with progress data | Reads `bestStars`. Must also read and render `bestScore`. |
+| `App.tsx` | Screen routing only; passes `onReturnToSelect` callback | No changes needed. |
 
 ---
 
-## Existing Architecture (Baseline)
+## Recommended Project Structure
 
-The codebase has two partially-overlapping state management systems that must be reconciled before adding progression features:
-
-### System A: `useReducer` in GameScreen (ACTIVE)
-
-`src/components/GameScreen.tsx` drives all live gameplay via `useReducer(gameReducer, ...)` from `src/game/engine.ts`. This is the authoritative runtime system.
+No new files or folders required. All changes are in-place modifications to existing files:
 
 ```
-GameScreen
-  └── useReducer(gameReducer, createGameState(LEVELS[0], 0))
-        ├── game/engine.ts      — pure reducer, all game logic
-        ├── game/rules.ts       — isValidPlacement, COMBO_TIERS
-        ├── game/levels.ts      — 20+ Level definitions (LEVELS array)
-        ├── game/storage.ts     — localStorage read/write (saveProgress, isLevelUnlocked)
-        └── game/types.ts       — GameState, ComboState, Level, LevelMode
+src/
+├── game/
+│   └── storage.ts          MODIFY — add bestScore to LevelProgress, extend saveProgress
+├── components/
+│   ├── GameScreen.tsx       MODIFY — derive isNewRecord, pass to LevelComplete, save score
+│   ├── LevelComplete.tsx    MODIFY — add isNewRecord prop, render "Nuovo Record!" badge
+│   └── LevelSelect/
+│       └── LevelSelect.tsx  MODIFY — pass bestScore into LevelCell, render score line
 ```
-
-### System B: `useGameStore` Zustand (DORMANT)
-
-`src/store/gameStore.ts` is a Zustand store (`useGameStore`) with a different `GameState` shape (`phase`, `slots`, `vinyls`). It exists but is NOT wired to GameScreen. It is effectively dead code that pre-dates the current reducer architecture.
-
-**Decision required before Phase 4 work:** Delete System B or replace System A with it. Based on codebase state, System A (reducer) should be kept as the canonical approach. The Zustand store (`src/store/gameStore.ts` + `src/types/game.ts`) can be removed or kept only as a typed facade if needed for devtools.
 
 ---
 
-## Recommended Architecture
+## Architectural Patterns
 
-### Diagram
+### Pattern 1: Extend Storage Shape In-Place
 
+**What:** Add `bestScore?: number` to the existing `LevelProgress` interface. Extend `saveProgress` with an optional `score` parameter. Best-only write logic: `score > existing.bestScore`.
+
+**When to use:** Adding a new scalar metric with identical semantics to existing `stars` or `bestTime` fields.
+
+**Trade-offs:** Zero migration cost — old data in localStorage is valid (missing `bestScore` treated as `undefined`/0). No breaking changes to callers that do not pass score.
+
+**Example:**
+```typescript
+// src/game/storage.ts
+
+export interface LevelProgress {
+  stars: number;
+  bestTime?: number;
+  bestScore?: number;   // NEW
+}
+
+export function saveProgress(
+  levelId: string,
+  stars: number,
+  timeSeconds?: number,
+  score?: number        // NEW optional param
+): void {
+  try {
+    const data = loadAllProgress();
+    const existing = data[levelId];
+    const starsImproved = !existing || stars > existing.stars;
+    const timeImproved = !starsImproved &&
+      stars === existing?.stars &&
+      timeSeconds !== undefined &&
+      (existing.bestTime === undefined || timeSeconds < existing.bestTime);
+    const scoreImproved = score !== undefined &&
+      (existing?.bestScore === undefined || score > existing.bestScore);
+
+    if (starsImproved || timeImproved || scoreImproved) {
+      data[levelId] = {
+        stars: starsImproved ? stars : (existing?.stars ?? stars),
+        bestTime: starsImproved || timeImproved ? timeSeconds : existing?.bestTime,
+        bestScore: scoreImproved ? score : existing?.bestScore,  // NEW
+      };
+      localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
+    }
+  } catch {
+    // localStorage might be unavailable
+  }
+}
 ```
-                         ┌─────────────────────────────────────┐
-                         │           GameScreen.tsx             │
-                         │   useReducer(gameReducer, initial)   │
-                         └───────────────┬─────────────────────┘
-                                         │ state + dispatch
-              ┌──────────────────────────┼──────────────────────────┐
-              ▼                          ▼                           ▼
-   ┌────────────────────┐   ┌───────────────────────┐   ┌──────────────────────┐
-   │  HUD Layer         │   │   Play Surface         │   │  Overlay Layer        │
-   │                    │   │                        │   │                       │
-   │  HUD.tsx           │   │  Shelf.tsx             │   │  LevelComplete.tsx    │
-   │  ProgressBar.tsx   │   │  ShelfSlot.tsx         │   │  Tutorial.tsx         │
-   │  ComboFloat.tsx    │   │  VinylCrate (carousel) │   │  LevelSelectScreen*   │
-   │  InstructionPill   │   │  Shelf3DCanvas.tsx     │   │  ★ StarRating display │
-   │  ComboPopup.tsx    │   │                        │   │                       │
-   │  ScorePopup.tsx    │   │  (Three.js handles     │   │                       │
-   │  ★ RulePill*       │   │   own render loop)     │   │                       │
-   └────────────────────┘   └───────────────────────┘   └──────────────────────┘
 
-* = New components to add
-
-                         ┌─────────────────────────────────────┐
-                         │          Game Logic Layer            │
-                         │                                      │
-                         │  engine.ts     — gameReducer         │
-                         │  rules.ts      — isValidPlacement    │
-                         │  levels.ts     — LEVELS array        │
-                         │  storage.ts    — localStorage        │
-                         │  ★ progression.ts*                   │
-                         └─────────────────────────────────────┘
-```
-
-`★` = new files/components to add in this milestone.
+**Important:** `bestScore` uses independent best-only semantics — it improves whenever the new score exceeds the stored value, regardless of whether stars also improved. A player can earn 3 stars on run 1 and beat their score without beating their star count on run 2.
 
 ---
 
-## Component Boundaries
+### Pattern 2: Derive isNewRecord in GameScreen Before Saving
 
-| Component | Responsibility | Reads From | Writes To |
-|-----------|---------------|------------|-----------|
-| `GameScreen.tsx` | Orchestrator. Owns `useReducer`. Mounts child components. Handles drag lifecycle. | `LEVELS`, `storage.ts` | `dispatch(action)`, `saveProgress()` |
-| `engine.ts` (gameReducer) | Pure state machine. All game logic. | `GameAction`, `Level` | Returns new `GameState` |
-| `rules.ts` | Validation. `isValidPlacement()` per mode. Combo tiers. | `Level`, placement args | `PlacementResult` |
-| `levels.ts` | Static level data. `LEVELS` export. | Nothing | Consumed by GameScreen |
-| `storage.ts` | Persistence layer. `saveProgress()`, `loadAllProgress()`, `isLevelUnlocked()`. | `localStorage` | `localStorage` |
-| `★ progression.ts` | Pure functions: `calculateStars()`, `getUnlockedLevels()`, `canAdvanceToLevel()`. Wraps/extends storage.ts logic. | `storage.ts` output | Consumed by GameScreen, LevelSelectScreen |
-| `HUD.tsx` | Live game stats display. Score, moves, time. | `state.score`, `state.rushTimeLeft`, `state.moves` | Nothing (display only) |
-| `ProgressBar.tsx` | Vinyl placement counter dots. | `state.unplacedVinylIds.length`, `state.level.vinyls.length` | Nothing |
-| `ComboFloat.tsx` | Active combo multiplier + decay bar. | `state.combo` | Nothing |
-| `ComboPopup.tsx` | Milestone burst (5x, 8x, 10x). | `state.combo.streak`, screen position | Nothing |
-| `ScorePopup.tsx` | Floating "+N" score delta after placement. | Points delta, screen coords | Nothing |
-| `LevelComplete.tsx` | End-of-level overlay. Stars, stats, next/replay. | `state.stars`, `state.mistakes`, `timeElapsed` | `onNextLevel()`, `onReplay()` callbacks |
-| `★ LevelSelectScreen.tsx` | Level map/grid. Shows locked/unlocked state + best stars. | `progression.ts`, `LEVELS` | Navigates to selected level |
-| `★ RulePill.tsx` | Current level mode rule banner in HUD. | `state.level.mode`, `state.level.hint` | Nothing |
-| `Tutorial.tsx` | Onboarding overlay. | `state.levelIndex`, `localStorage` | `localStorage` (marks seen) |
-| `CustomerPanel.tsx` | Customer timer + request display. | `state.customerTimeLeft`, `state.level.customerRequest` | Nothing |
+**What:** Before calling `saveProgress`, read the current stored `bestScore` via `getLevelProgress`. Compare `state.score > (existing?.bestScore ?? 0)`. Store the result in a local `useState` boolean. Pass the boolean as a prop to `LevelComplete`.
+
+**When to use:** Any "you beat your record" UI that requires a before/after comparison. The comparison must happen before the write, because after the write the stored value equals the current run and the comparison would always return false.
+
+**Where the comparison lives: `GameScreen.tsx` — inside the completion `useEffect`.**
+
+This is the correct location because:
+- GameScreen already owns the `saveProgress` call (line 189 in the existing file)
+- GameScreen has access to both `state.score` (current run) and can call `getLevelProgress(state.level.id)` (stored best)
+- LevelComplete is a pure display component — it must not read storage directly
+- App.tsx has no score awareness and must not gain it
+
+**Example:**
+```typescript
+// In GameScreen.tsx — replace existing completion useEffect
+
+const [isNewRecord, setIsNewRecord] = useState(false);
+
+useEffect(() => {
+  if (state.status === 'completed') {
+    const existing = getLevelProgress(state.level.id);
+    const newRecord = state.score > (existing?.bestScore ?? 0);
+    setIsNewRecord(newRecord);                                    // set BEFORE save
+    saveProgress(state.level.id, state.stars, timeElapsed, state.score);
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [state.status, state.stars]);
+```
+
+Then pass to LevelComplete:
+```tsx
+<LevelComplete
+  ...
+  isNewRecord={isNewRecord}   // NEW prop
+/>
+```
+
+Reset `isNewRecord` to `false` in both `handleRestart` and `handleNext` callbacks to prevent the badge from persisting into the next run.
+
+---
+
+### Pattern 3: Read bestScore in LevelSelect at Render Time
+
+**What:** `loadAllProgress()` is already called synchronously in `LevelSelect` at render time. Extract `bestScore` from the progress record alongside `bestStars`. Pass it to `LevelCell` as a new optional prop.
+
+**When to use:** LevelSelect already uses the synchronous read pattern — extend it to include the new field. No additional reads are needed.
+
+**Trade-offs:** Zero additional localStorage reads — same `loadAllProgress()` call already returns the extended shape once `storage.ts` is updated. `LevelCell` gets one new optional prop.
+
+**Example:**
+```typescript
+// LevelSelect.tsx
+
+interface CellProps {
+  levelNumber: number;
+  bestStars: number;
+  bestScore?: number;   // NEW
+  unlocked: boolean;
+  focused: boolean;
+  onClick: () => void;
+  cellRef?: React.Ref<HTMLButtonElement>;
+}
+
+function LevelCell({ levelNumber, bestStars, bestScore, unlocked, focused, onClick, cellRef }: CellProps) {
+  return (
+    <button ...>
+      <span className={styles.number}>{levelNumber}</span>
+      <div className={styles.stars}>...</div>
+      {bestScore !== undefined && bestScore > 0 && (
+        <span className={styles.bestScore}>
+          {bestScore.toLocaleString('it-IT')} pt
+        </span>
+      )}
+      {!unlocked && <span className={styles.lock}>🔒</span>}
+    </button>
+  );
+}
+
+// In LevelSelect render:
+const bestScore = p?.bestScore;
+return (
+  <LevelCell
+    ...
+    bestScore={bestScore}
+  />
+);
+```
+
+The Italian locale `it-IT` formats `1420` as `"1.420"` — matching the "1.420 pt" spec.
 
 ---
 
 ## Data Flow
 
-### Score Feedback (per placement)
+### bestScore Write Flow (new)
 
 ```
-1. User drops vinyl onto slot
-   │
-   ▼
-2. GameScreen handleDrop()
-   → dispatch({ type: 'PLACE_VINYL', vinylId, row, col })
-   │
-   ▼
-3. gameReducer (engine.ts)
-   → isValidPlacement() returns { valid: true/false }
-   → If valid: compute earnedScore = BASE_SCORE * combo.multiplier + rareBonus
-   → Update state.score, state.combo, state.placedVinyls
-   → If complete: calculate state.stars (0 mistakes = 3, ≤2 = 2, else 1)
-   │
-   ▼
-4. GameScreen receives new state
-   → lastSlotPosition ref updated (DOM rect of slot)
-   → Sets lastSlotPosition state → triggers ScorePopup render
-   → New score flows to HUD via props
-   → New combo flows to ComboFloat via props
-   → PlacedCount change flows to ProgressBar via props
+User completes level
+    |
+    v
+GameScreen — state.status === 'completed' fires useEffect
+    |
+    v
+getLevelProgress(state.level.id)  <-- read BEFORE write
+    |
+    v
+Compare: state.score > (existing?.bestScore ?? 0)
+    |
+    v
+setIsNewRecord(true/false)  <-- local useState, triggers re-render
+    |
+    v
+saveProgress(id, stars, timeElapsed, state.score)  <-- write
+    |
+    v
+LevelComplete receives isNewRecord=true  -->  renders "Nuovo Record!" badge
 ```
 
-### Level Completion + Persistence
+### bestScore Read Flow (LevelSelect)
 
 ```
-1. gameReducer returns state.status = 'completed'
-   │
-   ▼
-2. GameScreen useEffect [state.status]
-   → saveProgress(state.level.id, state.stars, timeElapsed)
-      → reads existing best from localStorage
-      → writes only if improved (more stars, or same stars + faster time)
-   │
-   ▼
-3. LevelComplete overlay mounts (conditional render on status === 'completed')
-   → displays state.stars, state.mistakes, state.hintsUsed, timeElapsed
-   │
-   ▼
-4. User clicks "Livello successivo"
-   → GameScreen onNextLevel()
-   → Checks isLevelUnlocked(nextIndex) via progression.ts
-   → dispatch({ type: 'NEXT_LEVEL', level: LEVELS[nextIndex], levelIndex: nextIndex })
-   → LevelComplete unmounts, gameplay resumes
+User returns to level select (or first load)
+    |
+    v
+LevelSelect re-mounts, render executes synchronously
+    |
+    v
+loadAllProgress()  <-- single synchronous localStorage read
+    |
+    v
+progress[level.id].bestScore extracted per cell
+    |
+    v
+LevelCell receives bestScore prop  -->  renders "1.420 pt" below stars
 ```
 
-### Level Unlock Check
+### Key Data Flows
 
-```
-progression.ts::canAdvanceToLevel(targetIndex)
-  → loadAllProgress() from localStorage
-  → Check: LEVELS[targetIndex - 1] has stars >= 2 (per PROJECT.md requirement)
-  → Returns boolean
-
-Called from:
-  - LevelSelectScreen: marks slots as locked/unlocked
-  - GameScreen onNextLevel: prevents advancing if not enough stars
-    (though completing a level always grants ≥1 star, so unlock threshold is 2)
-```
-
-### Stars Calculation (engine.ts, in PLACE_VINYL when isComplete)
-
-```
-Current logic (in engine.ts):
-  mistakes === 0 && hintsUsed === 0  → 3 stars
-  mistakes <= 2  || hintsUsed <= 1   → 2 stars
-  else                               → 1 star
-
-Note: PROJECT.md says "2 stelle = sblocca il prossimo livello"
-Note: Star logic is already in engine.ts PLACE_VINYL case.
-      The `progression.ts` wrapper does not recalculate stars — it reads
-      the stars value already computed and persisted.
-```
+1. **Write path:** `GameScreen completion useEffect` reads existing via `getLevelProgress` (before write) → derives `isNewRecord` → calls `saveProgress` (write)
+2. **Record badge path:** `isNewRecord` boolean in `GameScreen` local state → prop to `LevelComplete` → conditional render of badge
+3. **LevelSelect display path:** `loadAllProgress()` at render → `LevelCell.bestScore` prop → `toLocaleString('it-IT')` formatted output
 
 ---
 
-## Where to Add the Level Unlock / Persistence Layer
+## Integration Points
 
-### What Already Exists
+### Modified Files
 
-`src/game/storage.ts` is already implemented and correct:
-- `saveProgress(levelId, stars, timeSeconds)` — idempotent, only saves if improved
-- `loadAllProgress()` — returns `Record<string, LevelProgress>` from localStorage
-- `getLevelProgress(levelId)` — single-level lookup
-- `isLevelUnlocked(levelIndex)` — checks prev level has `stars >= 1`
+| File | Change Type | What Changes |
+|------|-------------|--------------|
+| `src/game/storage.ts` | Modify | Add `bestScore?: number` to `LevelProgress`; add optional `score` param to `saveProgress`; independent best-only write logic for score |
+| `src/components/GameScreen.tsx` | Modify | Add `isNewRecord` useState; read existing bestScore before save; pass `isNewRecord` to LevelComplete; reset in `handleRestart` and `handleNext` |
+| `src/components/LevelComplete.tsx` | Modify | Add `isNewRecord?: boolean` prop to `Props` interface; render "Nuovo Record!" badge when true |
+| `src/components/LevelSelect/LevelSelect.tsx` | Modify | Add `bestScore?: number` to `CellProps`; extract from progress record; render with `it-IT` locale formatting |
 
-**The unlock threshold in storage.ts is currently `>= 1` but PROJECT.md requires `>= 2`.** This is a one-line fix.
+### New Files
 
-### What Needs to Be Added
+None. All changes are additive modifications to existing files.
 
-**`src/game/progression.ts`** — a thin module that adds:
+### Internal Boundaries
 
-```typescript
-// Returns list of {level, stars, unlocked, bestTime} for the level select screen
-export function getLevelSelectData(): LevelSelectEntry[]
-
-// True if player has >= 2 stars on previous level
-export function canAdvanceToLevel(index: number): boolean
-
-// Best completion stats for display
-export function getBestStats(levelId: string): { stars: number; bestTime?: number } | null
-```
-
-This keeps `storage.ts` as the raw I/O layer and `progression.ts` as the domain logic layer.
-
-### Integration Points in GameScreen.tsx
-
-```typescript
-// 1. On mount: determine starting level index
-const startingIndex = getLastUnlockedLevelIndex(); // from progression.ts
-
-// 2. On NEXT_LEVEL button press:
-const nextIndex = state.levelIndex + 1;
-if (nextIndex < LEVELS.length && canAdvanceToLevel(nextIndex)) {
-  dispatch({ type: 'NEXT_LEVEL', level: LEVELS[nextIndex], levelIndex: nextIndex });
-}
-
-// 3. On level complete (useEffect):
-saveProgress(state.level.id, state.stars, timeElapsed); // already exists
-```
+| Boundary | Communication | Notes |
+|----------|---------------|-------|
+| `GameScreen` → `LevelComplete` | Props (`isNewRecord: boolean`) | One-way, synchronous. LevelComplete is a stateless display component. |
+| `GameScreen` → `storage.ts` | Direct function calls (`saveProgress`, `getLevelProgress`) | Synchronous. No async. `getLevelProgress` is a convenience wrapper over `loadAllProgress`. |
+| `LevelSelect` → `storage.ts` | Direct function call (`loadAllProgress`) | Already synchronous at render time. Pattern is unchanged. |
+| `LevelProgress` in localStorage | JSON shape extension with optional field | `bestScore?: number` — old stored data without the field degrades gracefully to `undefined`, treated as 0. |
 
 ---
 
-## Patterns to Follow
+## Scaling Considerations
 
-### Pattern 1: Pure Reducer Actions (existing, extend this)
+This is a single-player browser game using localStorage. Scaling is not a concern. The only relevant consideration is backwards compatibility with existing localStorage data:
 
-**What:** All game state mutations go through `dispatch(action)` into `gameReducer`. No direct state mutation outside the reducer.
-
-**When:** Every new gameplay feature (rush timer tick, customer patience, star calculation) should be a new `GameAction` type handled in the `switch`.
-
-**Example:**
-```typescript
-// Adding a "LEVEL_UNLOCKED" side-effect notification
-case 'PLACE_VINYL': {
-  // ... existing logic ...
-  // Stars already calculated here — no additional action needed
-  // GameScreen useEffect handles the saveProgress side-effect
-}
-```
-
-### Pattern 2: useEffect for Side Effects (existing, extend this)
-
-**What:** GameScreen has `useEffect` watchers on state slices to trigger side effects (save progress, trigger timers, show tutorial). All new persistence and navigation side effects belong here.
-
-**When:** Any time reducer-state change must trigger an external action (save, navigate, animate).
-
-**Example (already exists):**
-```typescript
-useEffect(() => {
-  if (state.status === 'completed') {
-    saveProgress(state.level.id, state.stars, timeElapsed);
-  }
-}, [state.status, state.stars]);
-```
-
-### Pattern 3: Props-Down for Display Components
-
-**What:** HUD, ProgressBar, ComboFloat, ScorePopup, LevelComplete receive data as props. They do NOT read from the reducer directly — GameScreen passes down what they need.
-
-**When:** Every new display component. This keeps components reusable and testable.
-
-**Example:**
-```typescript
-// RulePill gets only what it needs
-<RulePill mode={state.level.mode} hint={state.level.hint} />
-```
-
-### Pattern 4: Position from DOM Ref for Score Popups (existing)
-
-**What:** ScorePopup and ComboPopup need screen coordinates. These are obtained by calling `element.getBoundingClientRect()` on the slot element ref, not from the Three.js scene.
-
-**When:** Any floating animation that originates at a UI element position.
+| Concern | Approach |
+|---------|----------|
+| Existing localStorage data without `bestScore` | `bestScore?: number` is optional. `existing?.bestScore ?? 0` handles missing field on all existing saves. No migration needed. |
+| First run after update | `isNewRecord` will correctly be `true` on any completed level where `state.score > 0` and no prior `bestScore` is stored. This is correct — the first score for a level is always a record. |
 
 ---
 
-## Anti-Patterns to Avoid
+## Anti-Patterns
 
-### Anti-Pattern 1: Bypass the Reducer
+### Anti-Pattern 1: Deriving isNewRecord Inside LevelComplete
 
-**What:** Directly mutating state or using `useState` for game logic state inside GameScreen.
+**What people do:** Pass `score` and `levelId` to LevelComplete; let it call `getLevelProgress` itself to do the comparison.
 
-**Why bad:** Breaks the single source of truth. `timeElapsed` is currently tracked as a local `useState` in GameScreen — this is acceptable (it is display-only, not game-logic). Stars, mistakes, score must stay in the reducer.
+**Why it is wrong:** LevelComplete is a pure display component. More critically, it renders after GameScreen's `useEffect` has already called `saveProgress`. The comparison inside LevelComplete would compare the new score against the newly-written stored value — the result would always be false (or equal, never greater).
 
-**Instead:** Add any new game-logic state as fields in `GameState` and handle transitions in `gameReducer`.
-
-### Anti-Pattern 2: Mixing the Two State Systems
-
-**What:** Calling `useGameStore()` (Zustand) alongside `useReducer` in the same component.
-
-**Why bad:** Two sources of truth for game state. The Zustand store (`src/store/gameStore.ts`) uses a completely different `GameState` shape and has no connection to the live reducer.
-
-**Instead:** Keep `useGameStore` dormant or delete it. If Zustand devtools are needed, wrap the reducer with a Zustand store adapter in the future — but not during this milestone.
-
-### Anti-Pattern 3: Level Data Inside the Reducer
-
-**What:** Putting `LEVELS` array access or level loading logic inside `gameReducer`.
-
-**Why bad:** The reducer is a pure function — it receives `action.level` as a payload. Level selection logic (which index to load, unlock checks) belongs in GameScreen, not the reducer.
-
-**Instead:** GameScreen resolves which `Level` object to use, then passes it to `dispatch({ type: 'NEXT_LEVEL', level, levelIndex })`.
-
-### Anti-Pattern 4: localStorage Access in the Reducer
-
-**What:** Calling `saveProgress()` or `loadAllProgress()` inside `gameReducer`.
-
-**Why bad:** Reducers must be pure functions (no side effects). localStorage is a side effect.
-
-**Instead:** GameScreen useEffect calls `saveProgress()` after observing `state.status === 'completed'`.
+**Do this instead:** Derive `isNewRecord` in GameScreen's completion `useEffect`, reading storage before writing, then pass the boolean as a prop.
 
 ---
 
-## Suggested Build Order
+### Anti-Pattern 2: Deriving isNewRecord in App.tsx
 
-This order minimizes integration risk by building on what already works:
+**What people do:** Surface the record logic in the router layer so it can be passed as a callback or returned through `onReturnToSelect`.
 
-### Step 1: Fix unlock threshold in storage.ts (5 min)
-Change `isLevelUnlocked` threshold from `>= 1` to `>= 2` to match PROJECT.md requirement. No other code changes needed — it is the single source of truth for unlock logic.
+**Why it is wrong:** App.tsx has no access to `state.score` or `state.level.id`. Forcing App.tsx to own score logic would require threading game state up through `onReturnToSelect`, breaking the clean separation between the router and the game orchestrator.
 
-### Step 2: Add `progression.ts` (30 min)
-Pure functions wrapping `storage.ts`. Provides `canAdvanceToLevel()` and `getLevelSelectData()`. No UI changes. Testable in isolation.
-
-### Step 3: Expand `LEVELS` array to 20+ levels (bulk of time)
-Add level definitions to `src/game/levels.ts` covering all 6 modes (`free`, `genre`, `chronological`, `customer`, `blackout`, `rush`, `sleeve-match`). The engine already handles all modes — this is data, not code. Each level definition should include `id`, `mode`, `sortRule`, `hint`, `rows`, `cols`, `vinyls`.
-
-### Step 4: Wire HUD to show level rule (RulePill)
-New `RulePill` component receives `state.level.mode` and `state.level.hint`. Mount it in GameScreen next to the HUD. No reducer changes needed.
-
-### Step 5: Ensure ScorePopup fires on every valid placement
-GameScreen already tracks `lastSlotPosition` and renders `ScorePopup`. Verify it shows the correct `earnedScore` delta (currently `BASE_SCORE * multiplier + rareBonus` from the reducer). Wire the delta value through — currently `ScorePopup` receives only `points` prop.
-
-### Step 6: LevelComplete screen — verify stars display
-`LevelComplete.tsx` already renders stars. Verify it receives `state.stars` from GameScreen. Stars are already calculated in `gameReducer` PLACE_VINYL case. No reducer changes needed.
-
-### Step 7: LevelSelectScreen (new component)
-Renders a grid of levels using data from `progression.ts::getLevelSelectData()`. Shows lock/unlock state and best star count per level. Navigates to GameScreen with a specific `levelIndex` prop.
-
-### Step 8: Persist + restore last unlocked level on app start
-GameScreen currently always starts at `LEVELS[0]`. Add: on mount, read `getLastPlayableIndex()` from `progression.ts` to start at the last unlocked level (or let LevelSelectScreen handle this by passing `initialLevelIndex` prop).
+**Do this instead:** Keep all game state derivation inside GameScreen, which already owns the reducer and all side effects.
 
 ---
 
-## Scalability Considerations
+### Anti-Pattern 3: Saving bestScore Only When Stars Also Improve
 
-| Concern | Current (2 levels) | 20+ levels | 50+ levels |
-|---------|-------------------|------------|------------|
-| Level data size | Inline in `levels.ts` | Still fine in single file | Consider splitting by mode or chapter |
-| localStorage schema | `Record<levelId, {stars, bestTime}>` | Same schema, more keys | Add version field, migration utility |
-| Star calculation logic | Hardcoded thresholds in reducer | Extract to `rules.ts::calculateStars(mistakes, hints, time, level)` | Per-level star thresholds in `Level` type |
-| Level select rendering | N/A | Simple grid, all levels in DOM | Virtual list (react-window) if 50+ |
+**What people do:** Wrap the score write inside the existing `starsImproved` condition, so score is only stored alongside a star improvement.
 
-**Immediate recommendation:** Move star calculation out of the `PLACE_VINYL` case in `engine.ts` into a pure function `calculateStars(mistakes: number, hintsUsed: number): number` in `rules.ts`. This makes per-level star tuning possible without touching the reducer.
+**Why it is wrong:** A player can replay a level and score more points without earning more stars (e.g., faster combo execution on a run with the same error count). Score must improve independently of stars.
+
+**Do this instead:** Use `scoreImproved` as an independent condition with its own best-only write. Stars and score have logically separate "personal best" semantics.
 
 ---
 
-## Key Existing Files (reference for implementation)
+### Anti-Pattern 4: Formatting Score in LevelSelect Without Locale
 
-| File | Role | Relevant to Progression |
-|------|------|------------------------|
-| `src/game/engine.ts` | gameReducer + createGameState | Star calculation in PLACE_VINYL case |
-| `src/game/rules.ts` | isValidPlacement, COMBO_TIERS | Extract calculateStars here |
-| `src/game/levels.ts` | LEVELS array (needs expansion to 20+) | Central data source |
-| `src/game/storage.ts` | localStorage persistence | Fix unlock threshold >=1 → >=2 |
-| `src/game/types.ts` | GameState, Level, LevelMode | Add fields for future modes |
-| `src/components/GameScreen.tsx` | Orchestrator + drag system | All integration wiring |
-| `src/components/LevelComplete.tsx` | End-of-level overlay | Already correct shape |
-| `src/components/HUD/HUD.tsx` | Score/timer/moves | Add level rule display |
-| `src/components/ScorePopup/ScorePopup.tsx` | Floating score delta | Already implemented |
-| `src/components/ProgressBar.tsx` | Placement dots counter | Already implemented |
+**What people do:** `bestScore.toString()` or a manual comma-insertion function for the "1.420 pt" display.
+
+**Why it is wrong:** The spec calls for Italian thousand-separator notation ("1.420"). `(1420).toString()` returns `"1420"`. Manual implementations are fragile.
+
+**Do this instead:** `bestScore.toLocaleString('it-IT')` returns `"1.420"` on all modern platforms. Append `" pt"` as a string literal.
+
+---
+
+## Build Order
+
+Build in this order to respect dependency edges:
+
+1. **`src/game/storage.ts`** — Foundation. All other changes depend on `bestScore` existing in the `LevelProgress` shape and the extended `saveProgress` signature. Do this first.
+
+2. **`src/components/GameScreen.tsx`** — Reads from storage (requires step 1), derives `isNewRecord`, extends the `saveProgress` call, passes new prop to `LevelComplete`. Do this second.
+
+3. **`src/components/LevelComplete.tsx`** — Receives `isNewRecord` prop (interface contract known after step 2), adds the "Nuovo Record!" badge. Do this third.
+
+4. **`src/components/LevelSelect/LevelSelect.tsx`** — Reads `bestScore` from storage (requires step 1 only). Does not depend on steps 2 or 3. Can be done in parallel with steps 2–3 once step 1 is complete.
 
 ---
 
 ## Sources
 
-- Direct analysis of `src/game/engine.ts`, `rules.ts`, `storage.ts`, `types.ts` (HIGH confidence)
-- Direct analysis of `src/components/GameScreen.tsx`, `LevelComplete.tsx`, `HUD/HUD.tsx` (HIGH confidence)
-- Project requirements from `.planning/PROJECT.md` (HIGH confidence)
-- Game mechanics documentation from `GAME-LOGIC.md` (HIGH confidence)
+- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/game/storage.ts`
+- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/components/GameScreen.tsx`
+- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/components/LevelComplete.tsx`
+- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/components/LevelSelect/LevelSelect.tsx`
+- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/App.tsx`
+- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/game/types.ts`
+- Direct inspection of `/Users/martha2022/Documents/Sleevo/.planning/PROJECT.md`
+
+---
+*Architecture research for: bestScore persistence + personal record UI in Sleevo*
+*Researched: 2026-02-25*
