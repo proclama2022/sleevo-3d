@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 4 of 4 (Level Content and Mode Validation)
-Plan: 4 of 6 in current phase
+Plan: 5 of 6 in current phase
 Status: In Progress
-Last activity: 2026-02-25 — Completed Plan 04-04: CustomerPanel customerName prop and HUD urgency threshold fix (10s)
+Last activity: 2026-02-25 — Completed Plan 04-05: GameScreen integration — LevelHintOverlay, BLACKOUT_TICK interval, customerName wired
 
-Progress: [████████████████████████░░░░] 69% (9 of 13 plans across all phases)
+Progress: [█████████████████████████░░░] 73% (10 of 14 plans across all phases)
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Progress: [███████████████████████
 | Phase 04-level-content-and-mode-validation P02 | 3min | 1 task | 2 files |
 | Phase 04-level-content-and-mode-validation P03 | 174min | 1 tasks | 1 files |
 | Phase 04-level-content-and-mode-validation P04 | 2min | 2 tasks | 2 files |
+| Phase 04-level-content-and-mode-validation P05 | 3min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -102,6 +103,9 @@ Recent decisions affecting current work:
 - [Phase 04]: BLACKOUT_TICK reducer case makes label-hide deterministic — pure engine logic, not useEffect-driven
 - [Plan 04-04]: CustomerPanel speech changed from 'Cerco qualcosa di...' to '{name} vuole:...' — matches CONTEXT design spec
 - [Plan 04-04]: isLowTime threshold <= 10 (inclusive) so urgency fires exactly when clock reads 10 seconds
+- [Plan 04-05]: showHintOverlay reset in BOTH useEffect([state.level.id]) AND handleRestart — useEffect alone misses same-level restarts
+- [Plan 04-05]: BLACKOUT_TICK useEffect dependency includes blackoutSecondsLeft so interval stops naturally when countdown reaches 0
+- [Plan 04-05]: BLACKOUT_TRIGGER action retained in engine.ts as dead code — harmless; removal not in scope for this plan
 
 ### Pending Todos
 
@@ -114,5 +118,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 04-level-content-and-mode-validation-04-PLAN.md (CustomerPanel customerName prop and HUD urgency threshold fix)
+Stopped at: Completed 04-level-content-and-mode-validation-05-PLAN.md (GameScreen integration — LevelHintOverlay, BLACKOUT_TICK interval, customerName wired)
 Resume file: None

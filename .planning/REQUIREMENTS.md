@@ -43,7 +43,7 @@
 - [x] **MODE-01**: La modalità `rush` è completamente implementata con timer nell'HUD e comportamento "time's up" definito
 - [x] **MODE-02**: La modalità `blackout` nasconde le etichette colonna in modo affidabile (logica nel engine, non in useEffect)
 - [x] **MODE-03**: La modalità `customer` mostra chiaramente la richiesta del cliente durante il gioco
-- [ ] **MODE-04**: La modalità `sleeve-match` abbina il disco fisico alla copertina mostrata nello slot
+- [x] **MODE-04**: La modalità `sleeve-match` abbina il disco fisico alla copertina mostrata nello slot
 
 ## v2 Requirements
 
@@ -94,7 +94,7 @@
 | MODE-01 | Phase 4 | Complete |
 | MODE-02 | Phase 4 | Complete |
 | MODE-03 | Phase 4 | Complete |
-| MODE-04 | Phase 4 | Pending |
+| MODE-04 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 22 total
