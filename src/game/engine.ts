@@ -50,7 +50,8 @@ export function createGameState(level: Level, levelIndex: number): GameState {
     customerServed: false,
     customerTimeLeft: level.customerTimer ?? 0,
     customerLeft: false,
-    rushTimeLeft: level.timeLimit ?? 0,
+    blackoutSecondsLeft: level.mode === 'blackout' ? 3 : 0,
+    rushTimeLeft: level.rushTime ?? 0,
   };
 }
 
@@ -63,6 +64,7 @@ export type GameAction =
   | { type: 'CLEAR_SHAKE' }
   | { type: 'SHOW_HINT' }
   | { type: 'BLACKOUT_TRIGGER' }
+  | { type: 'BLACKOUT_TICK' }
   | { type: 'CUSTOMER_SERVED' }
   | { type: 'CUSTOMER_TICK' }       // decrement customer patience timer
   | { type: 'CUSTOMER_LEFT' }       // customer gave up
@@ -248,6 +250,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
 
     case 'BLACKOUT_TRIGGER':
       return { ...state, labelsVisible: false };
+
+    case 'BLACKOUT_TICK': {
+      if (state.status !== 'playing' || state.blackoutSecondsLeft <= 0) return state;
+      const newCount = state.blackoutSecondsLeft - 1;
+      return {
+        ...state,
+        blackoutSecondsLeft: newCount,
+        labelsVisible: newCount > 0,
+      };
+    }
 
     case 'CUSTOMER_SERVED':
       return { ...state, customerServed: true, score: state.score + 500 };
