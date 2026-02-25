@@ -190,7 +190,7 @@ export const HUD: React.FC<HUDProps> = ({
 }) => {
   const [displayScore, setDisplayScore] = useState(score);
   const [isAnimating, setIsAnimating] = useState(false);
-  const isLowTime = timeRemaining !== undefined && timeRemaining < 30;
+  const isLowTime = timeRemaining !== undefined && timeRemaining <= 10;
 
   // Animate score changes
   useEffect(() => {
@@ -246,8 +246,8 @@ export const HUD: React.FC<HUDProps> = ({
 
         {placed !== undefined && total !== undefined && (
           <StatItem>
-            <StatValue>{placed} / {total}</StatValue>
-            <StatLabel>Placed</StatLabel>
+            <StatValue style={{ fontSize: '1.15em', textShadow: '0 2px 12px rgba(0, 0, 0, 0.5)' }}>{placed} / {total}</StatValue>
+            <StatLabel style={{ opacity: 0.65 }}>Placed</StatLabel>
           </StatItem>
         )}
 
