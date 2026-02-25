@@ -10,7 +10,7 @@ import { ComboPopup } from './ComboPopup/ComboPopup';
 import { ScorePopup } from './ScorePopup/ScorePopup';
 import { LevelComplete } from './LevelComplete';
 import { ParticleBurst } from './ParticleBurst';
-import { saveProgress } from '../game/storage';
+import { saveProgress, getLevelProgress } from '../game/storage';
 import { LEVELS } from '../game/levels';
 import { isValidPlacement, COMBO_TIERS, COMBO_DECAY_MS } from '../game/rules';
 import { createGameState, gameReducer, getNextGlowingSlot } from '../game/engine';
@@ -91,6 +91,10 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
 
   // Pre-level hint overlay — shown at every level load and restart
   const [showHintOverlay, setShowHintOverlay] = useState(true);
+
+  // New Record badge state — computed before saveProgress in completion effect
+  const [isNewRecord, setIsNewRecord] = useState(false);
+  const [scoreDelta, setScoreDelta] = useState<number | undefined>(undefined);
 
   // Combo countdown (Fix 2) — conta i secondi rimanenti prima del decay
   const [comboSecondsLeft, setComboSecondsLeft] = useState<number | null>(null);
@@ -186,6 +190,16 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
   // Save progress to localStorage when level is completed
   useEffect(() => {
     if (state.status === 'completed') {
+      const existing = getLevelProgress(state.level.id);
+      const newRecord =
+        existing?.bestScore !== undefined &&
+        state.score > existing.bestScore;
+      setIsNewRecord(newRecord);
+      setScoreDelta(
+        newRecord && existing?.bestScore !== undefined
+          ? state.score - existing.bestScore
+          : undefined
+      );
       // score read from closure, not deps — intentional: fires once per completion only
       saveProgress(state.level.id, state.stars, timeElapsed, state.score);
     }
@@ -545,11 +559,15 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
   // Handlers
   const handleRestart = useCallback(() => {
     setTimeElapsed(0);
+    setIsNewRecord(false);
+    setScoreDelta(undefined);
     setShowHintOverlay(true);  // show hint on restart — same level.id so useEffect won't fire
     dispatch({ type: 'RESTART' });
   }, []);
   const handleNext = useCallback(() => {
     setTimeElapsed(0);
+    setIsNewRecord(false);
+    setScoreDelta(undefined);
     const nextIdx = state.levelIndex + 1;
     if (nextIdx < LEVELS.length) {
       dispatch({ type: 'NEXT_LEVEL', level: LEVELS[nextIdx], levelIndex: nextIdx });
@@ -905,6 +923,8 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
             hasNextLevel={state.levelIndex + 1 < LEVELS.length}
             onNextLevel={onReturnToSelect}
             onReplay={handleRestart}
+            isNewRecord={isNewRecord}
+            scoreDelta={scoreDelta}
           />
         )}
 
