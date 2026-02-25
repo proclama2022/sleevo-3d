@@ -118,13 +118,9 @@ export function LevelComplete({
         </div>
 
         <div className={styles.buttons}>
-          {hasNextLevel ? (
-            <button className={styles.btnPrimary} onClick={onNextLevel}>
-              Livello successivo →
-            </button>
-          ) : (
-            <div className={styles.noNextLevel}>Hai completato tutti i livelli! 🎉</div>
-          )}
+          <button className={styles.btnPrimary} onClick={onNextLevel}>
+            {hasNextLevel ? 'Continua →' : 'Torna alla mappa →'}
+          </button>
           <button className={styles.btnSecondary} onClick={onReplay}>
             ↺ Rigioca
           </button>
