@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-20)
 ## Current Position
 
 Phase: 4 of 4 (Level Content and Mode Validation)
-Plan: 5 of 6 in current phase
-Status: In Progress
-Last activity: 2026-02-25 — Completed Plan 04-05: GameScreen integration — LevelHintOverlay, BLACKOUT_TICK interval, customerName wired
+Plan: 6 of 6 in current phase
+Status: Complete
+Last activity: 2026-02-25 — Completed Plan 04-06: Build verification and end-to-end mode validation — all 7 modes human-verified
 
-Progress: [█████████████████████████░░░] 73% (10 of 14 plans across all phases)
+Progress: [████████████████████████████] 100% (14 of 14 plans across all phases)
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [███████████████████████
 | Phase 04-level-content-and-mode-validation P03 | 174min | 1 tasks | 1 files |
 | Phase 04-level-content-and-mode-validation P04 | 2min | 2 tasks | 2 files |
 | Phase 04-level-content-and-mode-validation P05 | 3min | 2 tasks | 1 files |
+| Phase 04-level-content-and-mode-validation P06 | 9min | 2 tasks | 0 files |
 
 ## Accumulated Context
 
@@ -106,6 +107,8 @@ Recent decisions affecting current work:
 - [Plan 04-05]: showHintOverlay reset in BOTH useEffect([state.level.id]) AND handleRestart — useEffect alone misses same-level restarts
 - [Plan 04-05]: BLACKOUT_TICK useEffect dependency includes blackoutSecondsLeft so interval stops naturally when countdown reaches 0
 - [Plan 04-05]: BLACKOUT_TRIGGER action retained in engine.ts as dead code — harmless; removal not in scope for this plan
+- [Plan 04-06]: Build verification (tsc + Vite build) run as first automated task before human checkpoint — confirms shippable codebase before human play-through
+- [Plan 04-06]: Human verification is the correct gate for visual behaviors (overlay dismiss UX, label fade timing, urgency animation) that TypeScript cannot catch
 
 ### Pending Todos
 
@@ -118,5 +121,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 04-level-content-and-mode-validation-05-PLAN.md (GameScreen integration — LevelHintOverlay, BLACKOUT_TICK interval, customerName wired)
+Stopped at: Completed 04-level-content-and-mode-validation-06-PLAN.md (Build verification and end-to-end mode validation — all 7 modes human-verified, Phase 4 complete)
 Resume file: None
