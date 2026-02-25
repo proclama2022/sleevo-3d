@@ -10,7 +10,7 @@ export const level1: Level = {
   cols: 3,
   sortRule: 'free',
   mode: 'free',
-  parTime: 18,  // 6 vinyls × 3s × 1.0 (free mode)
+  parTime: 15,  // 4 vinyls × 3s × 1.0 (free mode) — comfortable par for beginners
   hint: 'Trascina i vinili sullo scaffale — posizione libera!',
   theme: 'classic',
   vinyls: [
@@ -18,8 +18,6 @@ export const level1: Level = {
     { id: 'v2', color: '#2563EB', genre: 'Jazz',     year: 1959, artist: 'Miles Davis',   album: 'Kind of Blue',      cover: cover('/covers/miles-davis-kind-of-blue.jpg') },
     { id: 'v3', color: '#EC4899', genre: 'Pop',      year: 1989, artist: 'Madonna',       album: 'Like a Prayer',     cover: cover('/covers/madonna-like-a-prayer.jpg') },
     { id: 'v4', color: '#F97316', genre: 'Hip-Hop',  year: 1992, artist: 'Dr. Dre',       album: 'The Chronic',       cover: cover('/covers/dr-dre-the-chronic.jpg') },
-    { id: 'v5', color: '#A78BFA', genre: 'Classica', year: 1791, artist: 'W.A. Mozart',   album: 'Requiem',           cover: cover('/covers/wa-mozart-requiem.jpg') },
-    { id: 'v6', color: '#10B981', genre: 'Soul',     year: 1968, artist: 'Otis Redding',  album: 'Dock of the Bay',   cover: cover('/covers/otis-redding-dock-of-the-bay.jpg') },
   ],
 };
 
@@ -72,6 +70,7 @@ export const level4: Level = {
   cols: 4,
   sortRule: 'free',
   mode: 'customer',
+  customerName: 'Marco',
   parTime: 26,  // 8 vinyls × 3s × 1.1 (customer mode)
   hint: "Il cliente vuole un Rock degli anni '70! Mettilo in cima a sinistra.",
   theme: 'classic',
@@ -100,7 +99,6 @@ export const level5: Level = {
   cols: 4,
   sortRule: 'chronological',
   mode: 'blackout',
-  timeLimit: 90,
   parTime: 36,  // 8 vinyls × 3s × 1.5 (blackout mode)
   hint: 'Memorizza! Hai 3 secondi, poi le etichette spariscono...',
   theme: 'classic',
@@ -149,6 +147,7 @@ export const level7: Level = {
   cols: 4,
   sortRule: 'free',
   mode: 'customer',
+  customerName: 'Sofia',
   parTime: 26,  // 8 vinyls × 3s × 1.1 (customer mode)
   hint: 'Il cliente ha fretta — trova il Jazz anni \'60 prima che se ne vada!',
   theme: 'classic',
@@ -179,7 +178,7 @@ export const level8: Level = {
   cols: 4,
   sortRule: 'chronological',
   mode: 'rush',
-  timeLimit: 60,
+  rushTime: 60,
   parTime: 24,  // 10 vinyls × 3s × 0.8 (rush mode = less time = harder)
   hint: '60 secondi! Ordina per anno con slot rotti. I dischi rari danno +300!',
   theme: 'jazz-club',
@@ -287,6 +286,7 @@ export const level12: Level = {
   cols: 4,
   sortRule: 'chronological',
   mode: 'customer',
+  customerName: 'Luca',
   parTime: 29,  // 8 vinyls × 3s × 1.2 (customer has lower multiplier than pure chrono)
   hint: "Soul '60 in cima a sinistra per il cliente — colonna = anno, riga libera!",
   theme: 'jazz-club',
@@ -317,7 +317,6 @@ export const level13: Level = {
   cols: 4,
   sortRule: 'genre',
   mode: 'blackout',
-  timeLimit: 120,
   parTime: 36,  // 8 vinyls × 3s × 1.5 (blackout mode)
   hint: 'Memorizza i generi — le etichette spariscono presto! Raggruppa per genere.',
   theme: 'punk-basement',
@@ -341,7 +340,7 @@ export const level14: Level = {
   cols: 4,
   sortRule: 'genre',
   mode: 'rush',
-  timeLimit: 45,
+  rushTime: 45,
   parTime: 19,  // 8 vinyls × 3s × 0.8 (rush mode = less time = harder)
   hint: '45 secondi! Slot rotti ovunque — trova spazio e raggruppa per genere.',
   theme: 'punk-basement',
@@ -406,6 +405,7 @@ export const level16: Level = {
   cols: 4,
   sortRule: 'free',
   mode: 'customer',
+  customerName: 'Elena',
   parTime: 26,  // 8 vinyls × 3s × 1.1 (customer mode)
   hint: "Collezionista esigente! Vuole un Blues anni '40 — hai solo 20 secondi!",
   theme: 'punk-basement',
@@ -437,7 +437,7 @@ export const level17: Level = {
   cols: 5,
   sortRule: 'chronological',
   mode: 'rush',
-  timeLimit: 75,
+  rushTime: 75,
   parTime: 29,  // 12 vinyls × 3s × 0.8 (rush mode = less time = harder)
   hint: 'IL GRANDE RUSH! 75 secondi, scaffale 3×5 — ordina per anno, non mollare!',
   theme: 'punk-basement',
@@ -528,6 +528,7 @@ export const level20: Level = {
   cols: 4,
   sortRule: 'genre',
   mode: 'customer',
+  customerName: 'Giovanni',
   parTime: 26,  // 8 vinyls × 3s × 1.1 (customer mode)
   hint: "Cliente VIP! Vuole Elettronica anni '00 — e lo scaffale va per genere!",
   theme: 'disco-70s',
