@@ -20,8 +20,8 @@ import { CustomerPanel } from './CustomerPanel';
 import { ProgressBar } from './ProgressBar';
 import { SceneBackdrop } from './SceneBackdrop';
 
-// Dust particles (static, computed once)
-const particles = Array.from({ length: 12 }, (_, i) => ({
+// Dust particles (static, computed once) - ridotto per performance
+const particles = Array.from({ length: 6 }, (_, i) => ({
   id: i,
   left: `${5 + Math.random() * 90}%`,
   size: 1.5 + Math.random() * 1.5,
@@ -56,9 +56,14 @@ interface HoverCandidate {
   magnetic: boolean;
 }
 
-export function GameScreen() {
+interface Props {
+  initialLevelIndex: number;
+  onReturnToSelect: () => void;
+}
+
+export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
   const [state, dispatch] = useReducer(gameReducer, null, () =>
-    createGameState(LEVELS[0], 0)
+    createGameState(LEVELS[initialLevelIndex], initialLevelIndex)
   );
 
   const [tutorialStep, setTutorialStep] = useState<number>(() => {
@@ -773,6 +778,7 @@ export function GameScreen() {
         <Counter
           vinyls={unplacedVinyls}
           shakingVinylId={state.shakingVinylId}
+          highlightAll={tutorialStep === 1}
           onDragStart={handleDragStart}
           onShakeEnd={() => dispatch({ type: 'CLEAR_SHAKE' })}
         />
@@ -786,7 +792,7 @@ export function GameScreen() {
           onJumpToLevel={handleJumpToLevel}
         />
 
-        {/* Drag ghost — segue SEMPRE il dito, posizione via DOM ref */}
+        {/* Drag ghost — ottimizzato per 60fps */}
         {drag && (() => {
           const dragVinyl = vinylMap.get(drag.vinylId);
           return (
@@ -812,18 +818,19 @@ export function GameScreen() {
                 boxShadow: `0 16px 40px rgba(0,0,0,0.7), 0 4px 12px rgba(0,0,0,0.5), 0 0 24px 6px color-mix(in srgb, ${drag.color} 40%, transparent)`,
                 zIndex: 1000,
                 pointerEvents: 'none',
-                transform: 'scale(1.08)',
-                transition: 'transform 0.12s ease-out, box-shadow 0.12s ease-out',
-                willChange: 'left, top',
+                transform: 'scale(1.08) translateZ(0)',
+                transition: 'transform 0.1s ease-out, box-shadow 0.1s ease-out',
+                willChange: 'transform, left, top',
+                contain: 'layout style paint',
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              {/* Grooves */}
+              {/* Grooves - semplificato */}
               <div style={{
                 position: 'absolute',
                 inset: '6%',
                 borderRadius: '50%',
-                boxShadow: 'inset 0 0 0 2px rgba(255,255,255,0.05), inset 0 0 0 5px rgba(255,255,255,0.04), inset 0 0 0 8px rgba(255,255,255,0.03), inset 0 0 0 11px rgba(255,255,255,0.02)',
+                boxShadow: 'inset 0 0 0 3px rgba(255,255,255,0.04), inset 0 0 0 7px rgba(255,255,255,0.02)',
                 pointerEvents: 'none',
               }} />
               {/* Label */}
@@ -879,7 +886,7 @@ export function GameScreen() {
             score={state.score}
             parTime={state.level.parTime}
             hasNextLevel={state.levelIndex + 1 < LEVELS.length}
-            onNextLevel={handleNext}
+            onNextLevel={onReturnToSelect}
             onReplay={handleRestart}
           />
         )}
