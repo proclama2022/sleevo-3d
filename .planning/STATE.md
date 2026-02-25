@@ -47,6 +47,7 @@ Progress: [█████████████████████░░
 | Phase 03-progression-and-navigation P03-03 | 2 min | 2 tasks | 1 file |
 | Phase 04-level-content-and-mode-validation P01 | 4min | 2 tasks | 2 files |
 | Phase 04-level-content-and-mode-validation P02 | 3min | 1 task | 2 files |
+| Phase 04-level-content-and-mode-validation P03 | 174min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Plan 04-02]: LevelHintOverlay z-index 200 — above shelf (5-8) and HUD (100), below drag ghost (1000); overlay dismissed before any drag starts so no conflict
 - [Plan 04-02]: getModeLabel uses plain switch (not HUD's getLevelRuleDisplay) — overlay needs full Italian mode names, not short badge labels
 - [Plan 04-02]: CSS Modules overlay pattern: position fixed inset-0 backdrop + stopPropagation on inner card for dismiss-on-backdrop-click
+- [Phase 04]: BLACKOUT_TRIGGER retained for backward compatibility until Plan 05 GameScreen cleanup
+- [Phase 04]: BLACKOUT_TICK reducer case makes label-hide deterministic — pure engine logic, not useEffect-driven
 
 ### Pending Todos
 
