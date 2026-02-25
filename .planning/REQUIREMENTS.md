@@ -40,8 +40,8 @@ Il giocatore può confrontare le proprie performance passate — best score visi
 
 | REQ-ID | Phase | Plan |
 |--------|-------|------|
-| PERSIST-01 | TBD | TBD |
-| PERSIST-02 | TBD | TBD |
-| SELECT-01 | TBD | TBD |
-| COMPLETE-01 | TBD | TBD |
-| COMPLETE-02 | TBD | TBD |
+| PERSIST-01 | Phase 5 | TBD |
+| PERSIST-02 | Phase 5 | TBD |
+| SELECT-01 | Phase 7 | TBD |
+| COMPLETE-01 | Phase 6 | TBD |
+| COMPLETE-02 | Phase 6 | TBD |
