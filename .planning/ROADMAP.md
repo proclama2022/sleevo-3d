@@ -61,7 +61,12 @@ Plans:
   2. Locked levels cannot be started; the player must earn 2 stars on the previous level to unlock the next
   3. On app load, the game opens at the player's most recently unlocked level (not always level 1)
   4. Best star count for a completed level is preserved and displayed after the player replays and does worse
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Build LevelSelect component with 3-column grid, locked/focused states (PROG-03)
+- [ ] 03-02-PLAN.md — Wire App.tsx screen router and GameScreen initialLevelIndex prop (PROG-01, PROG-02)
+- [ ] 03-03-PLAN.md — Update LevelComplete Continue button + human verify end-to-end (PROG-01, PROG-02, PROG-03)
 
 ### Phase 4: Level Content and Mode Validation
 **Goal**: The game has 20+ levels covering all modes with a smooth difficulty curve and reliable mode behavior
@@ -84,5 +89,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation Fixes | 3/3 | Complete | 2026-02-23 |
 | 2. Star System and Level Complete | 0/3 | Planned | - |
-| 3. Progression and Navigation | 0/? | Not started | - |
+| 3. Progression and Navigation | 0/3 | Planned | - |
 | 4. Level Content and Mode Validation | 0/? | Not started | - |
