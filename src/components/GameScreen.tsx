@@ -186,7 +186,8 @@ export function GameScreen({ initialLevelIndex, onReturnToSelect }: Props) {
   // Save progress to localStorage when level is completed
   useEffect(() => {
     if (state.status === 'completed') {
-      saveProgress(state.level.id, state.stars, timeElapsed);
+      // score read from closure, not deps — intentional: fires once per completion only
+      saveProgress(state.level.id, state.stars, timeElapsed, state.score);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.status, state.stars]);
