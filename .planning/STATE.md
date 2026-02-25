@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Social & Retention
-status: ready_to_plan
-last_updated: "2026-02-25T00:00:00.000Z"
+status: in_progress
+last_updated: "2026-02-25T17:59:56Z"
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 5
+  completed_plans: 1
 ---
 
 # Project State
@@ -23,11 +23,11 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 5 of 7 (Storage and Score Utility)
-Plan: — of — (not yet planned)
-Status: Ready to plan
-Last activity: 2026-02-25 — v1.1 roadmap created; Phase 5 ready for planning
+Plan: 2 of 2 (05-02 next)
+Status: In progress — 05-01 complete
+Last activity: 2026-02-25 — 05-01 complete: extended LevelProgress with bestScore, created formatScore utility
 
-Progress: [░░░░░░░░░░] 0% (0 of ? plans — v1.1 only)
+Progress: [##░░░░░░░░] 20% (1 of 5 plans — v1.1 only)
 
 ## Performance Metrics
 
@@ -45,7 +45,11 @@ Progress: [░░░░░░░░░░] 0% (0 of ? plans — v1.1 only)
 | 03    | 3     | 7 min  | 2 min   |
 | 04    | 6     | 195 min | 33 min  |
 
-*v1.1 metrics will populate after first plan completes*
+**v1.1 metrics:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 05    | 1/2   | 7 min  | 7 min   |
 
 ## Accumulated Context
 
@@ -58,10 +62,13 @@ Recent decisions affecting current work:
 - [v1.1 Research]: isNewRecord must be computed in GameScreen at render time (before saveProgress effect fires) — reading after the write always returns false
 - [v1.1 Research]: Use `existingProgress?.bestScore !== undefined && score > existingProgress.bestScore` guard — `?? 0` fallback causes false badge on every first play
 - [v1.1 Research]: Hardcode `Intl.NumberFormat('it-IT')` — never rely on browser locale default
+- [Plan 05-01]: scoreImproved is an independent OR condition — not nested under starsImproved — so higher-score runs save even without star change
+- [Plan 05-01]: Spread-merge write { ...existing, ... } in saveProgress prevents silent field loss when schema grows
+- [Plan 05-01]: formatScore returns em dash U+2014 for undefined/null to distinguish unplayed levels from score zero
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
@@ -70,5 +77,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: v1.1 roadmap created — Phases 5, 6, 7 defined; ready to plan Phase 5
+Stopped at: Completed 05-01-PLAN.md
 Resume file: None

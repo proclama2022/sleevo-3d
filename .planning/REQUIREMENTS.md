@@ -8,8 +8,8 @@ Il giocatore può confrontare le proprie performance passate — best score visi
 
 ### Persistence
 
-- [ ] **PERSIST-01**: Il gioco salva il punteggio migliore (punti interi) per ogni livello in localStorage con semantica best-only (sovrascrive solo se il nuovo score supera il precedente)
-- [ ] **PERSIST-02**: Il salvataggio del punteggio migliore usa merge-write per non sovrascrivere i dati esistenti (bestStars, unlocked)
+- [x] **PERSIST-01**: Il gioco salva il punteggio migliore (punti interi) per ogni livello in localStorage con semantica best-only (sovrascrive solo se il nuovo score supera il precedente)
+- [x] **PERSIST-02**: Il salvataggio del punteggio migliore usa merge-write per non sovrascrivere i dati esistenti (bestStars, unlocked)
 
 ### Display — Level Select
 
