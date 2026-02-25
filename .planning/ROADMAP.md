@@ -69,7 +69,7 @@ Plans:
 - [ ] 03-03-PLAN.md — Update LevelComplete Continue button + human verify end-to-end (PROG-01, PROG-02, PROG-03)
 
 ### Phase 4: Level Content and Mode Validation
-**Goal**: The game has 20+ levels covering all modes with a smooth difficulty curve and reliable mode behavior
+**Goal**: The game has 21 playable levels covering all 7 modes with a pre-level hint overlay, reliable blackout/rush/customer behavior, and a smooth difficulty curve
 **Depends on**: Phase 3
 **Requirements**: LVLS-01, LVLS-02, LVLS-03, LVLS-04, MODE-01, MODE-02, MODE-03, MODE-04
 **Success Criteria** (what must be TRUE):
@@ -78,7 +78,15 @@ Plans:
   3. Rush mode shows a countdown timer in the HUD and shows a defined "time's up" result when it expires
   4. Blackout mode reliably hides column labels without flicker; the hide logic lives in the engine, not a useEffect
   5. Customer mode shows the active customer request clearly during play; the request resets correctly on LOAD_LEVEL
-**Plans**: TBD
+**Plans**: 6 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Update Level/GameState types and levels.ts data (rushTime rename, customerName, level 1 fix)
+- [ ] 04-02-PLAN.md — Create LevelHintOverlay component and CSS
+- [ ] 04-03-PLAN.md — Add BLACKOUT_TICK to engine and fix timeLimit → rushTime in engine.ts
+- [ ] 04-04-PLAN.md — CustomerPanel customerName display + HUD rush urgency threshold fix
+- [ ] 04-05-PLAN.md — Wire LevelHintOverlay and BLACKOUT_TICK into GameScreen; pass customerName
+- [ ] 04-06-PLAN.md — End-to-end human verification across all 7 modes
 
 ## Progress
 
@@ -90,4 +98,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation Fixes | 3/3 | Complete | 2026-02-23 |
 | 2. Star System and Level Complete | 3/3 | Complete | 2026-02-23 |
 | 3. Progression and Navigation | 3/3 | Complete   | 2026-02-25 |
-| 4. Level Content and Mode Validation | 0/? | Not started | - |
+| 4. Level Content and Mode Validation | 0/6 | Not started | - |
