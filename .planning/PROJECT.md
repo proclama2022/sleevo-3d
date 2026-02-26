@@ -32,23 +32,13 @@ Il giocatore deve sempre sapere esattamente cosa deve fare, perché ha guadagnat
 - ✓ Rush mode: countdown HUD, urgenza a 10s, auto-complete allo scadere — v1.0
 - ✓ Blackout mode: label-hide engine-driven senza flicker (BLACKOUT_TICK) — v1.0
 - ✓ Customer mode: nome cliente + richiesta nel panel sotto HUD — v1.0
+- ✓ Best score (punti) salvato in localStorage per ogni livello con best-only merge-write — v1.1
+- ✓ Cella level select mostra punteggio migliore "1.420 pt" sotto le stelle (o "—" se mai completato) — v1.1
+- ✓ Badge "Nuovo Record! +X pt" in LevelComplete quando si batte il record personale — v1.1
 
 ### Active
 
-- [ ] PERSIST-01: Il gioco salva il punteggio migliore per ogni livello in localStorage (best-only)
-- [ ] PERSIST-02: Il salvataggio usa merge-write per non sovrascrivere bestStars/unlocked esistenti
-- [ ] SELECT-01: La cella di ogni livello mostra il punteggio migliore come "1.420 pt" sotto le stelle (o "--" se mai completato)
-- [ ] COMPLETE-01: La schermata di fine livello mostra "Nuovo Record!" quando score > record precedente (escluso primo completamento)
-- [ ] COMPLETE-02: Il badge "Nuovo Record!" mostra anche il delta es. "+340 pt"
-
-## Current Milestone: v1.1 Social & Retention
-
-**Goal:** Il giocatore può confrontare le proprie performance passate — best score visibile nel level select e celebrazione del nuovo record alla fine del livello.
-
-**Target features:**
-- Best score (punti) salvato in localStorage per ogni livello
-- "1.420 pt" sotto le stelle in ogni cella del level select
-- Badge "Nuovo Record! +340 pt" in LevelComplete quando si batte il record
+*(next milestone requirements go here)*
 
 ### Out of Scope
 
@@ -64,7 +54,7 @@ Il giocatore deve sempre sapere esattamente cosa deve fare, perché ha guadagnat
 
 ## Context
 
-**v1.0 shipped 2026-02-25.** 21 livelli, 7 modalità, progressione completa, ~12.000 LOC TypeScript/CSS. 4 fasi, 15 piani, 61 commit in 14 giorni.
+**v1.1 shipped 2026-02-26.** 21 livelli, 7 modalità, progressione completa con best score e "Nuovo Record!" badge. 7 fasi totali (4 v1.0 + 3 v1.1), 19 piani.
 
 Tech stack: React + Three.js + TypeScript + Vite. State: useReducer in GameScreen. Storage: localStorage. No backend.
 
@@ -78,6 +68,11 @@ Tech stack: React + Three.js + TypeScript + Vite. State: useReducer in GameScree
 | localStorage per progressione | Zero infrastruttura, funziona offline | ✓ Good |
 | App.tsx screen router minimalista | Evita React Router per un'app a 2 schermate | ✓ Good |
 | LevelHintOverlay ad ogni load (non solo prima volta) | Refactoring più semplice; recall per i giocatori | ✓ Good |
+| saveProgress merge-write con spread `{ ...existing }` | Previene perdita campi silenziosa quando schema cresce | ✓ Good |
+| scoreImproved come condizione OR indipendente | Score migliore salva anche senza cambio stelle | ✓ Good |
+| isNewRecord calcolato pre-save nel useEffect | Evita lettura stale post-scrittura localStorage | ✓ Good |
+| Guard strict `!== undefined` (non `?? 0`) | Primo completamento non è "nuovo record" | ✓ Good |
+| formatScore hardcoded it-IT | Formato consistente indipendente da locale browser | ✓ Good |
 
 ## Constraints
 
@@ -86,4 +81,4 @@ Tech stack: React + Three.js + TypeScript + Vite. State: useReducer in GameScree
 - **Lingua**: UI in italiano
 
 ---
-*Last updated: 2026-02-25 after v1.1 milestone start*
+*Last updated: 2026-02-26 after v1.1 milestone*
