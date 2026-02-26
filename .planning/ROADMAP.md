@@ -19,7 +19,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 
 </details>
 
-### 🚧 v1.1 Social & Retention (In Progress)
+### ✅ v1.1 Social & Retention (Shipped 2026-02-26)
 
 **Milestone Goal:** Il giocatore può confrontare le proprie performance passate — best score visibile nel level select e celebrazione del nuovo record alla fine del livello.
 

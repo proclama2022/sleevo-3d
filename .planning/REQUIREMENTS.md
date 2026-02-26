@@ -13,7 +13,7 @@ Il giocatore può confrontare le proprie performance passate — best score visi
 
 ### Display — Level Select
 
-- [ ] **SELECT-01**: La cella di ogni livello mostra il punteggio migliore come "1.420 pt" sotto le stelle; mostra "--" se il livello non è mai stato completato
+- [x] **SELECT-01**: La cella di ogni livello mostra il punteggio migliore come "1.420 pt" sotto le stelle; mostra "--" se il livello non è mai stato completato
 
 ### Display — Level Complete
 
@@ -40,8 +40,8 @@ Il giocatore può confrontare le proprie performance passate — best score visi
 
 | REQ-ID | Phase | Plan |
 |--------|-------|------|
-| PERSIST-01 | Phase 5 | TBD |
-| PERSIST-02 | Phase 5 | TBD |
-| SELECT-01 | Phase 7 | TBD |
-| COMPLETE-01 | Phase 6 | TBD |
-| COMPLETE-02 | Phase 6 | TBD |
+| PERSIST-01 | Phase 5 | 05-01, 05-02 |
+| PERSIST-02 | Phase 5 | 05-01, 05-02 |
+| SELECT-01 | Phase 7 | 07-01 |
+| COMPLETE-01 | Phase 6 | 06-01 |
+| COMPLETE-02 | Phase 6 | 06-01 |
