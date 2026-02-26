@@ -5,10 +5,10 @@ milestone_name: Social & Retention
 status: unknown
 last_updated: "2026-02-25T18:47:31.514Z"
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 18
-  completed_plans: 18
+  total_phases: 7
+  completed_phases: 7
+  total_plans: 19
+  completed_plans: 19
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 ## Current Position
 
-Phase: 5 of 7 (Storage and Score Utility)
-Plan: 2 of 2 (05-02 complete)
-Status: In progress — 05-02 complete, Phase 5 fully done
-Last activity: 2026-02-25 — 05-02 complete: GameScreen wired to pass state.score to saveProgress; full storage pipeline human-verified
+Phase: 7 of 7 (Level Select Score Display)
+Plan: 1 of 1 (07-01 complete)
+Status: Complete — v1.1 milestone fully shipped
+Last activity: 2026-02-26 — 07-01 complete: bestScore prop and score row added to LevelCell; human-verified layout square, correct score/em dash/locked display
 
-Progress: [####░░░░░░] 40% (2 of 5 plans — v1.1 only)
+Progress: [##########] 100% (5 of 5 plans — v1.1 only)
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Recent decisions affecting current work:
 - [Plan 05-02]: state.score intentionally excluded from saveProgress useEffect deps — fires once per completion, not on each mid-game score increment; closure capture is the correct pattern here
 - [Phase 06-level-complete-record-badge]: Read getLevelProgress before saveProgress (read-before-save) to compute isNewRecord and scoreDelta without stale data
 - [Phase 06-level-complete-record-badge]: Strict undefined guard prevents false Nuovo Record badge on first play; 0.6s animation delay sequences after star pop-ins; entrance-only animation avoids looping
+- [Plan 07-01]: Score span gated on unlocked && — locked cells show nothing (not an em dash); formatScore(bestScore) called directly since utility already returns em dash for undefined; gap reduced 4px→2px on .cell to preserve aspect-ratio: 1
 
 ### Pending Todos
 
@@ -79,6 +80,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-25
-Stopped at: Completed 05-02-PLAN.md
+Last session: 2026-02-26
+Stopped at: Completed 07-01-PLAN.md
 Resume file: None

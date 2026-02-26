@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 MVP** — Phases 1-4 (shipped 2026-02-25)
-- 🚧 **v1.1 Social & Retention** — Phases 5-7 (in progress)
+- ✅ **v1.1 Social & Retention** — Phases 5-7 (shipped 2026-02-26)
 
 ## Phases
 
@@ -25,7 +25,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 
 - [x] **Phase 5: Storage and Score Utility** — Extend localStorage schema with bestScore and create the shared formatScore utility (2/2 plans complete — 2026-02-25)
 - [x] **Phase 6: Level Complete Record Badge** — Show "Nuovo Record! +340 pt" badge when the player beats their personal best (completed 2026-02-25)
-- [ ] **Phase 7: Level Select Score Display** — Display best score per level cell as "1.420 pt" (or "--" if never completed)
+- [x] **Phase 7: Level Select Score Display** — Display best score per level cell as "1.420 pt" (or "--" if never completed) (completed 2026-02-26)
 
 ## Phase Details
 
@@ -42,7 +42,7 @@ See: `.planning/milestones/v1.0-ROADMAP.md`
 
 Plans:
 - [x] 05-01-PLAN.md — Extend LevelProgress + saveProgress (merge-write, scoreImproved condition) and create formatScore utility
-- [ ] 05-02-PLAN.md — Wire GameScreen save call to pass state.score; manual localStorage verification
+- [x] 05-02-PLAN.md — Wire GameScreen save call to pass state.score; manual localStorage verification
 
 ### Phase 6: Level Complete Record Badge
 **Goal**: Players receive a clear signal when they beat their personal best, including the exact improvement margin
@@ -56,7 +56,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 06-01-PLAN.md — Add isNewRecord + scoreDelta logic to GameScreen and record badge UI to LevelComplete
+- [x] 06-01-PLAN.md — Add isNewRecord + scoreDelta logic to GameScreen and record badge UI to LevelComplete
 
 ### Phase 7: Level Select Score Display
 **Goal**: Players can compare their best scores across all levels at a glance from the level select grid
@@ -70,7 +70,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 07-01-PLAN.md — Add bestScore prop to LevelCell and score CSS class; human-verify layout
+- [x] 07-01-PLAN.md — Add bestScore prop to LevelCell and score CSS class; human-verify layout
 
 ## Progress
 
@@ -82,4 +82,4 @@ Plans:
 | 4. Level Content and Mode Validation | v1.0 | 6/6 | Complete | 2026-02-25 |
 | 5. Storage and Score Utility | v1.1 | 2/2 | Complete | 2026-02-25 |
 | 6. Level Complete Record Badge | v1.1 | 1/1 | Complete | 2026-02-25 |
-| 7. Level Select Score Display | v1.1 | 0/1 | Not started | - |
+| 7. Level Select Score Display | v1.1 | 1/1 | Complete | 2026-02-26 |
