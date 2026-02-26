@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react';
 import { loadAllProgress, isLevelUnlocked } from '../../game/storage';
 import { LEVELS } from '../../game/levels';
+import { formatScore } from '../../utils';
 import styles from './LevelSelect.module.css';
 
 interface Props {
@@ -11,13 +12,14 @@ interface Props {
 interface CellProps {
   levelNumber: number;
   bestStars: number;
+  bestScore?: number;        // undefined means never completed
   unlocked: boolean;
   focused: boolean;
   onClick: () => void;
   cellRef?: React.Ref<HTMLButtonElement>;
 }
 
-function LevelCell({ levelNumber, bestStars, unlocked, focused, onClick, cellRef }: CellProps) {
+function LevelCell({ levelNumber, bestStars, bestScore, unlocked, focused, onClick, cellRef }: CellProps) {
   return (
     <button
       ref={cellRef}
@@ -39,6 +41,9 @@ function LevelCell({ levelNumber, bestStars, unlocked, focused, onClick, cellRef
           </span>
         ))}
       </div>
+      {unlocked && (
+        <span className={styles.score}>{formatScore(bestScore)}</span>
+      )}
       {!unlocked && <span className={styles.lock}>🔒</span>}
     </button>
   );
@@ -63,6 +68,7 @@ export function LevelSelect({ onSelectLevel, currentFocusIndex }: Props) {
           {LEVELS.map((level, index) => {
             const p = progress[level.id];
             const bestStars = p?.stars ?? 0;
+            const bestScore = p?.bestScore;   // undefined if level never completed
             const unlocked = isLevelUnlocked(index, LEVELS);
             const isFocused = index === currentFocusIndex;
 
@@ -71,6 +77,7 @@ export function LevelSelect({ onSelectLevel, currentFocusIndex }: Props) {
                 key={level.id}
                 levelNumber={index + 1}
                 bestStars={bestStars}
+                bestScore={bestScore}
                 unlocked={unlocked}
                 focused={isFocused}
                 onClick={() => onSelectLevel(index)}
