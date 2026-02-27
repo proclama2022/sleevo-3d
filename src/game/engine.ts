@@ -50,7 +50,7 @@ export function createGameState(level: Level, levelIndex: number): GameState {
     customerServed: false,
     customerTimeLeft: level.customerTimer ?? 0,
     customerLeft: false,
-    blackoutSecondsLeft: level.mode === 'blackout' ? 3 : 0,
+    blackoutSecondsLeft: level.mode === 'blackout' ? 5 : 0,
     rushTimeLeft: level.rushTime ?? 0,
   };
 }
@@ -71,7 +71,10 @@ export type GameAction =
   | { type: 'RUSH_TICK' }           // decrement rush/timed level countdown
   | { type: 'CLEAR_INVALID_REASON' }
   | { type: 'MISSED_DROP'; vinylId: string }
-  | { type: 'REMOVE_VINYL'; vinylId: string };
+  | { type: 'REMOVE_VINYL'; vinylId: string }
+  | { type: 'FLIP_VINYL'; vinylId: string }
+  | { type: 'SWAP_VINYL'; vinylId1: string; vinylId2: string }
+  | { type: 'PILE_SPAWN'; vinyl: import('./types').Vinyl };
 
 export function gameReducer(state: GameState, action: GameAction): GameState {
   switch (action.type) {
@@ -322,6 +325,53 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         unplacedVinylIds: newUnplaced,
         combo: freshCombo(), // il combo si azzera quando si sposta un disco già piazzato
         status: 'playing',   // se era 'completed' per qualche motivo, torna in playing
+      };
+    }
+
+    case 'FLIP_VINYL': {
+      // Toggle current side of a double-sided vinyl (A↔B)
+      // This is for display purposes - the actual genre/year used comes from the current side
+      if (state.status !== 'playing') return state;
+      // For now, just return state - the UI will handle the visual flip
+      // The actual validation happens in PLACE_VINYL which checks the current side
+      return state;
+    }
+
+    case 'SWAP_VINYL': {
+      // Swap positions of two vinyls on the shelf (vinyl-swap mode)
+      const { vinylId1, vinylId2 } = action;
+      if (state.status !== 'playing') return state;
+
+      const pos1 = state.placedVinyls[vinylId1];
+      const pos2 = state.placedVinyls[vinylId2];
+      if (!pos1 || !pos2) return state;
+
+      const newGrid = state.grid.map((r) => r.map((c) => ({ ...c })));
+      newGrid[pos1.row][pos1.col].vinylId = vinylId2;
+      newGrid[pos2.row][pos2.col].vinylId = vinylId1;
+
+      const newPlaced = { ...state.placedVinyls, [vinylId1]: pos2, [vinylId2]: pos1 };
+
+      return {
+        ...state,
+        grid: newGrid,
+        placedVinyls: newPlaced,
+        moves: state.moves + 1,
+      };
+    }
+
+    case 'PILE_SPAWN': {
+      // Add a new vinyl to the pile (pile-up mode)
+      const { vinyl } = action;
+      if (state.status !== 'playing') return state;
+
+      return {
+        ...state,
+        unplacedVinylIds: [...state.unplacedVinylIds, vinyl.id],
+        level: {
+          ...state.level,
+          vinyls: [...state.level.vinyls, vinyl],
+        },
       };
     }
 

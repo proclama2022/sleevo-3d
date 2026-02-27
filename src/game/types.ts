@@ -7,6 +7,8 @@ export interface Vinyl {
   album?: string;    // e.g. "Led Zeppelin IV"
   isRare?: boolean;  // rare vinyls give bonus points
   cover?: string;    // e.g. '/covers/led-zeppelin-iv.jpg' — AI-generated cover art
+  sideA?: { genre: string; year: number };  // for double-sided mode
+  sideB?: { genre: string; year: number };  // for double-sided mode
 }
 
 export interface GridCell {
@@ -17,9 +19,9 @@ export interface GridCell {
 
 export type SortRule = 'genre' | 'chronological' | 'free';
 
-export type LevelMode = 'free' | 'genre' | 'chronological' | 'customer' | 'blackout' | 'rush' | 'sleeve-match';
+export type LevelMode = 'free' | 'genre' | 'chronological' | 'customer' | 'blackout' | 'rush' | 'sleeve-match' | 'color-blind' | 'pile-up' | 'double-sided' | 'vinyl-swap';
 
-export type LevelTheme = 'classic' | 'jazz-club' | 'punk-basement' | 'disco-70s';
+export type LevelTheme = 'classic' | 'jazz-club' | 'punk-basement' | 'disco-70s' | 'indie-loft' | 'electronic-neon' | 'vinyl-storage';
 
 export interface CustomerRequest {
   genre: string;
@@ -45,6 +47,8 @@ export interface Level {
   customerTimer?: number;  // seconds before customer leaves (impatience)
   // Sleeve-match mode: ogni slot mostra una copertina e il giocatore deve abbinare il disco giusto
   sleeveTargets?: { row: number; col: number; vinylId: string }[];
+  pileGrowthRate?: number;  // seconds between new vinyl spawns in pile-up mode
+  currentSide?: 'A' | 'B';  // which side is currently visible (for double-sided)
 }
 
 export type GameStatus = 'playing' | 'completed';

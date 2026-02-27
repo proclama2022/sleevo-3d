@@ -1,0 +1,251 @@
+/* ══════════════════════════════════════════════════════════
+   SceneBackdrop — themed visual background for the game
+   Each theme layers: photo + color overlay + shared fx
+   ══════════════════════════════════════════════════════════ */
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+
+  /* Default (classic) CSS vars — overridden per theme */
+  --lamp-color: rgba(255, 190, 80, 0.88);
+  --cone-color: rgba(255, 175, 60, 0.12);
+  --overlay: rgba(18, 10, 5, 0.48);
+  --bokeh-a: rgba(246, 176, 101, 0.55);
+  --bokeh-b: rgba(246, 132, 93, 0.5);
+  --bokeh-c: rgba(131, 185, 226, 0.45);
+  --bokeh-d: rgba(166, 233, 205, 0.42);
+  --glow-top: rgba(255, 195, 100, 0.38);
+  --glow-mid: rgba(255, 175, 80, 0.08);
+  --shelf-left: #5a3d2a;
+  --shelf-right: #523827;
+}
+
+/* ── PHOTO LAYER ── */
+.bgPhoto {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  filter: saturate(0.85) brightness(0.62);
+  transition: filter 0.6s ease;
+}
+
+/* ── COLOR OVERLAY — theme-specific tint on top of photo ── */
+.colorOverlay {
+  position: absolute;
+  inset: 0;
+  background: var(--overlay);
+  mix-blend-mode: multiply;
+}
+
+/* ── LAMPS ── */
+.lamp {
+  position: absolute;
+  top: -8px;
+  width: 14px;
+  height: 24px;
+  border-radius: 0 0 8px 8px;
+  background: linear-gradient(180deg, #2a1a0a 0%, #5a3814 100%);
+  box-shadow: 0 0 18px 8px var(--lamp-color);
+  z-index: 2;
+}
+.lampLeft  { left: 18%; }
+.lampRight { right: 18%; }
+
+/* ── LIGHT CONES ── */
+.lightCone {
+  position: absolute;
+  top: 16px;
+  width: 0;
+  height: 0;
+  z-index: 1;
+  filter: blur(0.3px);
+}
+.lightConeLeft {
+  left: calc(18% - 64px);
+  border-left: 64px solid transparent;
+  border-right: 64px solid transparent;
+  border-top: 0;
+  border-bottom: 320px solid var(--cone-color);
+}
+.lightConeRight {
+  right: calc(18% - 64px);
+  border-left: 64px solid transparent;
+  border-right: 64px solid transparent;
+  border-top: 0;
+  border-bottom: 320px solid var(--cone-color);
+}
+
+/* ── GLOW ── */
+.bgGlow {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 64% 36% at 50% 20%, var(--glow-top), rgba(0,0,0,0)),
+    radial-gradient(ellipse 42% 28% at 50% 50%, var(--glow-mid), rgba(0,0,0,0)),
+    radial-gradient(ellipse 100% 70% at 50% 65%, rgba(18, 12, 8, 0.14) 0%, rgba(8, 6, 4, 0.5) 100%);
+  animation: glowPulse 6s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  0%   { opacity: 0.86; }
+  100% { opacity: 1; }
+}
+
+/* ── FOG ── */
+.sceneFog {
+  position: absolute;
+  inset: 45% 0 0;
+  z-index: 1;
+  background: linear-gradient(180deg,
+    rgba(18, 13, 10, 0) 0%,
+    rgba(11, 8, 6, 0.12) 48%,
+    rgba(8, 6, 4, 0.3) 100%
+  );
+}
+
+/* ── BOKEH BLOBS ── */
+.bokeh {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(10px);
+  opacity: 0.65;
+  z-index: 1;
+}
+.bokehA { width: 82px; height: 82px; left: 22px;  top: 108px; background: radial-gradient(circle, var(--bokeh-a) 0%, rgba(0,0,0,0) 70%); }
+.bokehB { width: 72px; height: 72px; right: 30px; top: 252px; background: radial-gradient(circle, var(--bokeh-b) 0%, rgba(0,0,0,0) 70%); }
+.bokehC { width: 66px; height: 66px; left: 74px;  top: 294px; background: radial-gradient(circle, var(--bokeh-c) 0%, rgba(0,0,0,0) 70%); }
+.bokehD { width: 62px; height: 62px; right: 98px; top: 132px; background: radial-gradient(circle, var(--bokeh-d) 0%, rgba(0,0,0,0) 70%); }
+
+/* ── SIDE SHELF BLUR ── */
+.bgShelfLeft,
+.bgShelfRight {
+  position: absolute;
+  width: 132px;
+  height: 348px;
+  border-radius: 10px;
+  opacity: 0.28;
+  filter: blur(8px);
+  z-index: 1;
+}
+.bgShelfLeft  { left: -52px; top: 17%; background: linear-gradient(180deg, var(--shelf-left) 0%, #1b110b 100%); transform: perspective(330px) rotateY(10deg); }
+.bgShelfRight { right: -48px; top: 16%; background: linear-gradient(180deg, var(--shelf-right) 0%, #160f09 100%); transform: perspective(330px) rotateY(-10deg); }
+
+
+/* ══════════════════════════════════════════════════════════
+   THEME OVERRIDES
+   ══════════════════════════════════════════════════════════ */
+
+/* ── JAZZ CLUB — deep blue/purple neon ── */
+.jazz_club {
+  --lamp-color: rgba(120, 80, 255, 0.7);
+  --cone-color: rgba(100, 60, 220, 0.1);
+  --overlay: rgba(5, 5, 28, 0.52);
+  --bokeh-a: rgba(120, 80, 255, 0.5);
+  --bokeh-b: rgba(200, 60, 180, 0.45);
+  --bokeh-c: rgba(60, 140, 240, 0.45);
+  --bokeh-d: rgba(240, 100, 200, 0.4);
+  --glow-top: rgba(100, 60, 220, 0.32);
+  --glow-mid: rgba(60, 30, 160, 0.08);
+  --shelf-left: #1a1040;
+  --shelf-right: #14093a;
+}
+.jazz_club .bgPhoto {
+  filter: saturate(1.1) brightness(0.55) hue-rotate(220deg);
+}
+
+/* ── PUNK BASEMENT — raw green/red ── */
+.punk_basement {
+  --lamp-color: rgba(180, 220, 60, 0.6);
+  --cone-color: rgba(160, 200, 40, 0.08);
+  --overlay: rgba(4, 12, 4, 0.54);
+  --bokeh-a: rgba(180, 220, 60, 0.45);
+  --bokeh-b: rgba(220, 40, 40, 0.4);
+  --bokeh-c: rgba(40, 200, 80, 0.4);
+  --bokeh-d: rgba(200, 200, 20, 0.38);
+  --glow-top: rgba(160, 200, 40, 0.28);
+  --glow-mid: rgba(80, 160, 20, 0.06);
+  --shelf-left: #0e1a06;
+  --shelf-right: #0a1404;
+}
+.punk_basement .bgPhoto {
+  filter: saturate(0.7) brightness(0.5) contrast(1.1);
+}
+
+/* ── DISCO 70s — warm gold/orange ── */
+.disco_70s {
+  --lamp-color: rgba(255, 210, 60, 0.9);
+  --cone-color: rgba(255, 180, 30, 0.14);
+  --overlay: rgba(20, 10, 2, 0.44);
+  --bokeh-a: rgba(255, 210, 60, 0.55);
+  --bokeh-b: rgba(255, 100, 30, 0.5);
+  --bokeh-c: rgba(220, 180, 20, 0.48);
+  --bokeh-d: rgba(255, 140, 80, 0.45);
+  --glow-top: rgba(255, 210, 80, 0.42);
+  --glow-mid: rgba(255, 160, 40, 0.1);
+  --shelf-left: #4a2800;
+  --shelf-right: #3e2000;
+}
+.disco_70s .bgPhoto {
+  filter: saturate(1.2) brightness(0.6);
+}
+
+/* ── INDIE LOFT — industrial/hipster warm tones ── */
+.indie_loft {
+  --lamp-color: rgba(255, 180, 100, 0.85);
+  --cone-color: rgba(255, 160, 80, 0.11);
+  --overlay: rgba(25, 15, 8, 0.46);
+  --bokeh-a: rgba(255, 180, 100, 0.5);
+  --bokeh-b: rgba(200, 120, 60, 0.45);
+  --bokeh-c: rgba(180, 140, 100, 0.42);
+  --bokeh-d: rgba(220, 160, 80, 0.4);
+  --glow-top: rgba(255, 170, 90, 0.36);
+  --glow-mid: rgba(200, 120, 60, 0.08);
+  --shelf-left: #4a3528;
+  --shelf-right: #3a2820;
+}
+.indie_loft .bgPhoto {
+  filter: saturate(1.05) brightness(0.58) sepia(0.15);
+}
+
+/* ── ELECTRONIC NEON — cyberpunk/synthwave cyan/magenta ── */
+.electronic_neon {
+  --lamp-color: rgba(0, 255, 200, 0.75);
+  --cone-color: rgba(0, 200, 255, 0.12);
+  --overlay: rgba(5, 0, 20, 0.55);
+  --bokeh-a: rgba(0, 255, 200, 0.5);
+  --bokeh-b: rgba(255, 0, 150, 0.45);
+  --bokeh-c: rgba(100, 0, 255, 0.42);
+  --bokeh-d: rgba(255, 100, 200, 0.4);
+  --glow-top: rgba(0, 200, 255, 0.35);
+  --glow-mid: rgba(150, 0, 200, 0.1);
+  --shelf-left: #1a0a30;
+  --shelf-right: #0a0520;
+}
+.electronic_neon .bgPhoto {
+  filter: saturate(1.3) brightness(0.5) hue-rotate(-10deg);
+}
+
+/* ── VINYL STORAGE — warehouse/backroom dim/flickering ── */
+.vinyl_storage {
+  --lamp-color: rgba(255, 200, 120, 0.6);
+  --cone-color: rgba(255, 180, 80, 0.08);
+  --overlay: rgba(15, 10, 5, 0.6);
+  --bokeh-a: rgba(255, 200, 120, 0.35);
+  --bokeh-b: rgba(200, 150, 80, 0.3);
+  --bokeh-c: rgba(180, 140, 90, 0.28);
+  --bokeh-d: rgba(160, 120, 70, 0.25);
+  --glow-top: rgba(255, 180, 100, 0.22);
+  --glow-mid: rgba(150, 100, 60, 0.05);
+  --shelf-left: #2a2015;
+  --shelf-right: #1f1810;
+}
+.vinyl_storage .bgPhoto {
+  filter: saturate(0.8) brightness(0.45) contrast(1.05);
+}
