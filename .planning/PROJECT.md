@@ -38,7 +38,16 @@ Il giocatore deve sempre sapere esattamente cosa deve fare, perché ha guadagnat
 
 ### Active
 
-*(next milestone requirements go here)*
+**Current Milestone: v1.2 Visual Polish**
+
+**Goal:** Make the game feel more satisfying and polished with tactile feedback and ambient atmosphere.
+
+**Target features:**
+- Drag wobble — vinyl disc oscillates naturally when grabbed
+- Slot glow — shelf slots emit subtle glow when vinyl is near
+- Level transitions — smooth fade/slide between screens
+- Vinyl spin — disc rotates when placed, with drop shadow
+- Ambient particles — dust motes and light rays in scenes
 
 ### Out of Scope
 
@@ -81,4 +90,4 @@ Tech stack: React + Three.js + TypeScript + Vite. State: useReducer in GameScree
 - **Lingua**: UI in italiano
 
 ---
-*Last updated: 2026-02-26 after v1.1 milestone*
+*Last updated: 2026-03-02 after v1.2 milestone started*

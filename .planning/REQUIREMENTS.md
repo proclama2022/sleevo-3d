@@ -1,47 +1,95 @@
-# Requirements: Sleevo v1.1 — Social & Retention
+# Requirements: Sleevo v1.2 Visual Polish
 
-## Milestone Goal
+**Defined:** 2026-03-02
+**Core Value:** Il giocatore deve sempre sapere esattamente cosa deve fare, perché ha guadagnato punti, e quanto manca alla fine del livello.
 
-Il giocatore può confrontare le proprie performance passate — best score visibile nel level select e celebrazione del nuovo record alla fine del livello.
+## v1.2 Requirements
 
-## v1.1 Requirements
+### Accessibility (Foundation)
 
-### Persistence
+- [ ] **ACES-01**: Tutte le animazioni rispettano prefers-reduced-motion via CSS media query
+- [ ] **ACES-02**: Animazioni non causano vestibular issues (no infinite motion, no extreme parallax)
 
-- [x] **PERSIST-01**: Il gioco salva il punteggio migliore (punti interi) per ogni livello in localStorage con semantica best-only (sovrascrive solo se il nuovo score supera il precedente)
-- [x] **PERSIST-02**: Il salvataggio del punteggio migliore usa merge-write per non sovrascrivere i dati esistenti (bestStars, unlocked)
+### Drag Feedback
 
-### Display — Level Select
+- [ ] **DRAG-01**: Vinile oscilla naturalmente quando afferrato (wobble effect con physics)
+- [ ] **DRAG-02**: Wobble risponde alla velocità del drag — movimento veloce = oscillazione maggiore
+- [ ] **DRAG-03**: Wobble si attenua gradualmente quando il drag si ferma
 
-- [x] **SELECT-01**: La cella di ogni livello mostra il punteggio migliore come "1.420 pt" sotto le stelle; mostra "--" se il livello non è mai stato completato
+### Slot Feedback
 
-### Display — Level Complete
+- [ ] **SLOT-01**: Slot emette glow pulsante quando vinile è in prossimità
+- [ ] **SLOT-02**: Glow intensifica quando vinile è direttamente sopra lo slot
+- [ ] **SLOT-03**: Glow si spegne con transizione smooth quando vinile si allontana
 
-- [x] **COMPLETE-01**: La schermata di fine livello mostra il badge "Nuovo Record!" quando il punteggio corrente supera il record personale precedente (escluso il primo completamento — nessun record precedente non conta come "nuovo record")
-- [x] **COMPLETE-02**: Il badge "Nuovo Record!" mostra anche il delta rispetto al record precedente (es. "+340 pt")
+### Placement Feedback
+
+- [ ] **PLACE-01**: Vinile ruota di 360° quando piazzato correttamente (spin animation)
+- [ ] **PLACE-02**: Drop shadow appare sotto il vinile durante il drag
+- [ ] **PLACE-03**: Effetto "thwack" visivo al placement (mini-bounce + sparkle esistente)
+
+### Screen Transitions
+
+- [ ] **TRAN-01**: Transizione fade tra LevelSelect e GameScreen
+- [ ] **TRAN-02**: Transizione fade tra GameScreen e LevelComplete
+- [ ] **TRAN-03**: Loading state visivo durante lazy loading livelli
+- [ ] **TRAN-04**: Transizioni rispettano prefers-reduced-motion
+
+### Ambient Atmosphere
+
+- [ ] **AMBI-01**: Particelle polvere fluttuano nella scena (tema-aware)
+- [ ] **AMBI-02**: Raggi di luce sottili nella scena (solo temi specifici)
+- [ ] **AMBI-03**: Particelle reagiscono al tema (colore, intensità)
 
 ## Future Requirements
 
-*(Deferred to a future milestone)*
+Deferred to future release.
 
-- Delta score animato che conta su dalla differenza (P3 — visual polish)
-- Classifica locale multi-profilo (richiede refactor storage)
+### Advanced Polish
+
+- **ADV-01**: Particle burst colorato per combo > 3x
+- **ADV-02**: Screen shake per errori consecutivi
+- **ADV-03**: Haptic feedback su mobile
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Leaderboard online | Richiede backend |
-| Condivisione score sui social | Fuori dal core loop |
-| Best time display in LevelSelect | Non richiesto per v1.1; bestTime non ha superficie di display |
-| Animazione "nuovo record" elaborata (particelle, camera shake) | Overkill per questo contesto; badge + pulse sufficienti |
+| Suoni/effetti audio | Separato in milestone dedicata |
+| 3D mesh animati in Three.js | Three.js resta statico per performance |
+| Micro-interazioni su ogni button | Non core per game feel |
+| Parallax scrolling | Non applicabile al layout attuale |
 
 ## Traceability
 
-| REQ-ID | Phase | Plan |
-|--------|-------|------|
-| PERSIST-01 | Phase 5 | 05-01, 05-02 |
-| PERSIST-02 | Phase 5 | 05-01, 05-02 |
-| SELECT-01 | Phase 7 | 07-01 |
-| COMPLETE-01 | Phase 6 | 06-01 |
-| COMPLETE-02 | Phase 6 | 06-01 |
+Which phases cover which requirements. Updated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| ACES-01 | Phase 8 | Pending |
+| ACES-02 | Phase 8 | Pending |
+| DRAG-01 | Phase 9 | Pending |
+| DRAG-02 | Phase 9 | Pending |
+| DRAG-03 | Phase 9 | Pending |
+| SLOT-01 | Phase 9 | Pending |
+| SLOT-02 | Phase 9 | Pending |
+| SLOT-03 | Phase 9 | Pending |
+| PLACE-01 | Phase 10 | Pending |
+| PLACE-02 | Phase 10 | Pending |
+| PLACE-03 | Phase 10 | Pending |
+| TRAN-01 | Phase 11 | Pending |
+| TRAN-02 | Phase 11 | Pending |
+| TRAN-03 | Phase 11 | Pending |
+| TRAN-04 | Phase 11 | Pending |
+| AMBI-01 | Phase 12 | Pending |
+| AMBI-02 | Phase 12 | Pending |
+| AMBI-03 | Phase 12 | Pending |
+
+**Coverage:**
+- v1.2 requirements: 17 total
+- Mapped to phases: 17
+- Unmapped: 0 ✓
+
+---
+*Requirements defined: 2026-03-02*
+*Last updated: 2026-03-02 after initial definition*
