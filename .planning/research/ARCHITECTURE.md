@@ -1,368 +1,484 @@
 # Architecture Research
 
-**Domain:** Best score persistence + personal record UI in existing React browser game
-**Researched:** 2026-02-25
-**Confidence:** HIGH — based entirely on direct codebase inspection
+**Domain:** Visual Polish in React + Three.js Game
+**Researched:** 2026-03-02
+**Confidence:** HIGH
 
 ## Standard Architecture
 
 ### System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Screen Router (App.tsx)                  │
-│   useState: 'levelSelect' | 'playing'                        │
-├──────────────────────┬──────────────────────────────────────┤
-│   LevelSelect.tsx    │         GameScreen.tsx               │
-│   (read-only)        │   useReducer → GameState             │
-│   loadAllProgress()  │   saveProgress() on complete         │
-│   → bestStars        │   → bestStars + bestScore (NEW)      │
-│   → bestScore (NEW)  │                                      │
-│   LevelCell renders  │   LevelComplete.tsx                  │
-│   score per cell     │   receives isNewRecord prop (NEW)    │
-│   (NEW: "1.420 pt")  │   shows "Nuovo Record!" badge (NEW)  │
-├──────────────────────┴──────────────────────────────────────┤
-│                    src/game/storage.ts                       │
-│   LevelProgress: { stars, bestTime?, bestScore? (NEW) }     │
-│   saveProgress(id, stars, time?, score?) — best-only write  │
-│   loadAllProgress() → Record<string, LevelProgress>         │
-│   getLevelProgress(id) → LevelProgress | null               │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                     Presentation Layer (React)                  │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌──────────────┐            │
+│  │ VinylDisc   │  │ ShelfSlot   │  │ ParticleBurst│            │
+│  │ (CSS anims) │  │ (Sparkle)   │  │ (CSS/Canvas) │            │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬───────┘            │
+│         │                │                 │                     │
+│  ┌──────┴──────┐  ┌──────┴──────┐  ┌──────┴───────┐            │
+│  │  Counter    │  │   Shelf     │  │   GameScreen │            │
+│  │ (Wobble)    │  │ (Glow)      │  │ (Orchestrator)│           │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬───────┘            │
+├─────────┴────────────────┴─────────────────┴────────────────────┤
+│                   Animation Coordination Layer                   │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ TIMING.ts    │  │ keyframes.ts │  │ Animations   │          │
+│  │ (Constants)  │  │ (Keyframes)  │  │ (Mixins)     │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+├─────────────────────────────────────────────────────────────────┤
+│                      Three.js Layer (3D)                        │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │Shelf3DCanvas │  │ Scene        │  │Particles     │          │
+│  │ (Static)     │  │ Backdrop     │  │ (NEW)        │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+├─────────────────────────────────────────────────────────────────┤
+│                    State Management Layer                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ GameScreen   │  │  gameReducer │  │   Engine     │          │
+│  │ (useState)   │  │ (Logic)      │  │ (Rules)      │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Component Responsibilities
 
-| Component | Responsibility | Current State |
-|-----------|----------------|---------------|
-| `src/game/storage.ts` | Persist progress to localStorage; best-only semantics | Saves `stars` + `bestTime`. Must add `bestScore`. |
-| `GameScreen.tsx` | Orchestrate game loop; save progress on complete; pass data to LevelComplete | Calls `saveProgress(id, stars, time)`. Must add score arg and `isNewRecord` derivation. |
-| `LevelComplete.tsx` | Display end-of-level stats; show record badge | Renders score. Must accept `isNewRecord` prop and render "Nuovo Record!" badge. |
-| `LevelSelect.tsx / LevelCell` | Render per-level grid cells with progress data | Reads `bestStars`. Must also read and render `bestScore`. |
-| `App.tsx` | Screen routing only; passes `onReturnToSelect` callback | No changes needed. |
-
----
+| Component | Responsibility | Typical Implementation |
+|-----------|----------------|------------------------|
+| **VinylDisc** | Vinyl rendering, drag wobble animation | CSS transforms + styled-components |
+| **ShelfSlot** | Slot rendering, placement sparkles, glow effects | CSS keyframes + data-attributes |
+| **Counter** | Unplaced vinyls display, carousel rotation | CSS transforms for 3D carousel |
+| **Shelf** | Grid layout, 3D canvas integration, column hints | Grid + Shelf3DCanvas (Three.js) |
+| **GameScreen** | Animation orchestration, popup coordination | useState for ephemeral UI |
+| **ParticleBurst** | One-shot particle explosions | CSS transforms on individual particles |
+| **SceneBackdrop** | Themed background, ambient effects | CSS animations on layered divs |
 
 ## Recommended Project Structure
 
-No new files or folders required. All changes are in-place modifications to existing files:
-
 ```
 src/
-├── game/
-│   └── storage.ts          MODIFY — add bestScore to LevelProgress, extend saveProgress
+├── animations/              # Centralized animation system
+│   ├── index.ts            # Public API exports
+│   ├── timing.ts           # Duration/easing constants
+│   ├── keyframes.ts        # CSS keyframe definitions
+│   └── transitions.ts      # NEW: Screen transition utilities
 ├── components/
-│   ├── GameScreen.tsx       MODIFY — derive isNewRecord, pass to LevelComplete, save score
-│   ├── LevelComplete.tsx    MODIFY — add isNewRecord prop, render "Nuovo Record!" badge
-│   └── LevelSelect/
-│       └── LevelSelect.tsx  MODIFY — pass bestScore into LevelCell, render score line
+│   ├── VinylDisc.tsx       # Vinyl rendering (MODIFY for wobble)
+│   ├── VinylDisc.module.css # Vinyl-specific animations
+│   ├── ShelfSlot.tsx       # Slot rendering (MODIFY for glow)
+│   ├── ShelfSlot.module.css # Slot-specific animations
+│   ├── Shelf.tsx           # Grid + 3D integration
+│   ├── Shelf3DCanvas.tsx   # Three.js shelf rendering
+│   ├── Counter.tsx         # Carousel display
+│   ├── ParticleBurst/      # Burst effects
+│   │   ├── ParticleBurst.tsx
+│   │   ├── Particle.tsx
+│   │   └── index.ts
+│   ├── AmbientParticles/   # NEW: Dust/light ray system
+│   │   ├── AmbientParticles.tsx
+│   │   ├── DustMote.tsx
+│   │   ├── LightRay.tsx
+│   │   └── index.ts
+│   ├── ScreenTransition/   # NEW: Route transition wrapper
+│   │   ├── ScreenTransition.tsx
+│   │   └── index.ts
+│   └── GameScreen.tsx      # Main orchestrator
+├── game/
+│   ├── engine.ts           # Game logic (MODIFY for animation hooks)
+│   └── types.ts            # Shared types
+└── App.tsx                 # Route screen switching (MODIFY)
 ```
 
----
+### Structure Rationale
+
+- **animations/:** Centralized constants prevent magic numbers, ensure consistency
+- **components/AmbientParticles/:** Isolated particle system for reuse across scenes
+- **components/ScreenTransition/:** Declarative transition wrapper for clean App.tsx
+- **VinylDisc/ShelfSlot modules:** CSS Modules co-located with components for specificity
+- **GameScreen:** Remains orchestrator, not implementing animations directly
 
 ## Architectural Patterns
 
-### Pattern 1: Extend Storage Shape In-Place
+### Pattern 1: CSS-First Animations for UI Feedback
 
-**What:** Add `bestScore?: number` to the existing `LevelProgress` interface. Extend `saveProgress` with an optional `score` parameter. Best-only write logic: `score > existing.bestScore`.
+**What:** Use CSS keyframes and transforms for all UI feedback (wobble, sparkles, glow pulses)
 
-**When to use:** Adding a new scalar metric with identical semantics to existing `stars` or `bestTime` fields.
+**When to use:**
+- Drag feedback (wobble, scale)
+- Placement feedback (sparkles, glow)
+- Score popups, combo indicators
+- Anything affecting DOM elements
 
-**Trade-offs:** Zero migration cost — old data in localStorage is valid (missing `bestScore` treated as `undefined`/0). No breaking changes to callers that do not pass score.
+**Trade-offs:**
+- ✅ Pros: Hardware acceleration, declarative, reduced motion support
+- ✅ Easy to debug, predictable performance
+- ❌ Limited to transform/opacity/filter properties
+- ❌ Cannot animate 3D scene objects
 
 **Example:**
 ```typescript
-// src/game/storage.ts
+// VinylDisc.tsx - Drag wobble
+const Disc = styled.div<{ $dragging: boolean }>`
+  transform: rotate(-15deg);
 
-export interface LevelProgress {
-  stars: number;
-  bestTime?: number;
-  bestScore?: number;   // NEW
-}
+  ${(props) => props.$dragging && `
+    animation: ${wobble} 0.4s ease-in-out infinite;
+    will-change: transform;
+  `}
 
-export function saveProgress(
-  levelId: string,
-  stars: number,
-  timeSeconds?: number,
-  score?: number        // NEW optional param
-): void {
-  try {
-    const data = loadAllProgress();
-    const existing = data[levelId];
-    const starsImproved = !existing || stars > existing.stars;
-    const timeImproved = !starsImproved &&
-      stars === existing?.stars &&
-      timeSeconds !== undefined &&
-      (existing.bestTime === undefined || timeSeconds < existing.bestTime);
-    const scoreImproved = score !== undefined &&
-      (existing?.bestScore === undefined || score > existing.bestScore);
-
-    if (starsImproved || timeImproved || scoreImproved) {
-      data[levelId] = {
-        stars: starsImproved ? stars : (existing?.stars ?? stars),
-        bestTime: starsImproved || timeImproved ? timeSeconds : existing?.bestTime,
-        bestScore: scoreImproved ? score : existing?.bestScore,  // NEW
-      };
-      localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
-    }
-  } catch {
-    // localStorage might be unavailable
-  }
-}
+  ${reducedMotion} /* Respects prefers-reduced-motion */
+`;
 ```
 
-**Important:** `bestScore` uses independent best-only semantics — it improves whenever the new score exceeds the stored value, regardless of whether stars also improved. A player can earn 3 stars on run 1 and beat their score without beating their star count on run 2.
+### Pattern 2: Three.js for Static 3D, CSS for Dynamic Polish
 
----
+**What:** Three.js renders static shelf (meshes, lighting, shadows), CSS handles dynamic feedback
 
-### Pattern 2: Derive isNewRecord in GameScreen Before Saving
+**When to use:**
+- 3D environment that doesn't change during gameplay
+- Need realistic shadows, lighting, materials
+- Performance is critical (static = no per-frame updates)
 
-**What:** Before calling `saveProgress`, read the current stored `bestScore` via `getLevelProgress`. Compare `state.score > (existing?.bestScore ?? 0)`. Store the result in a local `useState` boolean. Pass the boolean as a prop to `LevelComplete`.
+**Trade-offs:**
+- ✅ Pros: Best performance (no render loop), realistic rendering
+- ✅ Clean separation: 3D vs 2D UI
+- ❌ Cannot animate shelf geometry (wobble, bounce)
+- ❌ Lighting is baked, not dynamic
 
-**When to use:** Any "you beat your record" UI that requires a before/after comparison. The comparison must happen before the write, because after the write the stored value equals the current run and the comparison would always return false.
+**Current implementation:**
+```typescript
+// Shelf3DCanvas.tsx - Static shelf, rendered once
+useEffect(() => {
+  const shelf = buildShelf(scene, rows, cols);
+  // No animation loop - renders once on mount/resize
+  const resize = () => {
+    renderer.render(scene, camera);
+  };
+  // Only re-renders on resize
+}, [rows, cols]);
+```
 
-**Where the comparison lives: `GameScreen.tsx` — inside the completion `useEffect`.**
+### Pattern 3: Ephemeral State Management for Animations
 
-This is the correct location because:
-- GameScreen already owns the `saveProgress` call (line 189 in the existing file)
-- GameScreen has access to both `state.score` (current run) and can call `getLevelProgress(state.level.id)` (stored best)
-- LevelComplete is a pure display component — it must not read storage directly
-- App.tsx has no score awareness and must not gain it
+**What:** Use local useState in GameScreen for transient animation state
+
+**When to use:**
+- One-shot animations (particle bursts, popups)
+- Short-lived UI (score popups, combo indicators)
+- Effects that self-cleanup after N ms
+
+**Trade-offs:**
+- ✅ Pros: Simple, no cleanup complexity, predictable lifecycle
+- ✅ Works well with React's rendering model
+- ❌ Not suitable for persistent state
+- ❌ Cannot coordinate complex animations across components
 
 **Example:**
 ```typescript
-// In GameScreen.tsx — replace existing completion useEffect
-
-const [isNewRecord, setIsNewRecord] = useState(false);
+// GameScreen.tsx - Particle burst coordination
+const [comboBurst, setComboBurst] = useState<{x: number; y: number} | null>(null);
 
 useEffect(() => {
-  if (state.status === 'completed') {
-    const existing = getLevelProgress(state.level.id);
-    const newRecord = state.score > (existing?.bestScore ?? 0);
-    setIsNewRecord(newRecord);                                    // set BEFORE save
-    saveProgress(state.level.id, state.stars, timeElapsed, state.score);
+  if (currentCombo >= 5 && prevCombo < 5 && lastSlotPosition) {
+    setComboBurst(lastSlotPosition); // Trigger burst
   }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [state.status, state.stars]);
+}, [currentCombo]);
+
+// Cleanup handled by ParticleBurst's internal timer
+{comboBurst && (
+  <ParticleBurst
+    x={comboBurst.x}
+    y={comboBurst.y}
+    onComplete={() => setComboBurst(null)}
+  />
+)}
 ```
 
-Then pass to LevelComplete:
-```tsx
-<LevelComplete
-  ...
-  isNewRecord={isNewRecord}   // NEW prop
-/>
-```
+### Pattern 4: Data-Attribute Driven Visual States
 
-Reset `isNewRecord` to `false` in both `handleRestart` and `handleNext` callbacks to prevent the badge from persisting into the next run.
+**What:** Use data-attributes for performance-critical hover/active states
 
----
+**When to use:**
+- High-frequency updates (60fps drag hover)
+- Avoiding React re-renders during interactions
+- Simple binary/toggle states
 
-### Pattern 3: Read bestScore in LevelSelect at Render Time
-
-**What:** `loadAllProgress()` is already called synchronously in `LevelSelect` at render time. Extract `bestScore` from the progress record alongside `bestStars`. Pass it to `LevelCell` as a new optional prop.
-
-**When to use:** LevelSelect already uses the synchronous read pattern — extend it to include the new field. No additional reads are needed.
-
-**Trade-offs:** Zero additional localStorage reads — same `loadAllProgress()` call already returns the extended shape once `storage.ts` is updated. `LevelCell` gets one new optional prop.
+**Trade-offs:**
+- ✅ Pros: Zero re-renders, CSS handles all transitions
+- ✅ Bypasses React's virtual DOM for hot paths
+- ❌ Harder to debug (no React DevTools visibility)
+- ❌ Limited to simple state (no complex objects)
 
 **Example:**
 ```typescript
-// LevelSelect.tsx
+// GameScreen.tsx - Direct DOM manipulation during drag
+const handlePointerMove = (e: React.PointerEvent) => {
+  const foundElement = candidate.element;
 
-interface CellProps {
-  levelNumber: number;
-  bestStars: number;
-  bestScore?: number;   // NEW
-  unlocked: boolean;
-  focused: boolean;
-  onClick: () => void;
-  cellRef?: React.Ref<HTMLButtonElement>;
+  // Direct DOM update - no setState, no re-render
+  if (foundElement) {
+    foundElement.setAttribute('data-hover', valid ? 'valid' : 'invalid');
+    foundElement.setAttribute('data-hover-magnetic', 'true');
+  }
+};
+
+// ShelfSlot.module.css - CSS responds to data-attributes
+.slot[data-hover='valid'] {
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.6);
+  transform: scale(1.05);
 }
-
-function LevelCell({ levelNumber, bestStars, bestScore, unlocked, focused, onClick, cellRef }: CellProps) {
-  return (
-    <button ...>
-      <span className={styles.number}>{levelNumber}</span>
-      <div className={styles.stars}>...</div>
-      {bestScore !== undefined && bestScore > 0 && (
-        <span className={styles.bestScore}>
-          {bestScore.toLocaleString('it-IT')} pt
-        </span>
-      )}
-      {!unlocked && <span className={styles.lock}>🔒</span>}
-    </button>
-  );
-}
-
-// In LevelSelect render:
-const bestScore = p?.bestScore;
-return (
-  <LevelCell
-    ...
-    bestScore={bestScore}
-  />
-);
 ```
-
-The Italian locale `it-IT` formats `1420` as `"1.420"` — matching the "1.420 pt" spec.
-
----
 
 ## Data Flow
 
-### bestScore Write Flow (new)
+### Animation Trigger Flow
 
 ```
-User completes level
-    |
-    v
-GameScreen — state.status === 'completed' fires useEffect
-    |
-    v
-getLevelProgress(state.level.id)  <-- read BEFORE write
-    |
-    v
-Compare: state.score > (existing?.bestScore ?? 0)
-    |
-    v
-setIsNewRecord(true/false)  <-- local useState, triggers re-render
-    |
-    v
-saveProgress(id, stars, timeElapsed, state.score)  <-- write
-    |
-    v
-LevelComplete receives isNewRecord=true  -->  renders "Nuovo Record!" badge
+[User Action: Drag Start]
+    ↓
+GameScreen.handleDragStart()
+    ↓
+setDrag({ vinylId, color, x, y }) → Triggers VinylDisc wobble
+    ↓
+[User Action: Drag Move]
+    ↓
+GameScreen.handlePointerMove()
+    ↓
+Direct DOM: setAttribute('data-hover', 'valid') → Triggers slot glow
+    ↓
+[User Action: Release]
+    ↓
+GameScreen.handlePointerUp()
+    ↓
+dispatch({ type: 'PLACE_VINYL' }) → Updates game state
+    ↓
+ShelfSlot detects new vinyl.id → Triggers sparkle animation
+    ↓
+GameScreen captures slot position → setLastSlotPosition()
+    ↓
+Render ParticleBurst at position → Self-cleanup after 650ms
 ```
 
-### bestScore Read Flow (LevelSelect)
+### State Management for Animations
 
 ```
-User returns to level select (or first load)
-    |
-    v
-LevelSelect re-mounts, render executes synchronously
-    |
-    v
-loadAllProgress()  <-- single synchronous localStorage read
-    |
-    v
-progress[level.id].bestScore extracted per cell
-    |
-    v
-LevelCell receives bestScore prop  -->  renders "1.420 pt" below stars
+┌─────────────────────────────────────────────────────────────┐
+│                    GameScreen State                         │
+├─────────────────────────────────────────────────────────────┤
+│  Persistent Game State (useReducer):                        │
+│  - score, combo, placedVinyls, level status                 │
+│  → Managed by gameReducer, drives core game logic           │
+│                                                             │
+│  Ephemeral Animation State (useState):                      │
+│  - comboBurst, scorePopups, lastSlotPosition                │
+│  → Local to GameScreen, self-cleanup via onComplete         │
+│  → Example: setComboBurst(pos) → ParticleBurst → onComplete │
+│                                                             │
+│  Derived State (computed):                                  │
+│  - progress, hudTimeRemaining, unplacedVinyls               │
+│  → Computed from reducer state, no setter needed            │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### Key Data Flows
 
-1. **Write path:** `GameScreen completion useEffect` reads existing via `getLevelProgress` (before write) → derives `isNewRecord` → calls `saveProgress` (write)
-2. **Record badge path:** `isNewRecord` boolean in `GameScreen` local state → prop to `LevelComplete` → conditional render of badge
-3. **LevelSelect display path:** `loadAllProgress()` at render → `LevelCell.bestScore` prop → `toLocaleString('it-IT')` formatted output
-
----
-
-## Integration Points
-
-### Modified Files
-
-| File | Change Type | What Changes |
-|------|-------------|--------------|
-| `src/game/storage.ts` | Modify | Add `bestScore?: number` to `LevelProgress`; add optional `score` param to `saveProgress`; independent best-only write logic for score |
-| `src/components/GameScreen.tsx` | Modify | Add `isNewRecord` useState; read existing bestScore before save; pass `isNewRecord` to LevelComplete; reset in `handleRestart` and `handleNext` |
-| `src/components/LevelComplete.tsx` | Modify | Add `isNewRecord?: boolean` prop to `Props` interface; render "Nuovo Record!" badge when true |
-| `src/components/LevelSelect/LevelSelect.tsx` | Modify | Add `bestScore?: number` to `CellProps`; extract from progress record; render with `it-IT` locale formatting |
-
-### New Files
-
-None. All changes are additive modifications to existing files.
-
-### Internal Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| `GameScreen` → `LevelComplete` | Props (`isNewRecord: boolean`) | One-way, synchronous. LevelComplete is a stateless display component. |
-| `GameScreen` → `storage.ts` | Direct function calls (`saveProgress`, `getLevelProgress`) | Synchronous. No async. `getLevelProgress` is a convenience wrapper over `loadAllProgress`. |
-| `LevelSelect` → `storage.ts` | Direct function call (`loadAllProgress`) | Already synchronous at render time. Pattern is unchanged. |
-| `LevelProgress` in localStorage | JSON shape extension with optional field | `bestScore?: number` — old stored data without the field degrades gracefully to `undefined`, treated as 0. |
-
----
+1. **Drag Wobble:** `drag state` → `VinylDisc` CSS class → `@keyframes wobble`
+2. **Slot Glow:** `handlePointerMove` → `data-hover attribute` → `CSS selector`
+3. **Placement Sparkle:** `vinyl.id change` → `useEffect` → `showSparkle state`
+4. **Particle Burst:** `lastSlotPosition` → `ParticleBurst prop` → `self-cleanup timer`
+5. **Screen Transition:** `screen state` → `ScreenTransition` wrapper → `CSSTransition`
 
 ## Scaling Considerations
 
-This is a single-player browser game using localStorage. Scaling is not a concern. The only relevant consideration is backwards compatibility with existing localStorage data:
+| Scale | Architecture Adjustments |
+|-------|--------------------------|
+| **Current (21 levels)** | CSS animations are sufficient, no optimization needed |
+| **50+ levels** | Consider lazy-loading heavy themes, memoize particle components |
+| **Complex effects** | Move particle rendering to Canvas/WebGL if DOM count > 100 particles |
+| **Mobile expansion** | Test `will-change` usage, ensure reduced motion works well |
 
-| Concern | Approach |
-|---------|----------|
-| Existing localStorage data without `bestScore` | `bestScore?: number` is optional. `existing?.bestScore ?? 0` handles missing field on all existing saves. No migration needed. |
-| First run after update | `isNewRecord` will correctly be `true` on any completed level where `state.score > 0` and no prior `bestScore` is stored. This is correct — the first score for a level is always a record. |
+### Scaling Priorities
 
----
+1. **First bottleneck:** Particle count. DOM nodes are expensive.
+   - **Fix:** Use Canvas-based particles for effects > 50 particles
+   - **Threshold:** Start with DOM, migrate when needed
+
+2. **Second bottleneck:** CSS animation complexity during drag.
+   - **Fix:** Use `will-change` sparingly, prefer transforms
+   - **Threshold:** Profile 60fps during drag, reduce wobble complexity if needed
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Deriving isNewRecord Inside LevelComplete
+### Anti-Pattern 1: Animating Three.js Objects for UI Feedback
 
-**What people do:** Pass `score` and `levelId` to LevelComplete; let it call `getLevelProgress` itself to do the comparison.
+**What people do:** Try to animate shelf meshes, vinyl 3D models for wobble/glow
 
-**Why it is wrong:** LevelComplete is a pure display component. More critically, it renders after GameScreen's `useEffect` has already called `saveProgress`. The comparison inside LevelComplete would compare the new score against the newly-written stored value — the result would always be false (or equal, never greater).
+**Why it's wrong:**
+- Requires render loop (kills battery)
+- Breaks static rendering optimization
+- Complex coordination between React state and Three.js scene graph
 
-**Do this instead:** Derive `isNewRecord` in GameScreen's completion `useEffect`, reading storage before writing, then pass the boolean as a prop.
+**Do this instead:** Use CSS transforms on DOM overlays for all UI feedback
+- Three.js = static shelf, realistic lighting
+- CSS = wobble, glow, particles, transitions
 
----
+### Anti-Pattern 2: Global Animation State
 
-### Anti-Pattern 2: Deriving isNewRecord in App.tsx
+**What people do:** Create single global `animationState` object for all effects
 
-**What people do:** Surface the record logic in the router layer so it can be passed as a callback or returned through `onReturnToSelect`.
+**Why it's wrong:**
+- Unnecessary complexity for short-lived effects
+- Harder to track cleanup, memory leaks
+- Violates "ephemeral state" principle
 
-**Why it is wrong:** App.tsx has no access to `state.score` or `state.level.id`. Forcing App.tsx to own score logic would require threading game state up through `onReturnToSelect`, breaking the clean separation between the router and the game orchestrator.
+**Do this instead:** Use local useState in orchestrating component
+- `const [burst, setBurst] = useState(null)`
+- Component self-cleans via `onComplete`
+- Simple, predictable, React-idiomatic
 
-**Do this instead:** Keep all game state derivation inside GameScreen, which already owns the reducer and all side effects.
+### Anti-Pattern 3: Mixing Animation Logic with Game Rules
 
----
+**What people do:** Put animation triggers in `gameReducer` or `isValidPlacement`
 
-### Anti-Pattern 3: Saving bestScore Only When Stars Also Improve
+**Why it's wrong:**
+- Game logic should be pure, testable
+- Animations are presentation concern
+- Creates coupling between rules and visuals
 
-**What people do:** Wrap the score write inside the existing `starsImproved` condition, so score is only stored alongside a star improvement.
+**Do this instead:** Separate concerns
+- `gameReducer` updates state (pure)
+- `GameScreen` detects state changes, triggers animations (effectful)
+- Example: `combo.streak` changes → `useEffect` → `setComboBurst`
 
-**Why it is wrong:** A player can replay a level and score more points without earning more stars (e.g., faster combo execution on a run with the same error count). Score must improve independently of stars.
+### Anti-Pattern 4: Ignoring prefers-reduced-motion
 
-**Do this instead:** Use `scoreImproved` as an independent condition with its own best-only write. Stars and score have logically separate "personal best" semantics.
+**What people do:** Add animations without accessibility fallbacks
 
----
+**Why it's wrong:**
+- Causes motion sickness/nausea for some users
+- Legal accessibility requirement in many jurisdictions
+- Against WCAG guidelines
 
-### Anti-Pattern 4: Formatting Score in LevelSelect Without Locale
+**Do this instead:** Always include reduced motion mixin
+```typescript
+const wobble = keyframes`...`;
 
-**What people do:** `bestScore.toString()` or a manual comma-insertion function for the "1.420 pt" display.
+const WobbleDiv = styled.div`
+  animation: ${wobble} 0.4s infinite;
 
-**Why it is wrong:** The spec calls for Italian thousand-separator notation ("1.420"). `(1420).toString()` returns `"1420"`. Manual implementations are fragile.
+  ${reducedMotion} /* Wraps in @media (prefers-reduced-motion: reduce) */
+`;
+```
 
-**Do this instead:** `bestScore.toLocaleString('it-IT')` returns `"1.420"` on all modern platforms. Append `" pt"` as a string literal.
+## Integration Points
 
----
+### New Components Required
 
-## Build Order
+| Component | Purpose | Integration Point |
+|-----------|---------|-------------------|
+| **AmbientParticles** | Dust motes, light rays in background | SceneBackdrop or GameScreen |
+| **ScreenTransition** | Fade/slide between LevelSelect ↔ Game | Wrap App.tsx screen renders |
+| **WobbleWrapper** | Apply wobble to VinylDisc during drag | VinylDisc internal, triggered by `drag` prop |
+| **GlowOverlay** | Subtle slot glow when vinyl near | ShelfSlot internal, triggered by `isGlowing` prop |
 
-Build in this order to respect dependency edges:
+### Data Flow Changes
 
-1. **`src/game/storage.ts`** — Foundation. All other changes depend on `bestScore` existing in the `LevelProgress` shape and the extended `saveProgress` signature. Do this first.
+| Current Flow | New Flow | Impact |
+|--------------|----------|--------|
+| Screen switch: instant | Screen switch: transition wrapper | Minor App.tsx change |
+| No ambient effects | Ambient particles in background | Add to GameScreen JSX |
+| Static drag feedback | Wobble animation during drag | VinylDisc CSS change |
+| No slot proximity glow | Glow when vinyl near slot | ShelfSlot props + CSS |
 
-2. **`src/components/GameScreen.tsx`** — Reads from storage (requires step 1), derives `isNewRecord`, extends the `saveProgress` call, passes new prop to `LevelComplete`. Do this second.
+### Three.js Scene Graph Considerations
 
-3. **`src/components/LevelComplete.tsx`** — Receives `isNewRecord` prop (interface contract known after step 2), adds the "Nuovo Record!" badge. Do this third.
+**Current architecture:** Shelf3DCanvas is purely static
+- Builds scene once on mount
+- No animation loop
+- Re-renders only on resize
 
-4. **`src/components/LevelSelect/LevelSelect.tsx`** — Reads `bestScore` from storage (requires step 1 only). Does not depend on steps 2 or 3. Can be done in parallel with steps 2–3 once step 1 is complete.
+**For v1.2 polish:** Keep static, add CSS overlays
+- ✅ Dust particles: DOM nodes with CSS animations
+- ✅ Light rays: CSS gradients with animation
+- ✅ Vinyl wobble: CSS transform on DOM element
+- ❌ Don't add animated meshes to Three.js scene
 
----
+**Future expansion (if needed):**
+- Move to react-three-fiber if 3D animation becomes core requirement
+- Consider render loop only if animating shelf geometry (not in scope)
+
+### Component Tree Placement
+
+```
+App
+└── ScreenTransition (NEW)
+    ├── LevelSelect
+    └── GameScreen
+        ├── SceneBackdrop
+        │   └── AmbientParticles (NEW)
+        ├── HUD
+        ├── Shelf
+        │   ├── Shelf3DCanvas (Three.js, static)
+        │   └── ShelfSlot (glow effects)
+        ├── Counter
+        │   └── VinylDisc (wobble animation)
+        ├── ParticleBurst (existing)
+        └── [various popup overlays]
+```
+
+## Build Order (Respecting Dependencies)
+
+1. **Animation infrastructure** (no dependencies)
+   - Extend `src/animations/timing.ts` with new constants
+   - Extend `src/animations/keyframes.ts` with wobble/glow keyframes
+   - Add `src/animations/transitions.ts` for screen transitions
+
+2. **VinylDisc wobble** (self-contained)
+   - Modify `VinylDisc.tsx` to accept `dragging` prop
+   - Add wobble keyframe to `VinylDisc.module.css`
+   - Test in isolation
+
+3. **ShelfSlot glow** (self-contained)
+   - Modify `ShelfSlot.tsx` to accept `isGlowing` prop
+   - Add glow pulse to `ShelfSlot.module.css`
+   - Test in isolation
+
+4. **AmbientParticles** (independent, reusable)
+   - Create `AmbientParticles` component
+   - Integrate into `SceneBackdrop`
+   - Test with different themes
+
+5. **ScreenTransition** (wraps App routing)
+   - Create `ScreenTransition` component
+   - Modify `App.tsx` to use wrapper
+   - Test LevelSelect ↔ GameScreen transitions
+
+6. **Integration & coordination**
+   - Wire up `GameScreen` to pass `dragging` to VinylDisc
+   - Wire up `GameScreen` to pass `isGlowing` to ShelfSlot
+   - Coordinate animation timing with game events
+   - Performance test (60fps drag, particle count)
 
 ## Sources
 
-- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/game/storage.ts`
-- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/components/GameScreen.tsx`
-- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/components/LevelComplete.tsx`
-- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/components/LevelSelect/LevelSelect.tsx`
-- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/App.tsx`
-- Direct inspection of `/Users/martha2022/Documents/Sleevo/src/game/types.ts`
-- Direct inspection of `/Users/martha2022/Documents/Sleevo/.planning/PROJECT.md`
+**Confidence Level:** HIGH
+- Analysis based on existing codebase patterns
+- CSS-first animation approach verified in current implementation
+- Three.js static rendering pattern confirmed in Shelf3DCanvas.tsx
+- Ephemeral state pattern observed in GameScreen.tsx (comboBurst, scorePopups)
 
----
-*Architecture research for: bestScore persistence + personal record UI in Sleevo*
-*Researched: 2026-02-25*
+**Key Code References:**
+- `/src/components/GameScreen.tsx` - Lines 36-44 (particle system), 122-124 (comboBurst state)
+- `/src/components/ShelfSlot.tsx` - Lines 23-40 (sparkle animation), 90-101 (sparkle trigger)
+- `/src/components/HUD/HUD.tsx` - Lines 93-116 (AnimatedScore pattern)
+- `/src/animations/timing.ts` - Animation timing constants
+- `/src/animations/keyframes.ts` - Keyframe definitions, reducedMotion mixin
+- `/src/components/Shelf3DCanvas.tsx` - Static Three.js rendering pattern
+- `/src/App.tsx` - Current routing (no transitions)
+
+**Pattern Sources:**
+- CSS Modules + styled-components: Current codebase standard
+- Data-attribute driven hover: GameScreen.tsx lines 462-505
+- Ephemeral state: GameScreen.tsx lines 122-124, 132-140
+- Separation of concerns: game/engine.ts (logic) vs components (presentation)
